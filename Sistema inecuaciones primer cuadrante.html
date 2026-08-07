@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Regiones en el Primer Cuadrante</title>
+  <style>
+    :root {
+      --bg-color: #f4f6f9;
+      --card-bg: #ffffff;
+      --primary-color: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success-color: #16a34a;
+      --error-color: #dc2626;
+      --text-color: #1e293b;
+      --border-color: #cbd5e1;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 12px;
+    }
+
+    .container {
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 500px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 12px;
+    }
+
+    .title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-color);
+    }
+
+    .canvas-container {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      position: relative;
+      background-color: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .instruction {
+      text-align: center;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .option-btn {
+      background-color: #ffffff;
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-color);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 55px;
+      touch-action: manipulation;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .option-btn:hover:not(:disabled) {
+      border-color: var(--primary-color);
+      background-color: #f8fafc;
+    }
+
+    .option-btn:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    .option-btn.correct {
+      background-color: #dcfce7 !important;
+      border-color: var(--success-color) !important;
+      color: #15803d !important;
+    }
+
+    .option-btn.incorrect {
+      background-color: #fee2e2 !important;
+      border-color: var(--error-color) !important;
+      color: #b91c1c !important;
+    }
+
+    .option-btn:disabled {
+      cursor: default;
+      opacity: 0.8;
+    }
+
+    .feedback {
+      min-height: 24px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .feedback.success {
+      color: var(--success-color);
+    }
+
+    .feedback.error {
+      color: var(--error-color);
+    }
+
+    .next-btn {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      display: none;
+    }
+
+    .next-btn:hover {
+      background-color: var(--primary-hover);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <div class="title">Sistemas de Inecuaciones (1er Cuadrante)</div>
+    </div>
+
+    <div class="canvas-container">
+      <svg id="plot" viewBox="-1.2 -11.2 12.4 12.4">
+        <defs>
+          <pattern id="grid" width="1" height="1" patternUnits="userSpaceOnUse">
+            <path d="M 1 0 L 0 0 0 1" fill="none" stroke="#e2e8f0" stroke-width="0.04"/>
+          </pattern>
+          <clipPath id="clip-first-quadrant">
+            <rect x="0" y="-10" width="10" height="10" />
+          </clipPath>
+        </defs>
+        <rect x="-1.2" y="-11.2" width="12.4" height="12.4" fill="#ffffff" />
+        <rect x="0" y="-10" width="10" height="10" fill="url(#grid)" stroke="#cbd5e1" stroke-width="0.05" />
+        <g id="region-group" clip-path="url(#clip-first-quadrant)"></g>
+        <g id="axes-group"></g>
+        <g id="line-group" clip-path="url(#clip-first-quadrant)"></g>
+      </svg>
+    </div>
+
+    <div class="instruction">Selecciona el sistema que representa la región sombreada:</div>
+
+    <div class="options-grid" id="options-container">
+      <button class="option-btn" onclick="checkAnswer(0)"></button>
+      <button class="option-btn" onclick="checkAnswer(1)"></button>
+      <button class="option-btn" onclick="checkAnswer(2)"></button>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+    <button class="next-btn" id="next-btn" onclick="generateNewProblem()">Siguiente ejercicio</button>
+  </div>
+
+  <script>
+    let currentProblem = null;
+    let answered = false;
+
+    function getRandomInt(min, max, excludeZero = false) {
+      let val;
+      do {
+        val = Math.floor(Math.random() * (max - min + 1)) + min;
+      } while (excludeZero && val === 0);
+      return val;
+    }
+
+    function formatInequality(m, b, op) {
+      let termX = '';
+      if (m === 1) termX = 'x';
+      else if (m === -1) termX = '-x';
+      else if (m !== 0) termX = `${m}x`;
+
+      let termB = '';
+      if (b > 0) termB = termX ? ` + ${b}` : `${b}`;
+      else if (b < 0) termB = termX ? ` - ${Math.abs(b)}` : `-${Math.abs(b)}`;
+      else if (!termX) termB = '0';
+
+      let symbol = op === '>=' ? '≥' : '≤';
+      return `y ${symbol} ${termX}${termB}`;
+    }
+
+    function formatSystem(line1, line2) {
+      const ineq1 = formatInequality(line1.m, line1.b, line1.op);
+      const ineq2 = formatInequality(line2.m, line2.b, line2.op);
+      return `{ ${ineq1} ; ${ineq2} ; x ≥ 0 ; y ≥ 0 }`;
+    }
+
+    function generateProblem() {
+      let m1, m2, b1, b2, xInt, yInt, valid = false;
+      let line1, line2, op1, op2;
+
+      while (!valid) {
+        // Para asegurar regiones convexas válidas en 1er cuadrante
+        m1 = getRandomInt(-2, -1);
+        m2 = getRandomInt(1, 2); 
+        if (Math.random() > 0.5) {
+          m1 = -1; m2 = -2;
+        }
+
+        b1 = getRandomInt(4, 9);
+        b2 = getRandomInt(3, 9);
+
+        if (m1 === m2) continue;
+
+        // Punto de intersección entre las dos rectas
+        xInt = (b2 - b1) / (m1 - m2);
+        yInt = m1 * xInt + b1;
+
+        // La intersección DEBE estar estrictamente dentro del primer cuadrante [0.5, 8.5]
+        if (xInt >= 1 && xInt <= 8 && yInt >= 1 && yInt <= 8) {
+          valid = true;
+        }
+      }
+
+      // Elegir operadores que formen una región acotada activa por ambas rectas
+      op1 = '<=';
+      op2 = '<=';
+
+      line1 = { m: m1, b: b1, op: op1 };
+      line2 = { m: m2, b: b2, op: op2 };
+
+      const correctSystemStr = formatSystem(line1, line2);
+
+      const dirFlip = { '>=': '<=', '<=': '>=' };
+      const distractors = new Set();
+
+      distractors.add(formatSystem({ ...line1, op: dirFlip[op1] }, line2));
+      distractors.add(formatSystem(line1, { ...line2, op: dirFlip[op2] }));
+      distractors.add(formatSystem({ ...line1, op: dirFlip[op1] }, { ...line2, op: dirFlip[op2] }));
+
+      const optionsList = Array.from(distractors).filter(item => item !== correctSystemStr);
+
+      const finalOptions = [correctSystemStr];
+      while (finalOptions.length < 3 && optionsList.length > 0) {
+        const idx = Math.floor(Math.random() * optionsList.length);
+        finalOptions.push(optionsList.splice(idx, 1)[0]);
+      }
+
+      for (let i = finalOptions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [finalOptions[i], finalOptions[j]] = [finalOptions[j], finalOptions[i]];
+      }
+
+      return {
+        line1, line2,
+        correctIndex: finalOptions.indexOf(correctSystemStr),
+        options: finalOptions
+      };
+    }
+
+    function createRegionPath(m, b, op) {
+      const xL = -5, xR = 15;
+      const yL_svg = -(m * xL + b);
+      const yR_svg = -(m * xR + b);
+      const yFar = op === '>=' ? -25 : 15;
+
+      return `M ${xL} ${yL_svg} L ${xR} ${yR_svg} L ${xR} ${yFar} L ${xL} ${yFar} Z`;
+    }
+
+    function drawPlot(line1, line2) {
+      const axesGroup = document.getElementById('axes-group');
+      const lineGroup = document.getElementById('line-group');
+      const regionGroup = document.getElementById('region-group');
+
+      axesGroup.innerHTML = '';
+      lineGroup.innerHTML = '';
+      regionGroup.innerHTML = '';
+
+      // Ejes coordenados delgados y nítidos
+      const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      xAxis.setAttribute('x1', -1.2); xAxis.setAttribute('y1', 0);
+      xAxis.setAttribute('x2', 11.2); xAxis.setAttribute('y2', 0);
+      xAxis.setAttribute('stroke', '#1e293b'); xAxis.setAttribute('stroke-width', '0.08');
+
+      const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      yAxis.setAttribute('x1', 0); yAxis.setAttribute('y1', -11.2);
+      yAxis.setAttribute('x2', 0); yAxis.setAttribute('y2', 1.2);
+      yAxis.setAttribute('stroke', '#1e293b'); yAxis.setAttribute('stroke-width', '0.08');
+
+      axesGroup.appendChild(xAxis);
+      axesGroup.appendChild(yAxis);
+
+      // Etiquetas de los ejes
+      for (let i = 0; i <= 10; i += 2) {
+        const tickX = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        tickX.setAttribute('x', i); tickX.setAttribute('y', 0.7);
+        tickX.setAttribute('font-size', '0.45'); tickX.setAttribute('text-anchor', 'middle');
+        tickX.setAttribute('fill', '#475569'); tickX.textContent = i;
+        axesGroup.appendChild(tickX);
+
+        if (i !== 0) {
+          const tickY = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          tickY.setAttribute('x', -0.3); tickY.setAttribute('y', -i + 0.15);
+          tickY.setAttribute('font-size', '0.45'); tickY.setAttribute('text-anchor', 'end');
+          tickY.setAttribute('fill', '#475569'); tickY.textContent = i;
+          axesGroup.appendChild(tickY);
+        }
+      }
+
+      // Máscara para la intersección
+      const maskId = 'fq-intersection-mask';
+      let defs = regionGroup.querySelector('defs');
+      if (!defs) {
+        defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        regionGroup.appendChild(defs);
+      }
+
+      const mask = document.createElementNS('http://www.w3.org/2000/svg', 'mask');
+      mask.setAttribute('id', maskId);
+
+      const bgMask = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      bgMask.setAttribute('x', -5); bgMask.setAttribute('y', -20);
+      bgMask.setAttribute('width', 30); bgMask.setAttribute('height', 30);
+      bgMask.setAttribute('fill', 'black');
+      mask.appendChild(bgMask);
+
+      const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path1.setAttribute('d', createRegionPath(line1.m, line1.b, line1.op));
+      path1.setAttribute('fill', 'white');
+
+      const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path2.setAttribute('d', createRegionPath(line2.m, line2.b, line2.op));
+      path2.setAttribute('fill', 'white');
+
+      const maskGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      maskGroup.appendChild(path1);
+
+      const mask2 = document.createElementNS('http://www.w3.org/2000/svg', 'mask');
+      mask2.setAttribute('id', 'sub-mask-fq');
+      
+      const bgSub = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      bgSub.setAttribute('x', -5); bgSub.setAttribute('y', -20);
+      bgSub.setAttribute('width', 30); bgSub.setAttribute('height', 30);
+      bgSub.setAttribute('fill', 'black');
+      mask2.appendChild(bgSub);
+      mask2.appendChild(path2);
+      defs.appendChild(mask2);
+
+      maskGroup.setAttribute('mask', 'url(#sub-mask-fq)');
+      mask.appendChild(maskGroup);
+      defs.appendChild(mask);
+
+      // Región sombreada acotada al primer cuadrante
+      const shadedRegion = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      shadedRegion.setAttribute('x', 0); shadedRegion.setAttribute('y', -10);
+      shadedRegion.setAttribute('width', 10); shadedRegion.setAttribute('height', 10);
+      shadedRegion.setAttribute('fill', 'rgba(37, 99, 235, 0.35)');
+      shadedRegion.setAttribute('mask', `url(#${maskId})`);
+      regionGroup.appendChild(shadedRegion);
+
+      // Trazado de líneas frontera (stroke-width delgado = 0.1)
+      [line1, line2].forEach((l, idx) => {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        const xL = -2, xR = 12;
+        line.setAttribute('x1', xL);
+        line.setAttribute('y1', -(l.m * xL + l.b));
+        line.setAttribute('x2', xR);
+        line.setAttribute('y2', -(l.m * xR + l.b));
+        line.setAttribute('stroke', idx === 0 ? '#1d4ed8' : '#0284c7');
+        line.setAttribute('stroke-width', '0.1');
+        lineGroup.appendChild(line);
+      });
+    }
+
+    function generateNewProblem() {
+      answered = false;
+      currentProblem = generateProblem();
+      
+      document.getElementById('feedback').textContent = '';
+      document.getElementById('feedback').className = 'feedback';
+      document.getElementById('next-btn').style.display = 'none';
+
+      drawPlot(currentProblem.line1, currentProblem.line2);
+
+      const buttons = document.querySelectorAll('.option-btn');
+      buttons.forEach((btn, index) => {
+        btn.textContent = currentProblem.options[index];
+        btn.className = 'option-btn';
+        btn.disabled = false;
+      });
+    }
+
+    function checkAnswer(selectedIndex) {
+      if (answered) return;
+      answered = true;
+
+      const buttons = document.querySelectorAll('.option-btn');
+      const feedbackEl = document.getElementById('feedback');
+
+      buttons.forEach(btn => btn.disabled = true);
+
+      if (selectedIndex === currentProblem.correctIndex) {
+        buttons[selectedIndex].classList.add('correct');
+        feedbackEl.textContent = '¡Correcto!';
+        feedbackEl.className = 'feedback success';
+      } else {
+        buttons[selectedIndex].classList.add('incorrect');
+        buttons[currentProblem.correctIndex].classList.add('correct');
+        feedbackEl.textContent = 'Incorrecto. Revisa el sentido de las desigualdades que acotan la región.';
+        feedbackEl.className = 'feedback error';
+      }
+
+      document.getElementById('next-btn').style.display = 'block';
+    }
+
+    generateNewProblem();
+  </script>
+</body>
+</html>

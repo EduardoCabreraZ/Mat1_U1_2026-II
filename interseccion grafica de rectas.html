@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego: Intersección de Rectas</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #2ecc71;
+            --error-color: #e74c3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 550px;
+            width: 100%;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+
+        .instructions {
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        canvas {
+            border: 2px solid var(--primary-color);
+            border-radius: 6px;
+            background-color: #fafafa;
+            margin-bottom: 15px;
+        }
+
+        .equations-box {
+            background-color: #eef2f5;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .eq-line1 { color: #e74c3c; }
+        .eq-line2 { color: #2980b9; }
+
+        .input-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        input[type="number"] {
+            width: 60px;
+            padding: 8px;
+            font-size: 1.1rem;
+            text-align: center;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            outline: none;
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--accent-color);
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .feedback {
+            min-height: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .success { color: var(--success-color); font-size: 2rem; }
+        .error { color: var(--error-color); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Encuentra la Intersección</h1>
+    <p class="instructions">Observa el plano o resuelve el sistema para hallar el punto (x, y) donde se cruzan las rectas.</p>
+    
+    <canvas id="gridCanvas" width="400" height="400"></canvas>
+
+    <div class="equations-box">
+        <span id="eq1" class="eq-line1">L1: </span>
+        <span id="eq2" class="eq-line2">L2: </span>
+    </div>
+
+    <div class="input-group">
+        <span>Intersección: (</span>
+        <input type="number" id="inputX" placeholder="x" step="1">
+        <span>;</span>
+        <input type="number" id="inputY" placeholder="y" step="1">
+        <span>)</span>
+    </div>
+
+    <button onclick="checkAnswer()">Comprobar</button>
+
+    <div id="feedback" class="feedback"></div>
+</div>
+
+<script>
+    const canvas = document.getElementById('gridCanvas');
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    const gridSize = 10;
+    const scale = width / (gridSize * 2);
+
+    let targetX = 0;
+    let targetY = 0;
+    let m1 = 0, b1 = 0;
+    let m2 = 0, b2 = 0;
+
+    function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function generateProblem() {
+        targetX = getRandomInt(-5, 5);
+        targetY = getRandomInt(-5, 5);
+
+        m1 = getRandomInt(-2, 2);
+        do {
+            m2 = getRandomInt(-2, 2);
+        } while (m1 === m2);
+
+        b1 = targetY - m1 * targetX;
+        b2 = targetY - m2 * targetX;
+
+        document.getElementById('inputX').value = '';
+        document.getElementById('inputY').value = '';
+        
+        document.getElementById('eq1').textContent = `L1: y = ${formatLinear(m1, b1)}`;
+        document.getElementById('eq2').textContent = `L2: y = ${formatLinear(m2, b2)}`;
+
+        drawGrid();
+        drawLine(m1, b1, '#e74c3c');
+        drawLine(m2, b2, '#2980b9');
+    }
+
+    function formatLinear(m, b) {
+        let res = '';
+        if (m === 1) res += 'x';
+        else if (m === -1) res += '-x';
+        else if (m !== 0) res += `${m}x`;
+
+        if (b > 0) res += (m !== 0 ? ' + ' : '') + b;
+        else if (b < 0) res += (m !== 0 ? ' - ' : '-') + Math.abs(b);
+        else if (m === 0) res += '0';
+
+        return res;
+    }
+
+    function toScreenX(x) {
+        return width / 2 + x * scale;
+    }
+
+    function toScreenY(y) {
+        return height / 2 - y * scale;
+    }
+
+    function drawGrid() {
+        ctx.clearRect(0, 0, width, height);
+
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.lineWidth = 1;
+
+        for (let x = -gridSize; x <= gridSize; x++) {
+            ctx.beginPath();
+            ctx.moveTo(toScreenX(x), 0);
+            ctx.lineTo(toScreenX(x), height);
+            ctx.stroke();
+        }
+
+        for (let y = -gridSize; y <= gridSize; y++) {
+            ctx.beginPath();
+            ctx.moveTo(0, toScreenY(y));
+            ctx.lineTo(width, toScreenY(y));
+            ctx.stroke();
+        }
+
+        ctx.strokeStyle = '#2c3e50';
+        ctx.lineWidth = 2;
+
+        ctx.beginPath();
+        ctx.moveTo(0, height / 2);
+        ctx.lineTo(width, height / 2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(width / 2, 0);
+        ctx.lineTo(width / 2, height);
+        ctx.stroke();
+
+        ctx.fillStyle = '#7f8c8d';
+        ctx.font = '10px sans-serif';
+        for (let x = -gridSize; x <= gridSize; x += 2) {
+            if (x !== 0) {
+                ctx.fillText(x, toScreenX(x) - 5, toScreenY(0) + 12);
+            }
+        }
+        for (let y = -gridSize; y <= gridSize; y += 2) {
+            if (y !== 0) {
+                ctx.fillText(y, toScreenX(0) + 5, toScreenY(y) + 3);
+            }
+        }
+    }
+
+    function drawLine(m, b, color) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2.5;
+
+        const x1 = -gridSize;
+        const y1 = m * x1 + b;
+        const x2 = gridSize;
+        const y2 = m * x2 + b;
+
+        ctx.beginPath();
+        ctx.moveTo(toScreenX(x1), toScreenY(y1));
+        ctx.lineTo(toScreenX(x2), toScreenY(y2));
+        ctx.stroke();
+    }
+
+    function checkAnswer() {
+        const userX = parseInt(document.getElementById('inputX').value, 10);
+        const userY = parseInt(document.getElementById('inputY').value, 10);
+        const feedbackEl = document.getElementById('feedback');
+
+        if (isNaN(userX) || isNaN(userY)) {
+            feedbackEl.className = 'feedback error';
+            feedbackEl.textContent = 'Por favor, ingresa valores válidos.';
+            return;
+        }
+
+        if (userX === targetX && userY === targetY) {
+            feedbackEl.className = 'feedback success';
+            feedbackEl.textContent = '😊 ¡Correcto!';
+        } else {
+            feedbackEl.className = 'feedback error';
+            feedbackEl.textContent = `Error. La respuesta era (${targetX}; ${targetY})`;
+        }
+
+        setTimeout(() => {
+            feedbackEl.textContent = '';
+            generateProblem();
+        }, 2000);
+    }
+
+    generateProblem();
+</script>
+
+</body>
+</html>

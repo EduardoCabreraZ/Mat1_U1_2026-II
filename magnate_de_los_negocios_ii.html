@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magnate de los Negocios II: Simulador Financiero</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body { font-family: 'Inter', 'Segoe UI', sans-serif; }
+        @keyframes pulse-soft {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        .animate-pulse-soft { animation: pulse-soft 2s infinite ease-in-out; }
+        .glass-panel { 
+            background: rgba(15, 23, 42, 0.85); 
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-center p-4 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+
+    <!-- Elaborado por Eduardo Cabrera con asistencia de Gemini -->
+    <!-- ECCZ % Gem -->
+
+    <!-- PANTALLA 1: INICIO Y REGLAS -->
+    <div id="screen-intro" class="max-w-2xl w-full glass-panel rounded-2xl shadow-2xl p-8 text-center transition-all duration-300 relative">
+        <button onclick="toggleMute()" class="absolute top-4 right-4 text-slate-400 hover:text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+            <i id="audio-icon" class="fa-solid fa-volume-high"></i>
+        </button>
+
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-emerald-600/20 text-emerald-400 rounded-full mb-6 shadow-inner border border-emerald-500/30">
+            <i class="fa-solid fa-chart-line text-4xl"></i>
+        </div>
+        <h1 class="text-3xl md:text-4xl font-black tracking-tight text-white mb-3">
+            Magnate de los Negocios II
+        </h1>
+        <p class="text-emerald-400 font-semibold mb-8 uppercase tracking-widest text-sm">
+            Ecuaciones Lineales en la Economía
+        </p>
+
+        <div class="bg-slate-900/80 border border-slate-700/60 rounded-xl p-6 text-left mb-8 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-200 flex items-center gap-2 border-b border-slate-800 pb-3 mb-4">
+                <i class="fa-solid fa-briefcase text-amber-400"></i> Tu Misión Financiera:
+            </h2>
+            <ul class="space-y-4 text-slate-300 text-sm leading-relaxed">
+                <li class="flex items-start gap-3">
+                    <span class="text-emerald-400 font-bold mt-0.5"><i class="fa-solid fa-building"></i></span>
+                    <span><strong>Análisis:</strong> Lee el caso de la empresa. Tendrás los Costos Fijos (<span class="text-rose-400 font-mono">C<sub>F</sub></span>), Costos Variables (<span class="text-orange-400 font-mono">C<sub>v</sub></span>) y Precio de Venta (<span class="text-emerald-400 font-mono">p</span>).</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="text-emerald-400 font-bold mt-0.5"><i class="fa-solid fa-calculator"></i></span>
+                    <span><strong>Decisión:</strong> Selecciona la cantidad (<span class="text-blue-400 font-mono">q</span>) o precio correcto para alcanzar el Punto de Equilibrio (I = C) o la Utilidad objetivo (U = I - C).</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="text-emerald-400 font-bold mt-0.5"><i class="fa-solid fa-heart"></i></span>
+                    <span><strong>Riesgo:</strong> Tienes <strong>3 vidas</strong> y el tiempo corre en tu contra. Un mal cálculo financiero te costará una vida.</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="mb-8">
+            <label class="block text-sm font-semibold text-slate-400 mb-4 tracking-wide uppercase">Selecciona tu Mercado (Dificultad)</label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-md mx-auto">
+                <button onclick="selectLevel(1)" id="btn-lvl-1" class="py-3 px-4 rounded-xl border-2 border-emerald-500 bg-emerald-600/30 font-bold text-white shadow-lg transition-all focus:outline-none">
+                    Startup<span class="block text-xs font-medium text-emerald-200 mt-1">Punto de Eq.</span>
+                </button>
+                <button onclick="selectLevel(2)" id="btn-lvl-2" class="py-3 px-4 rounded-xl border-2 border-slate-700 bg-slate-800 hover:border-slate-500 font-bold text-slate-300 transition-all focus:outline-none">
+                    Empresa<span class="block text-xs font-medium text-slate-500 mt-1">Utilidad</span>
+                </button>
+                <button onclick="selectLevel(3)" id="btn-lvl-3" class="py-3 px-4 rounded-xl border-2 border-slate-700 bg-slate-800 hover:border-slate-500 font-bold text-slate-300 transition-all focus:outline-none">
+                    Corporación<span class="block text-xs font-medium text-slate-500 mt-1">Fijar Precios</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <button onclick="startGame()" class="w-full sm:w-auto px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-lg rounded-xl shadow-lg transition-all transform hover:-translate-y-1">
+                <i class="fa-solid fa-play mr-2"></i> INVERTIR AHORA
+            </button>
+            <button onclick="showLeaderboard()" class="w-full sm:w-auto px-6 py-4 bg-slate-800 hover:bg-slate-700 text-white font-bold text-lg rounded-xl shadow-lg transition-all border border-slate-600">
+                <i class="fa-solid fa-ranking-star text-amber-400 mr-2"></i> FORBES TOP 5
+            </button>
+        </div>
+    </div>
+
+    <!-- PANTALLA 2: DASHBOARD FINANCIERO -->
+    <div id="screen-game" class="max-w-5xl w-full glass-panel rounded-2xl shadow-2xl overflow-hidden hidden flex-col border border-slate-700/50">
+        
+        <!-- Top Bar -->
+        <div class="bg-slate-900/80 px-4 md:px-6 py-4 border-b border-slate-700/50 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3 md:gap-5">
+                <span id="level-badge" class="px-3 py-1 bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 font-bold text-xs uppercase tracking-wider rounded-md">
+                    Startup
+                </span>
+                <div id="lives-container" class="flex gap-1.5 text-rose-500 text-lg drop-shadow-md">
+                    <!-- JS -->
+                </div>
+            </div>
+
+            <div class="text-2xl font-black tracking-widest bg-slate-950 px-4 py-1.5 rounded-lg border border-slate-800 font-mono text-amber-400 flex items-center gap-3">
+                <i class="fa-regular fa-clock text-base text-slate-500"></i>
+                <span id="timer-display">00:45</span>
+            </div>
+
+            <div class="text-sm font-semibold text-slate-400 flex flex-col items-end">
+                <span class="text-[10px] uppercase tracking-widest mb-0.5">Capital Acumulado</span>
+                <span id="score-display" class="text-emerald-400 font-bold text-xl font-mono leading-none">$ 0</span>
+            </div>
+        </div>
+
+        <!-- Layout 2 Columnas -->
+        <div class="p-4 md:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1">
+            
+            <!-- Columna Izquierda: Caso y Datos -->
+            <div class="flex flex-col gap-4">
+                <!-- Caso de Negocio -->
+                <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-5 shadow-inner">
+                    <h2 class="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2 mb-3">
+                        <i class="fa-solid fa-file-invoice-dollar"></i> Reporte Financiero
+                    </h2>
+                    <p id="business-case" class="text-slate-200 text-sm md:text-base leading-relaxed">
+                        <!-- Generado por JS -->
+                    </p>
+                </div>
+
+                <!-- Indicadores Visuales -->
+                <div id="financial-data" class="grid grid-cols-3 gap-3">
+                    <!-- Generado por JS -->
+                </div>
+
+                <!-- Panel de Decisión -->
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 flex-1 flex flex-col justify-center">
+                    <h3 id="question-text" class="text-center font-bold text-slate-300 mb-4">¿Cuál es tu decisión gerencial?</h3>
+                    <div id="options-container" class="space-y-3">
+                        <!-- Alternativas JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Gráfico Canvas -->
+            <div class="bg-slate-900 border border-slate-700 rounded-xl p-4 flex flex-col shadow-inner relative">
+                <div class="flex justify-between items-center mb-2 px-2">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Gráfico de Rentabilidad</span>
+                    <span id="chart-status" class="text-xs font-bold bg-slate-800 text-slate-400 px-2 py-1 rounded">Esperando análisis...</span>
+                </div>
+                
+                <div class="flex-1 w-full bg-slate-950 rounded-lg relative overflow-hidden min-h-[300px]">
+                    <canvas id="ecoCanvas" class="w-full h-full absolute inset-0"></canvas>
+                </div>
+
+                <!-- Feedback Visual (Fórmula) -->
+                <div id="feedback-msg" class="mt-4 text-center font-mono text-sm bg-slate-800 p-3 rounded-lg border border-slate-700 opacity-0 transition-opacity duration-300">
+                    <!-- Ecuación resuelta JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANTALLA 3: VICTORIA Y REGISTRO -->
+    <div id="modal-victory" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-slate-800 border-2 border-emerald-500/50 rounded-2xl max-w-md w-full p-8 text-center shadow-[0_0_40px_rgba(16,185,129,0.2)] animate-pulse-soft">
+            <div class="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner">
+                <i class="fa-solid fa-vault"></i>
+            </div>
+            <h2 class="text-3xl font-extrabold text-white mb-2">¡Objetivo Cumplido!</h2>
+            <p class="text-slate-300 mb-6 text-sm">Tus cálculos financieros fueron precisos. La empresa prospera.</p>
+            
+            <div class="bg-slate-900/80 p-5 rounded-xl mb-8 border border-slate-700">
+                <span class="text-xs text-slate-500 font-bold block mb-2 tracking-widest uppercase">Capital Final Generado</span>
+                <span id="final-score-val" class="text-5xl font-black text-emerald-400 font-mono drop-shadow-md">$0</span>
+            </div>
+
+            <div class="mb-8 text-left bg-slate-700/30 p-4 rounded-xl border border-slate-600/50">
+                <label class="block text-xs font-bold text-blue-300 uppercase mb-3"><i class="fa-solid fa-signature mr-1"></i> Firma del Gerente (Nombre):</label>
+                <input type="text" id="player-name" maxlength="12" placeholder="Ej: WARREN B." 
+                       class="w-full bg-slate-900 border-2 border-slate-600 rounded-lg px-4 py-3 text-white font-mono text-center uppercase tracking-widest text-lg focus:outline-none focus:border-emerald-500 transition-colors">
+            </div>
+
+            <button onclick="saveScore()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-lg rounded-xl shadow-lg transition-all focus:outline-none">
+                <i class="fa-solid fa-save mr-2"></i> Registrar Récord
+            </button>
+        </div>
+    </div>
+
+    <!-- PANTALLA 4: LEADERBOARD -->
+    <div id="modal-leaderboard" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-slate-800 border border-slate-600 rounded-2xl max-w-lg w-full p-6 shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-4 mb-4">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+                    <i class="fa-solid fa-ranking-star text-amber-400 text-3xl"></i> Forbes Top 5
+                </h2>
+                <button onclick="returnToMenu()" class="text-slate-400 hover:text-white bg-slate-700 hover:bg-slate-600 rounded-full w-8 h-8 flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto pr-2 space-y-2 mb-6" id="leaderboard-list">
+                <!-- Data inyectada JS -->
+            </div>
+
+            <button onclick="returnToMenu()" class="w-full py-4 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-all shadow-md focus:outline-none">
+                <i class="fa-solid fa-house mr-2"></i> Volver a la Bolsa
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL GAME OVER -->
+    <div id="modal-gameover" class="fixed inset-0 bg-rose-950/90 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-slate-900 border-2 border-rose-500/50 rounded-2xl max-w-sm w-full p-8 text-center shadow-[0_0_30px_rgba(244,63,94,0.3)]">
+            <div class="w-20 h-20 bg-rose-500/20 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">
+                <i class="fa-solid fa-chart-line-down"></i>
+            </div>
+            <h2 class="text-3xl font-black text-white mb-2 uppercase tracking-widest text-rose-500">Bancarrota</h2>
+            <p id="gameover-cause" class="text-base text-slate-300 mb-8 font-medium">La empresa se quedó sin fondos.</p>
+            <button onclick="returnToMenuFromGameOver()" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-colors border border-slate-600">
+                <i class="fa-solid fa-rotate-right mr-2"></i> Intentar Nueva Inversión
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let isAudioInitialized = false;
+        let isMuted = false;
+        let synthCash, synthWrong, synthTick, synthWin;
+
+        async function initAudio() {
+            if (isAudioInitialized) return;
+            await Tone.start();
+            
+            synthCash = new Tone.PolySynth(Tone.MetalSynth, {
+                envelope: { attack: 0.001, decay: 0.1, release: 0.01 },
+                harmonicity: 5.1,
+                modulationIndex: 32,
+                resonance: 4000,
+                octaves: 1.5
+            }).toDestination();
+            synthCash.volume.value = -12;
+
+            synthWrong = new Tone.MembraneSynth().toDestination();
+            synthWrong.volume.value = -5;
+
+            synthTick = new Tone.PluckSynth().toDestination();
+            synthTick.volume.value = -10;
+
+            synthWin = new Tone.PolySynth(Tone.Synth).toDestination();
+            synthWin.volume.value = -8;
+
+            isAudioInitialized = true;
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            Tone.Destination.mute = isMuted;
+            const icon = document.getElementById('audio-icon');
+            icon.className = isMuted ? "fa-solid fa-volume-xmark text-rose-400" : "fa-solid fa-volume-high text-slate-300";
+        }
+
+        function playSfx(type) {
+            if (!isAudioInitialized || isMuted) return;
+            const now = Tone.now();
+            if(type === 'correct') {
+                synthCash.triggerAttackRelease(["E5", "G5", "C6"], "16n", now);
+            } else if (type === 'wrong') {
+                synthWrong.triggerAttackRelease("C2", "8n", now);
+            } else if (type === 'tick') {
+                synthTick.triggerAttackRelease("C4", now);
+            } else if (type === 'gameover') {
+                synthWin.triggerAttackRelease(["C3", "Eb3"], "2n", now);
+            } else if (type === 'victory') {
+                synthWin.triggerAttackRelease(["C4", "E4", "G4", "C5"], "4n", now);
+            }
+        }
+
+        let currentLevel = 1;
+        let lives = 3;
+        let score = 0;
+        let timer = null;
+        let timeLeft = 60;
+        let gameCount = 0; 
+        
+        let state = {
+            CF: 0, Cv: 0, p: 0, q: 0, U: 0, 
+            targetQ: 0, targetP: 0, type: 'q' 
+        };
+
+        const LEVEL_CONFIG = {
+            1: { time: 45, scoreBase: 1000, label: "Startup (I = C)" },
+            2: { time: 60, scoreBase: 2000, label: "Empresa (Utilidad)" },
+            3: { time: 75, scoreBase: 3500, label: "Corpo (Precio)" }
+        };
+
+        function selectLevel(lvl) {
+            currentLevel = lvl;
+            for (let i = 1; i <= 3; i++) {
+                const btn = document.getElementById(`btn-lvl-${i}`);
+                if (i === lvl) {
+                    btn.className = "py-3 px-4 rounded-xl border-2 border-emerald-500 bg-emerald-600/30 font-bold text-white shadow-lg transition-all focus:outline-none";
+                    btn.querySelector('span').className = "block text-xs font-medium text-emerald-200 mt-1";
+                } else {
+                    btn.className = "py-3 px-4 rounded-xl border-2 border-slate-700 bg-slate-800 hover:border-slate-500 font-bold text-slate-300 transition-all focus:outline-none";
+                    btn.querySelector('span').className = "block text-xs font-medium text-slate-500 mt-1";
+                }
+            }
+        }
+
+        async function startGame() {
+            await initAudio();
+            document.getElementById('screen-intro').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+            document.getElementById('screen-game').classList.add('flex');
+            
+            lives = 3;
+            score = 0;
+            gameCount = 0;
+            
+            updateLivesDisplay();
+            updateScoreDisplay();
+            document.getElementById('level-badge').innerText = LEVEL_CONFIG[currentLevel].label;
+            
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            generateBusinessCase();
+        }
+
+        function generateBusinessCase() {
+            document.getElementById('feedback-msg').style.opacity = '0';
+            document.getElementById('chart-status').innerText = "Esperando decisión...";
+            document.getElementById('chart-status').className = "text-xs font-bold bg-slate-800 text-slate-400 px-2 py-1 rounded";
+            
+            drawEmptyChart();
+
+            let caseText = "";
+            let question = "";
+            let options = [];
+
+            if (currentLevel === 1) {
+                state.type = 'q';
+                state.U = 0;
+                state.Cv = Math.floor(Math.random() * 20) + 5; 
+                const margin = Math.floor(Math.random() * 15) + 5; 
+                state.p = state.Cv + margin;
+                state.targetQ = Math.floor(Math.random() * 40) + 10; 
+                state.CF = state.targetQ * margin; 
+
+                caseText = `Lanzas un producto con un costo unitario de <strong>$${state.Cv}</strong> y un precio de venta de <strong>$${state.p}</strong>. Los costos fijos del local son <strong>$${state.CF}</strong> mensuales.`;
+                question = `¿Cuántas unidades (<span class="font-mono text-blue-400">q</span>) debes vender para alcanzar el Punto de Equilibrio (No ganar ni perder)?`;
+                options = generateDistractors(state.targetQ, 'q');
+                
+            } else if (currentLevel === 2) {
+                state.type = 'q';
+                state.Cv = Math.floor(Math.random() * 30) + 10;
+                const margin = Math.floor(Math.random() * 20) + 10;
+                state.p = state.Cv + margin;
+                const breakEvenQ = Math.floor(Math.random() * 30) + 10;
+                state.CF = breakEvenQ * margin;
+                state.targetQ = breakEvenQ + Math.floor(Math.random() * 25) + 5; 
+                state.U = state.targetQ * margin - state.CF;
+
+                caseText = `Tu fábrica tiene costos fijos de <strong>$${state.CF}</strong>. Fabricar cuesta <strong>$${state.Cv}</strong> la unidad y se vende a <strong>$${state.p}</strong>.`;
+                question = `Para los inversores, tu meta es una utilidad de <strong>$${state.U}</strong>. ¿Cuántas unidades (<span class="font-mono text-blue-400">q</span>) debes vender?`;
+                options = generateDistractors(state.targetQ, 'q');
+
+            } else {
+                state.type = 'p';
+                state.U = 0;
+                state.targetQ = Math.floor(Math.random() * 50) + 20; 
+                state.Cv = Math.floor(Math.random() * 40) + 10;
+                const margin = Math.floor(Math.random() * 20) + 10;
+                state.targetP = state.Cv + margin;
+                state.CF = state.targetQ * margin;
+
+                caseText = `Tienes asegurada la venta de <strong>${state.targetQ}</strong> unidades. Tu costo unitario es <strong>$${state.Cv}</strong> y los costos fijos suman <strong>$${state.CF}</strong>.`;
+                question = `Para no quebrar (Punto de Equilibrio), ¿cuál debe ser tu Precio Unitario (<span class="font-mono text-emerald-400">p</span>) mínimo?`;
+                options = generateDistractors(state.targetP, 'p');
+            }
+
+            document.getElementById('business-case').innerHTML = caseText;
+            document.getElementById('question-text').innerHTML = question;
+            
+            document.getElementById('financial-data').innerHTML = `
+                <div class="bg-slate-900 p-3 rounded-lg border border-slate-700/50 flex flex-col items-center">
+                    <span class="text-xs text-rose-400 font-bold mb-1">Costo Fijo (C<sub>F</sub>)</span>
+                    <span class="font-mono text-lg text-white">$${state.CF}</span>
+                </div>
+                <div class="bg-slate-900 p-3 rounded-lg border border-slate-700/50 flex flex-col items-center">
+                    <span class="text-xs text-orange-400 font-bold mb-1">Costo Unit. (C<sub>v</sub>)</span>
+                    <span class="font-mono text-lg text-white">$${state.Cv}</span>
+                </div>
+                <div class="bg-slate-900 p-3 rounded-lg border border-slate-700/50 flex flex-col items-center">
+                    <span class="text-xs text-emerald-400 font-bold mb-1">Precio (p)</span>
+                    <span class="font-mono text-lg text-white">${state.type === 'p' ? '?' : '$'+state.p}</span>
+                </div>
+            `;
+
+            const optContainer = document.getElementById('options-container');
+            optContainer.innerHTML = '';
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left px-5 py-4 rounded-xl border border-slate-600 bg-slate-700/50 hover:bg-slate-600 hover:border-blue-400 font-bold text-white text-lg transition-all flex justify-between items-center group font-mono";
+                btn.innerHTML = `
+                    <span>${state.type === 'p' ? '$' : ''}${opt.val} ${state.type === 'q' ? 'unidades' : ''}</span>
+                    <i class="fa-solid fa-arrow-right text-slate-500 group-hover:text-emerald-400 transition-colors"></i>
+                `;
+                btn.onclick = () => checkAnswer(opt.correct, opt.val);
+                optContainer.appendChild(btn);
+            });
+
+            startTimer(LEVEL_CONFIG[currentLevel].time);
+        }
+
+        function generateDistractors(correctValue, type) {
+            let offset1 = Math.floor(Math.random() * 5) + 2;
+            let offset2 = Math.floor(Math.random() * 5) + 2;
+            let w1 = correctValue + offset1;
+            let w2 = correctValue > offset2 ? correctValue - offset2 : correctValue + offset1 + offset2;
+            
+            return [
+                { val: correctValue, correct: true },
+                { val: w1, correct: false },
+                { val: w2, correct: false }
+            ].sort(() => Math.random() - 0.5);
+        }
+
+        function startTimer(seconds) {
+            clearInterval(timer);
+            timeLeft = seconds;
+            updateTimerDisplay();
+            
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft > 0 && timeLeft <= 10) playSfx('tick');
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    handleError("El mercado cerró por falta de decisiones.");
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = String(Math.floor(Math.max(0, timeLeft) / 60)).padStart(2, '0');
+            const secs = String(Math.max(0, timeLeft) % 60).padStart(2, '0');
+            const display = document.getElementById('timer-display');
+            display.innerText = `${mins}:${secs}`;
+            if (timeLeft <= 10) display.classList.add('text-rose-500', 'animate-pulse');
+            else display.classList.remove('text-rose-500', 'animate-pulse');
+        }
+
+        function updateLivesDisplay() {
+            const container = document.getElementById('lives-container');
+            container.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                container.innerHTML += i < lives ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-solid fa-heart-crack text-slate-700"></i>';
+            }
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('score-display').innerText = `$ ${score.toLocaleString()}`;
+        }
+
+        function checkAnswer(isCorrect, value) {
+            clearInterval(timer);
+            const buttons = document.getElementById('options-container').querySelectorAll('button');
+            buttons.forEach(b => b.disabled = true);
+
+            if (isCorrect) {
+                playSfx('correct');
+                const base = LEVEL_CONFIG[currentLevel].scoreBase;
+                const bonus = timeLeft * 50;
+                score += base + bonus;
+                updateScoreDisplay();
+
+                if (state.type === 'p') state.p = value;
+                else state.q = value;
+
+                drawSuccessChart();
+                
+                const fb = document.getElementById('feedback-msg');
+                fb.style.opacity = '1';
+                
+                const margenUnitario = state.p - state.Cv;
+
+                if(currentLevel === 1) {
+                    fb.innerHTML = `<span class="text-emerald-400 font-bold mb-1 block">Truco: Factorizando con el Margen Unitario</span> ${state.CF} / ($${state.p} - $${state.Cv}) = ${state.q} <br> <span class="text-slate-400 text-xs">Margen neto de ganancia por unidad: $${margenUnitario}</span>`;
+                } else if (currentLevel === 2) {
+                    fb.innerHTML = `<span class="text-emerald-400 font-bold mb-1 block">U = q(p - C<sub>v</sub>) - C<sub>F</sub></span> ${state.U} = ${state.q}($${margenUnitario}) - ${state.CF} <br> <span class="text-slate-400 text-xs">Ganancia factorizada usando el margen unitario.</span>`;
+                } else {
+                    fb.innerHTML = `<span class="text-emerald-400 font-bold mb-1 block">p = C<sub>v</sub> + (C<sub>F</sub> / q)</span> p = ${state.Cv} + (${state.CF} / ${state.targetQ}) = ${state.p} <br> <span class="text-slate-400 text-xs">Precio fijado correctamente para no quebrar.</span>`;
+                }
+
+                document.getElementById('chart-status').innerText = "Análisis Correcto";
+                document.getElementById('chart-status').className = "text-xs font-bold bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded";
+
+                gameCount++;
+                setTimeout(() => {
+                    if (gameCount >= 3) showVictoryModal();
+                    else generateBusinessCase();
+                }, 4000); 
+
+            } else {
+                playSfx('wrong');
+                handleError("Cálculo incorrecto. La empresa sufrió pérdidas.");
+            }
+        }
+
+        function handleError(msg) {
+            lives--;
+            updateLivesDisplay();
+            
+            const mainBox = document.getElementById('screen-game');
+            mainBox.style.transform = "translateX(-10px)";
+            setTimeout(() => mainBox.style.transform = "translateX(10px)", 100);
+            setTimeout(() => mainBox.style.transform = "translateX(0)", 200);
+
+            if (lives <= 0) {
+                playSfx('gameover');
+                document.getElementById('gameover-cause').innerText = msg;
+                document.getElementById('modal-gameover').classList.remove('hidden');
+            } else {
+                alert(`${msg}\n¡Pierdes una vida! Asegúrate de justificar tu razonamiento en voz alta para corregir el error.`);
+                generateBusinessCase();
+            }
+        }
+
+        let ecoCanvas = document.getElementById('ecoCanvas');
+        let ctx = ecoCanvas.getContext('2d');
+
+        function resizeCanvas() {
+            const container = ecoCanvas.parentElement;
+            ecoCanvas.width = container.clientWidth;
+            ecoCanvas.height = container.clientHeight;
+            if(state.q === 0) drawEmptyChart();
+            else drawSuccessChart();
+        }
+
+        function drawEmptyChart() {
+            ctx.clearRect(0, 0, ecoCanvas.width, ecoCanvas.height);
+            drawGrid();
+            
+            ctx.fillStyle = "#64748b";
+            ctx.font = "italic 14px 'Inter', sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("Esperando resolución de la ecuación...", ecoCanvas.width / 2, ecoCanvas.height / 2);
+        }
+
+        function drawGrid() {
+            ctx.strokeStyle = "rgba(148, 163, 184, 0.1)"; 
+            ctx.lineWidth = 1;
+            const stepX = ecoCanvas.width / 10;
+            const stepY = ecoCanvas.height / 5;
+            for(let i=1; i<10; i++) {
+                ctx.beginPath(); ctx.moveTo(i*stepX, 0); ctx.lineTo(i*stepX, ecoCanvas.height); ctx.stroke();
+            }
+            for(let i=1; i<5; i++) {
+                ctx.beginPath(); ctx.moveTo(0, i*stepY); ctx.lineTo(ecoCanvas.width, i*stepY); ctx.stroke();
+            }
+            
+            const pad = 30;
+            ctx.strokeStyle = "#94a3b8";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(pad, pad); ctx.lineTo(pad, ecoCanvas.height - pad); 
+            ctx.lineTo(ecoCanvas.width - pad, ecoCanvas.height - pad); 
+            ctx.stroke();
+
+            ctx.fillStyle = "#94a3b8";
+            ctx.font = "10px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("Cantidad (q)", ecoCanvas.width / 2, ecoCanvas.height - 10);
+            
+            ctx.save();
+            ctx.translate(15, ecoCanvas.height / 2);
+            ctx.rotate(-Math.PI/2);
+            ctx.fillText("Dinero ($)", 0, 0);
+            ctx.restore();
+        }
+
+        function drawSuccessChart() {
+            ctx.clearRect(0, 0, ecoCanvas.width, ecoCanvas.height);
+            drawGrid();
+
+            const pad = 30;
+            const w = ecoCanvas.width - pad * 2;
+            const h = ecoCanvas.height - pad * 2;
+
+            const targetQ = currentLevel === 3 ? state.targetQ : state.q;
+            const maxQ = targetQ * 1.5; 
+            const maxMoney = state.p * maxQ;
+
+            const scaleX = w / maxQ;
+            const scaleY = h / maxMoney;
+
+            const getX = (q) => pad + (q * scaleX);
+            const getY = (money) => (ecoCanvas.height - pad) - (money * scaleY);
+
+            ctx.strokeStyle = "#f43f5e"; 
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(getX(0), getY(state.CF));
+            ctx.lineTo(getX(maxQ), getY(state.CF + state.Cv * maxQ));
+            ctx.stroke();
+
+            ctx.strokeStyle = "#10b981"; 
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(getX(0), getY(0));
+            ctx.lineTo(getX(maxQ), getY(state.p * maxQ));
+            ctx.stroke();
+
+            const breakEvenQ = state.CF / (state.p - state.Cv);
+            
+            ctx.fillStyle = "rgba(16, 185, 129, 0.15)";
+            ctx.beginPath();
+            ctx.moveTo(getX(breakEvenQ), getY(state.p * breakEvenQ)); 
+            ctx.lineTo(getX(maxQ), getY(state.p * maxQ)); 
+            ctx.lineTo(getX(maxQ), getY(state.CF + state.Cv * maxQ)); 
+            ctx.closePath();
+            ctx.fill();
+
+            const objX = getX(targetQ);
+            const objY_I = getY(state.p * targetQ);
+            const objY_C = getY(state.CF + state.Cv * targetQ);
+
+            ctx.strokeStyle = "#38bdf8"; 
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(objX, ecoCanvas.height - pad);
+            ctx.lineTo(objX, objY_I); 
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.fillStyle = "#38bdf8";
+            ctx.font = "bold 12px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(targetQ.toString(), objX, ecoCanvas.height - pad + 15);
+
+            if (currentLevel === 1 || currentLevel === 3) {
+                ctx.fillStyle = "#eab308"; 
+                ctx.beginPath();
+                ctx.arc(objX, objY_I, 6, 0, Math.PI*2);
+                ctx.fill();
+                ctx.strokeStyle = "#fff";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.fillStyle = "#eab308";
+                ctx.textAlign = "left";
+                ctx.fillText("Eq. (I=C)", objX + 10, objY_I - 10);
+            } else {
+                ctx.strokeStyle = "#eab308";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(objX, objY_I);
+                ctx.lineTo(objX, objY_C);
+                ctx.stroke();
+
+                ctx.fillStyle = "#eab308";
+                ctx.beginPath();
+                ctx.arc(objX, objY_I, 4, 0, Math.PI*2);
+                ctx.arc(objX, objY_C, 4, 0, Math.PI*2);
+                ctx.fill();
+                
+                ctx.textAlign = "left";
+                ctx.fillText(`U = $${state.U}`, objX + 10, (objY_I + objY_C)/2);
+            }
+
+            ctx.fillStyle = "#10b981"; ctx.textAlign = "right";
+            ctx.fillText("Ingreso", getX(maxQ) - 10, getY(state.p * maxQ) - 10);
+            ctx.fillStyle = "#f43f5e"; 
+            ctx.fillText("Costo", getX(maxQ) - 10, getY(state.CF + state.Cv * maxQ) + 15);
+        }
+
+        function showVictoryModal() {
+            playSfx('victory');
+            document.getElementById('final-score-val').innerText = `$ ${score.toLocaleString()}`;
+            document.getElementById('modal-victory').classList.remove('hidden');
+        }
+
+        function saveScore() {
+            const input = document.getElementById('player-name');
+            let name = input.value.trim().toUpperCase();
+            if (!name) name = "INVERSOR ANON.";
+
+            const newEntry = { name: name, score: score, level: LEVEL_CONFIG[currentLevel].label };
+            let leaderboard = JSON.parse(localStorage.getItem('tycoon_leaderboard') || "[]");
+            
+            leaderboard.push(newEntry);
+            leaderboard.sort((a, b) => b.score - a.score);
+            leaderboard = leaderboard.slice(0, 5);
+            localStorage.setItem('tycoon_leaderboard', JSON.stringify(leaderboard));
+
+            document.getElementById('modal-victory').classList.add('hidden');
+            showLeaderboard();
+        }
+
+        function showLeaderboard() {
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = "";
+            const leaderboard = JSON.parse(localStorage.getItem('tycoon_leaderboard') || "[]");
+
+            if (leaderboard.length === 0) {
+                list.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Bolsa de valores vacía.</p>`;
+            } else {
+                leaderboard.forEach((entry, idx) => {
+                    const badge = idx === 0 ? 'bg-amber-500 text-slate-900 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : 
+                                 idx === 1 ? 'bg-slate-300 text-slate-900' : 
+                                 idx === 2 ? 'bg-amber-700 text-white' : 'bg-slate-700 text-slate-400';
+                    
+                    list.innerHTML += `
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900/50 border border-slate-700/50 transition-all hover:bg-slate-700/30">
+                            <div class="flex items-center gap-3">
+                                <span class="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs ${badge}">${idx + 1}</span>
+                                <div>
+                                    <div class="font-bold text-white tracking-wider">${entry.name}</div>
+                                    <div class="text-[10px] text-slate-500 uppercase">${entry.level}</div>
+                                </div>
+                            </div>
+                            <span class="font-mono font-black text-emerald-400 text-lg">$${entry.score.toLocaleString()}</span>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('screen-intro').classList.add('hidden');
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('modal-leaderboard').classList.remove('hidden');
+        }
+
+        function returnToMenu() {
+            clearInterval(timer);
+            document.getElementById('modal-leaderboard').classList.add('hidden');
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-intro').classList.remove('hidden');
+        }
+
+        function returnToMenuFromGameOver() {
+            document.getElementById('modal-gameover').classList.add('hidden');
+            returnToMenu();
+        }
+    </script>
+</body>
+</html>

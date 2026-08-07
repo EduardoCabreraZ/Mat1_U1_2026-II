@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analizador Pedagógico de Inecuaciones Lineales</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --sol-bg: rgba(56, 189, 248, 0.15);
+      --code-bg: #0b1120;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 2rem 1rem;
+      min-height: 100vh;
+    }
+    .container {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    }
+    h1 { font-size: 1.4rem; margin-bottom: 1rem; color: var(--accent); text-align: center; }
+    .input-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+    input, select, button {
+      font-size: 1rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background-color: var(--bg);
+      color: var(--text);
+      outline: none;
+    }
+    input[type="number"] { width: 85px; text-align: center; }
+    input:focus, select:focus { border-color: var(--accent); }
+    button {
+      background-color: var(--accent);
+      color: var(--bg);
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s;
+    }
+    button:hover { background-color: var(--accent-hover); }
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 200px;
+      margin-top: 1rem;
+      background-color: var(--code-bg);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    canvas { display: block; width: 100%; height: 100%; }
+    .results { display: flex; flex-direction: column; gap: 1rem; }
+    .step-card {
+      background-color: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .step-title {
+      font-weight: bold;
+      color: var(--accent);
+      font-size: 1.05rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.4rem;
+    }
+    .math-expr {
+      font-family: 'Courier New', Courier, monospace;
+      background-color: var(--code-bg);
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      display: inline-block;
+      margin: 0.3rem 0;
+      color: #38bdf8;
+    }
+    .solution-box {
+      background-color: var(--sol-bg);
+      border: 2px solid var(--accent);
+      padding: 1.2rem;
+      border-radius: 8px;
+      font-size: 1.25rem;
+      text-align: center;
+      font-weight: bold;
+    }
+    .alert-text {
+      color: #f59e0b;
+      font-size: 0.95rem;
+      margin-top: 0.2rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="card">
+    <h1>Analizador Pedagógico de Inecuaciones Lineales</h1>
+    
+    <div class="input-group">
+      <input type="number" id="valA" value="2" step="any">
+      <span>x +</span>
+      <input type="number" id="valB" value="-6" step="any">
+      <select id="ineqSign">
+        <option value=">">&gt;</option>
+        <option value=">=">&ge;</option>
+        <option value="<">&lt;</option>
+        <option value="<=">&le;</option>
+      </select>
+      <span>0</span>
+    </div>
+
+    <div style="text-align: center;">
+      <button onclick="calcular()">Analizar e Ilustrar</button>
+    </div>
+
+    <div class="canvas-container">
+      <canvas id="graphCanvas"></canvas>
+    </div>
+  </div>
+
+  <div class="card results" id="outputCard" style="display: none;">
+    <div class="solution-box" id="solutionText"></div>
+    <div class="results" id="stepsContainer"></div>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById('graphCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function resizeCanvas() {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+  }
+  window.addEventListener('resize', () => { resizeCanvas(); calcular(); });
+
+  function fmtNum(n) {
+    if (Math.abs(n) < 1e-9) return "0";
+    return Number.isInteger(n) ? n.toString() : n.toFixed(2).replace('.', ',');
+  }
+
+  function fmtPoly(a, b) {
+    let res = "";
+    if (a === 1) res += "x";
+    else if (a === -1) res += "-x";
+    else res += `${fmtNum(a)}x`;
+
+    if (b > 0) res += ` + ${fmtNum(b)}`;
+    else if (b < 0) res += ` - ${fmtNum(-b)}`;
+
+    return res;
+  }
+
+  function invertSign(sign) {
+    if (sign === '>') return '<';
+    if (sign === '>=') return '<=';
+    if (sign === '<') return '>';
+    if (sign === '<=') return '>=';
+    return sign;
+  }
+
+  function calcular() {
+    resizeCanvas();
+    const a = parseFloat(document.getElementById('valA').value);
+    const b = parseFloat(document.getElementById('valB').value);
+    const sign = document.getElementById('ineqSign').value;
+
+    if (isNaN(a) || isNaN(b)) {
+      alert("Ingrese números válidos.");
+      return;
+    }
+
+    const container = document.getElementById('stepsContainer');
+    container.innerHTML = "";
+
+    // Caso especial: a = 0 (Ecuación degenerada)
+    if (a === 0) {
+      let satisfies = false;
+      if (sign === '>' && b > 0) satisfies = true;
+      if (sign === '>=' && b >= 0) satisfies = true;
+      if (sign === '<' && b < 0) satisfies = true;
+      if (sign === '<=' && b <= 0) satisfies = true;
+
+      const solStr = satisfies ? "x ∈ ] -∞; +∞ [ (recta horizontal)" : "x ∈ ∅";
+      document.getElementById('outputCard').style.display = 'flex';
+      document.getElementById('solutionText').innerHTML = `Conjunto Solución: <span style="color: #38bdf8;">${solStr}</span>`;
+
+      container.innerHTML = `<div class="step-card">
+        <div class="step-title">Análisis de Caso Especial (a = 0)</div>
+        <p>Como el coeficiente de x es 0, la inecuación se reduce a comparar dos números: <span class="math-expr">${fmtNum(b)} ${sign} 0</span></p>
+        <p>${satisfies ? 'La desigualdad es <strong>verdadera</strong> para cualquier valor de x.' : 'La desigualdad es <strong>falsa</strong> para cualquier valor de x.'}</p>
+      </div>`;
+
+      dibujarRectaCasoEspecial(satisfies);
+      return;
+    }
+
+    // Caso general: a != 0
+    const valCero = -b / a;
+    let finalSign = sign;
+    let inverted = false;
+
+    if (a < 0) {
+      finalSign = invertSign(sign);
+      inverted = true;
+    }
+
+    const sol = obtenerSolucion(valCero, finalSign);
+
+    document.getElementById('outputCard').style.display = 'flex';
+    document.getElementById('solutionText').innerHTML = `Conjunto Solución: <span style="color: #38bdf8;">${sol.intervalo}</span>`;
+
+    // Paso 1: Planteamiento y trasposición del término independiente
+    let htmlPaso1 = `<div class="step-card">
+      <div class="step-title">Paso 1: Trasposición del Término Independiente</div>
+      <p>Partimos de la inecuación lineal: <span class="math-expr">${fmtPoly(a, b)} ${sign} 0</span></p>
+      <p>Pasamos el término independiente (${fmtNum(b)}) al otro lado de la desigualdad cambiando de signo:</p>
+      <div class="math-expr">${a === 1 ? 'x' : (a === -1 ? '-x' : `${fmtNum(a)}x`)} ${sign} ${fmtNum(-b)}</div>
+    </div>`;
+
+    // Paso 2: Despeje de la variable x
+    let htmlPaso2 = `<div class="step-card">
+      <div class="step-title">Paso 2: Despeje de la Variable x</div>
+      <p>Pasamos a dividir el coeficiente de x (<span class="math-expr">a = ${fmtNum(a)}</span>):</p>`;
+
+    if (inverted) {
+      htmlPaso2 += `<p class="alert-text"><strong>¡Atención!</strong> Como el número que pasa a dividir es <strong>negativo (${fmtNum(a)})</strong>, el sentido de la desigualdad <strong>se invierte</strong>.</p>
+      <div class="math-expr">x ${finalSign} (${fmtNum(-b)}) / (${fmtNum(a)})</div>
+      <p>Obtenemos: <span class="math-expr">x ${finalSign} ${fmtNum(valCero)}</span></p>`;
+    } else {
+      htmlPaso2 += `<p>Como el número que pasa a dividir es <strong>positivo (${fmtNum(a)})</strong>, el sentido de la desigualdad <strong>se mantiene igual</strong>.</p>
+      <div class="math-expr">x ${finalSign} ${fmtNum(-b)} / ${fmtNum(a)}</div>
+      <p>Obtenemos: <span class="math-expr">x ${finalSign} ${fmtNum(valCero)}</span></p>`;
+    }
+    htmlPaso2 += `</div>`;
+
+    // Paso 3: Interpretación del Intervalo
+    let htmlPaso3 = `<div class="step-card">
+      <div class="step-title">Paso 3: Expresión del Conjunto Solución</div>
+      <p>Traducimos la condición <span class="math-expr">x ${finalSign} ${fmtNum(valCero)}</span> a notación de intervalos:</p>
+      <p>• El valor frontera es <span class="math-expr">${fmtNum(valCero)}</span>.</p>
+      <p>• El extremo es <strong>${finalSign.includes('=') ? 'cerrado (se incluye el punto)' : 'abierto (no se incluye el punto)'}</strong>.</p>
+    </div>`;
+
+    container.innerHTML = htmlPaso1 + htmlPaso2 + htmlPaso3;
+
+    dibujarRecta(valCero, finalSign);
+  }
+
+  function obtenerSolucion(valCero, finalSign) {
+    const num = fmtNum(valCero);
+    if (finalSign === '>')  return { intervalo: `x ∈ ] ${num}; +∞ [` };
+    if (finalSign === '>=') return { intervalo: `x ∈ [ ${num}; +∞ [` };
+    if (finalSign === '<')  return { intervalo: `x ∈ ] -∞; ${num} [` };
+    if (finalSign === '<=') return { intervalo: `x ∈ ] -∞; ${num} ]` };
+  }
+
+  function dibujarRecta(valCero, finalSign) {
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const centerY = h / 2 + 10;
+    const pX = w / 2;
+
+    const isGreater = finalSign.includes('>');
+    const isClosed = finalSign.includes('=');
+
+    // Región solución
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 4;
+
+    if (isGreater) {
+      ctx.fillRect(pX, centerY - 35, w - pX, 70);
+      ctx.beginPath();
+      ctx.moveTo(pX, centerY);
+      ctx.lineTo(w, centerY);
+      ctx.stroke();
+    } else {
+      ctx.fillRect(0, centerY - 35, pX, 70);
+      ctx.beginPath();
+      ctx.moveTo(0, centerY);
+      ctx.lineTo(pX, centerY);
+      ctx.stroke();
+    }
+
+    // Línea base de la recta
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(15, centerY);
+    ctx.lineTo(w - 15, centerY);
+    ctx.stroke();
+
+    // Punto de corte / frontera
+    ctx.fillStyle = '#0b1120';
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(pX, centerY, 7, 0, Math.PI * 2);
+    ctx.fill();
+    if (isClosed) {
+      ctx.fillStyle = '#38bdf8';
+      ctx.fill();
+    }
+    ctx.stroke();
+
+    // Etiqueta del valor
+    ctx.font = '14px system-ui';
+    ctx.fillStyle = '#f8fafc';
+    ctx.textAlign = 'center';
+    ctx.fillText(fmtNum(valCero), pX, centerY + 28);
+
+    dibujarFlechas(w, centerY);
+  }
+
+  function dibujarRectaCasoEspecial(satisfies) {
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const centerY = h / 2 + 10;
+
+    if (satisfies) {
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
+      ctx.fillRect(0, centerY - 35, w, 70);
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(0, centerY);
+      ctx.lineTo(w, centerY);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(15, centerY);
+    ctx.lineTo(w - 15, centerY);
+    ctx.stroke();
+
+    dibujarFlechas(w, centerY);
+  }
+
+  function dibujarFlechas(w, y) {
+    ctx.fillStyle = '#94a3b8';
+    ctx.beginPath();
+    ctx.moveTo(10, y);
+    ctx.lineTo(20, y - 6);
+    ctx.lineTo(20, y + 6);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(w - 10, y);
+    ctx.lineTo(w - 20, y - 6);
+    ctx.lineTo(w - 20, y + 6);
+    ctx.fill();
+
+    ctx.font = '12px system-ui';
+    ctx.fillText('-∞', 25, y + 22);
+    ctx.fillText('+∞', w - 25, y + 22);
+  }
+
+  calcular();
+</script>
+
+</body>
+</html>

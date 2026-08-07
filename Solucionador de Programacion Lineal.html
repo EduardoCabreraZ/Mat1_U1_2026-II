@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Representación Gráfica de Inecuaciones</title>
+  <style>
+    :root {
+      --bg-color: #f4f6f9;
+      --card-bg: #ffffff;
+      --primary-color: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success-color: #16a34a;
+      --error-color: #dc2626;
+      --text-color: #1e293b;
+      --border-color: #cbd5e1;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 12px;
+    }
+
+    .container {
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 520px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 12px;
+    }
+
+    .title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-color);
+    }
+
+    .system-box {
+      background-color: #f8fafc;
+      border: 2px solid var(--primary-color);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: 0.3px;
+    }
+
+    .instruction {
+      text-align: center;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .plots-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      width: 100%;
+    }
+
+    .plot-card {
+      background-color: #ffffff;
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      padding: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      touch-action: manipulation;
+    }
+
+    .plot-card:hover:not(.disabled) {
+      border-color: var(--primary-color);
+      background-color: #f8fafc;
+    }
+
+    .plot-card:active:not(.disabled) {
+      transform: scale(0.97);
+    }
+
+    .plot-card.correct {
+      background-color: #dcfce7 !important;
+      border-color: var(--success-color) !important;
+    }
+
+    .plot-card.incorrect {
+      background-color: #fee2e2 !important;
+      border-color: var(--error-color) !important;
+    }
+
+    .plot-card.disabled {
+      cursor: default;
+      opacity: 0.85;
+    }
+
+    .plot-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .canvas-container {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      position: relative;
+      background-color: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .feedback {
+      min-height: 24px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .feedback.success {
+      color: var(--success-color);
+    }
+
+    .feedback.error {
+      color: var(--error-color);
+    }
+
+    .next-btn {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      display: none;
+    }
+
+    .next-btn:hover {
+      background-color: var(--primary-hover);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <div class="title">Representación Gráfica de Inecuaciones</div>
+    </div>
+
+    <div class="system-box" id="system-display"></div>
+
+    <div class="instruction">Haz clic sobre la opción que representa la región solución:</div>
+
+    <div class="plots-grid">
+      <div class="plot-card" id="card-0" onclick="checkAnswer(0)">
+        <div class="canvas-container">
+          <svg id="plot-0" viewBox="-1.2 -11.2 12.4 12.4"></svg>
+        </div>
+        <span class="plot-label">Opción A</span>
+      </div>
+
+      <div class="plot-card" id="card-1" onclick="checkAnswer(1)">
+        <div class="canvas-container">
+          <svg id="plot-1" viewBox="-1.2 -11.2 12.4 12.4"></svg>
+        </div>
+        <span class="plot-label">Opción B</span>
+      </div>
+
+      <div class="plot-card" id="card-2" onclick="checkAnswer(2)">
+        <div class="canvas-container">
+          <svg id="plot-2" viewBox="-1.2 -11.2 12.4 12.4"></svg>
+        </div>
+        <span class="plot-label">Opción C</span>
+      </div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+    <button class="next-btn" id="next-btn" onclick="generateNewProblem()">Siguiente ejercicio</button>
+  </div>
+
+  <script>
+    let currentProblem = null;
+    let answered = false;
+
+    function getRandomInt(min, max, excludeZero = false) {
+      let val;
+      do {
+        val = Math.floor(Math.random() * (max - min + 1)) + min;
+      } while (excludeZero && val === 0);
+      return val;
+    }
+
+    function formatInequality(m, b, op) {
+      let termX = '';
+      if (m === 1) termX = 'x';
+      else if (m === -1) termX = '-x';
+      else if (m !== 0) termX = `${m}x`;
+
+      let termB = '';
+      if (b > 0) termB = termX ? ` + ${b}` : `${b}`;
+      else if (b < 0) termB = termX ? ` - ${Math.abs(b)}` : `-${Math.abs(b)}`;
+      else if (!termX) termB = '0';
+
+      let symbol = op === '>=' ? '≥' : '≤';
+      return `y ${symbol} ${termX}${termB}`;
+    }
+
+    function formatSystem(line1, line2) {
+      const ineq1 = formatInequality(line1.m, line1.b, line1.op);
+      const ineq2 = formatInequality(line2.m, line2.b, line2.op);
+      return `{ ${ineq1} ; ${ineq2} ; x ≥ 0 ; y ≥ 0 }`;
+    }
+
+    function generateProblem() {
+      let m1, m2, b1, b2, op1, op2, xInt, yInt, valid = false;
+
+      // Alternar aleatoriamente la presencia del origen (0,0)
+      const includeOrigin = Math.random() > 0.5;
+
+      while (!valid) {
+        if (includeOrigin) {
+          // Región con (0,0) adentro: ambos <=
+          m1 = -1; m2 = 1;
+          b1 = getRandomInt(5, 8);
+          b2 = getRandomInt(1, 4);
+          op1 = '<=';
+          op2 = '<=';
+        } else {
+          // Región SIN (0,0): al menos uno de los semiplanos es >=
+          m1 = 1; m2 = -1;
+          b1 = getRandomInt(-2, 2);
+          b2 = getRandomInt(6, 9);
+          op1 = '>='; // excluye el origen si b1 > 0 o fuerza franja
+          op2 = '<=';
+        }
+
+        xInt = (b2 - b1) / (m1 - m2);
+        yInt = m1 * xInt + b1;
+
+        if (xInt >= 1.5 && xInt <= 8.5 && yInt >= 1.5 && yInt <= 8.5) {
+          valid = true;
+        }
+      }
+
+      const line1 = { m: m1, b: b1, op: op1 };
+      const line2 = { m: m2, b: b2, op: op2 };
+
+      const dirFlip = { '>=': '<=', '<=': '>=' };
+
+      // Opciones gráficas combinando variantes de los dos semiplanos
+      const optionConfigs = [
+        { l1: { ...line1 }, l2: { ...line2 } },                             // Correcto
+        { l1: { ...line1, op: dirFlip[op1] }, l2: { ...line2 } },             // Cambia L1
+        { l1: { ...line1 }, l2: { ...line2, op: dirFlip[op2] } }              // Cambia L2
+      ];
+
+      const shuffledIndices = [0, 1, 2];
+      for (let i = shuffledIndices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledIndices[i], shuffledIndices[j]] = [shuffledIndices[j], shuffledIndices[i]];
+      }
+
+      const finalOptions = shuffledIndices.map(idx => optionConfigs[idx]);
+      const correctIndex = shuffledIndices.indexOf(0);
+
+      return {
+        line1, line2,
+        systemStr: formatSystem(line1, line2),
+        options: finalOptions,
+        correctIndex
+      };
+    }
+
+    function createRegionPath(m, b, op) {
+      const xL = -5, xR = 15;
+      const yL_svg = -(m * xL + b);
+      const yR_svg = -(m * xR + b);
+      const yFar = op.includes('>=') ? -25 : 15;
+
+      return `M ${xL} ${yL_svg} L ${xR} ${yR_svg} L ${xR} ${yFar} L ${xL} ${yFar} Z`;
+    }
+
+    function renderPlot(svgId, line1, line2, plotIndex) {
+      const svg = document.getElementById(svgId);
+      svg.innerHTML = '';
+
+      const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      
+      const pattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+      pattern.setAttribute('id', `grid-${plotIndex}`);
+      pattern.setAttribute('width', '2'); pattern.setAttribute('height', '2');
+      pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+      pattern.innerHTML = '<path d="M 2 0 L 0 0 0 2" fill="none" stroke="#e2e8f0" stroke-width="0.08"/>';
+      defs.appendChild(pattern);
+
+      const clipPath = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
+      clipPath.setAttribute('id', `clip-fq-${plotIndex}`);
+      clipPath.innerHTML = '<rect x="0" y="-10" width="10" height="10" />';
+      defs.appendChild(clipPath);
+
+      const mask = document.createElementNS('http://www.w3.org/2000/svg', 'mask');
+      mask.setAttribute('id', `mask-main-${plotIndex}`);
+      
+      const bgMask = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      bgMask.setAttribute('x', '-5'); bgMask.setAttribute('y', '-20');
+      bgMask.setAttribute('width', '30'); bgMask.setAttribute('height', '30');
+      bgMask.setAttribute('fill', 'black');
+      mask.appendChild(bgMask);
+
+      const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path1.setAttribute('d', createRegionPath(line1.m, line1.b, line1.op));
+      path1.setAttribute('fill', 'white');
+
+      const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path2.setAttribute('d', createRegionPath(line2.m, line2.b, line2.op));
+      path2.setAttribute('fill', 'white');
+
+      const maskGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      maskGroup.appendChild(path1);
+
+      const maskSub = document.createElementNS('http://www.w3.org/2000/svg', 'mask');
+      maskSub.setAttribute('id', `mask-sub-${plotIndex}`);
+      maskSub.innerHTML = '<rect x="-5" y="-20" width="30" height="30" fill="black"/>';
+      maskSub.appendChild(path2);
+      defs.appendChild(maskSub);
+
+      maskGroup.setAttribute('mask', `url(#mask-sub-${plotIndex})`);
+      mask.appendChild(maskGroup);
+      defs.appendChild(mask);
+
+      svg.appendChild(defs);
+
+      const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      bgRect.setAttribute('x', '-1.2'); bgRect.setAttribute('y', '-11.2');
+      bgRect.setAttribute('width', '12.4'); bgRect.setAttribute('height', '12.4');
+      bgRect.setAttribute('fill', '#ffffff');
+      svg.appendChild(bgRect);
+
+      const gridRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      gridRect.setAttribute('x', '0'); gridRect.setAttribute('y', '-10');
+      gridRect.setAttribute('width', '10'); gridRect.setAttribute('height', '10');
+      gridRect.setAttribute('fill', `url(#grid-${plotIndex})`);
+      gridRect.setAttribute('stroke', '#cbd5e1'); gridRect.setAttribute('stroke-width', '0.08');
+      svg.appendChild(gridRect);
+
+      const regionGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      regionGroup.setAttribute('clip-path', `url(#clip-fq-${plotIndex})`);
+      
+      const shadedRegion = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      shadedRegion.setAttribute('x', '0'); shadedRegion.setAttribute('y', '-10');
+      shadedRegion.setAttribute('width', '10'); shadedRegion.setAttribute('height', '10');
+      shadedRegion.setAttribute('fill', 'rgba(37, 99, 235, 0.4)');
+      shadedRegion.setAttribute('mask', `url(#mask-main-${plotIndex})`);
+      regionGroup.appendChild(shadedRegion);
+      svg.appendChild(regionGroup);
+
+      const axesGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      
+      const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      xAxis.setAttribute('x1', '-1.2'); xAxis.setAttribute('y1', '0');
+      xAxis.setAttribute('x2', '11.2'); xAxis.setAttribute('y2', '0');
+      xAxis.setAttribute('stroke', '#1e293b'); xAxis.setAttribute('stroke-width', '0.1');
+
+      const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      yAxis.setAttribute('x1', '0'); yAxis.setAttribute('y1', '-11.2');
+      yAxis.setAttribute('x2', '0'); yAxis.setAttribute('y2', '1.2');
+      yAxis.setAttribute('stroke', '#1e293b'); yAxis.setAttribute('stroke-width', '0.1');
+
+      axesGroup.appendChild(xAxis);
+      axesGroup.appendChild(yAxis);
+
+      for (let i = 0; i <= 10; i += 2) {
+        const tickX = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        tickX.setAttribute('x', i); tickX.setAttribute('y', 1.0);
+        tickX.setAttribute('font-size', '0.75'); tickX.setAttribute('text-anchor', 'middle');
+        tickX.setAttribute('fill', '#475569'); tickX.textContent = i;
+        axesGroup.appendChild(tickX);
+
+        if (i !== 0) {
+          const tickY = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          tickY.setAttribute('x', -0.4); tickY.setAttribute('y', -i + 0.25);
+          tickY.setAttribute('font-size', '0.75'); tickY.setAttribute('text-anchor', 'end');
+          tickY.setAttribute('fill', '#475569'); tickY.textContent = i;
+          axesGroup.appendChild(tickY);
+        }
+      }
+      svg.appendChild(axesGroup);
+
+      const lineGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      lineGroup.setAttribute('clip-path', `url(#clip-fq-${plotIndex})`);
+
+      [line1, line2].forEach((l, idx) => {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        const xL = -2, xR = 12;
+        line.setAttribute('x1', xL);
+        line.setAttribute('y1', -(l.m * xL + l.b));
+        line.setAttribute('x2', xR);
+        line.setAttribute('y2', -(l.m * xR + l.b));
+        line.setAttribute('stroke', idx === 0 ? '#1d4ed8' : '#0284c7');
+        line.setAttribute('stroke-width', '0.12');
+        lineGroup.appendChild(line);
+      });
+
+      svg.appendChild(lineGroup);
+    }
+
+    function generateNewProblem() {
+      answered = false;
+      currentProblem = generateProblem();
+      
+      document.getElementById('system-display').textContent = currentProblem.systemStr;
+      document.getElementById('feedback').textContent = '';
+      document.getElementById('feedback').className = 'feedback';
+      document.getElementById('next-btn').style.display = 'none';
+
+      currentProblem.options.forEach((opt, index) => {
+        const card = document.getElementById(`card-${index}`);
+        card.className = 'plot-card';
+        renderPlot(`plot-${index}`, opt.l1, opt.l2, index);
+      });
+    }
+
+    function checkAnswer(selectedIndex) {
+      if (answered) return;
+      answered = true;
+
+      const feedbackEl = document.getElementById('feedback');
+
+      for (let i = 0; i < 3; i++) {
+        const card = document.getElementById(`card-${i}`);
+        card.classList.add('disabled');
+      }
+
+      if (selectedIndex === currentProblem.correctIndex) {
+        document.getElementById(`card-${selectedIndex}`).classList.add('correct');
+        feedbackEl.textContent = '¡Correcto! La región marcada cumple con todas las desigualdades.';
+        feedbackEl.className = 'feedback success';
+      } else {
+        document.getElementById(`card-${selectedIndex}`).classList.add('incorrect');
+        document.getElementById(`card-${currentProblem.correctIndex}`).classList.add('correct');
+        feedbackEl.textContent = 'Incorrecto. Evalúa un punto de prueba (como el origen o un vértice) en el sistema.';
+        feedbackEl.className = 'feedback error';
+      }
+
+      document.getElementById('next-btn').style.display = 'block';
+    }
+
+    generateNewProblem();
+  </script>
+</body>
+</html>

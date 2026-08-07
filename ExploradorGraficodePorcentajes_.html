@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explorador de Porcentajes - Nivel 2</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+            --card-bg: #ffffff;
+            --text-main: #102a43;
+            --text-muted: #627d98;
+            --primary: #334e68;
+            --accent-color: #ff6b6b; /* Tono coral alegre */
+            --accent-hover: #fa5252;
+            --grid-border: #bcccdc;
+            --cell-empty: #ffffff;
+            --shadow: 0 10px 25px rgba(16, 42, 67, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--text-main);
+        }
+
+        .container {
+            background: var(--card-bg);
+            max-width: 960px;
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: #243b53;
+            color: white;
+            padding: 20px 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        header p {
+            font-size: 0.95rem;
+            color: #d9e2ec;
+            margin-top: 5px;
+        }
+
+        .app-body {
+            display: flex;
+            flex-direction: row;
+            padding: 30px;
+            gap: 40px;
+            align-items: flex-start;
+        }
+
+        @media (max-width: 850px) {
+            .app-body {
+                flex-direction: column;
+                align-items: center;
+                gap: 25px;
+                padding: 20px;
+            }
+        }
+
+        .grid-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 4px;
+            background: var(--grid-border);
+            padding: 4px;
+            border-radius: 12px;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .cell {
+            background-color: var(--cell-empty);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.15s ease, transform 0.1s ease;
+            user-select: none;
+        }
+
+        .cell:hover {
+            border: 2px solid #9fb3c8;
+        }
+
+        .cell:active {
+            transform: scale(0.9);
+        }
+
+        .cell.active {
+            background-color: var(--accent-color);
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.1);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            background: #f0f4f8;
+            color: var(--text-main);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--grid-border);
+        }
+
+        button:hover {
+            background: #d9e2ec;
+            transform: translateY(-1px);
+        }
+
+        button.btn-clear:hover {
+            background: #ffe3e3;
+            color: #c92a2a;
+            border-color: #ffa8a8;
+        }
+
+        .math-section {
+            flex: 1.2;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .result-box {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .result-box.highlight {
+            border-color: var(--accent-color);
+            background: #fff5f5;
+        }
+
+        .result-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .big-percent {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--accent-color);
+            line-height: 1;
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .decimal-view {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* NUEVO: Diseño de dos columnas para el recuadro principal */
+        .two-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            align-items: center;
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            .two-columns {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        .math-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 480px) {
+            .math-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .math-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 90px;
+        }
+
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            vertical-align: middle;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-main);
+            padding: 0 4px;
+        }
+
+        .numerator {
+            border-bottom: 2px solid var(--text-main);
+            padding-bottom: 2px;
+        }
+
+        .denominator {
+            padding-top: 2px;
+        }
+
+        .formula-display {
+            font-size: 1.1rem;
+            color: var(--text-main);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .pedagogical-note {
+            background: #ebf8ff;
+            border-left: 4px solid #3182ce;
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.9rem;
+            color: #2b6cb0;
+            line-height: 1.4;
+        }
+        
+        .adelantando-note {
+            margin-top: 15px; 
+            text-align: center; 
+            font-size: 0.95rem; 
+            color: #4a5568; 
+            background: #edf2f7; /* Gris muy suave */
+            padding: 12px; 
+            border-radius: 8px;
+            border: 1px dashed #cbd5e0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Explorador Gráfico de Porcentajes</h1>
+        <p>El porcentaje como una fracción de 100 partes iguales</p>
+    </header>
+
+    <div class="app-body">
+        <!-- Tablero 10x10 -->
+        <div class="grid-section">
+            <div class="grid-container" id="grid">
+                <!-- Se genera dinámicamente con JS -->
+            </div>
+            <div class="controls">
+                <button class="btn-clear" onclick="clearGrid()">Limpiar Todo</button>
+                <button onclick="fillGrid()">Llenar Todo</button>
+                <button onclick="randomGrid()">Aleatorio</button>
+            </div>
+        </div>
+
+        <!-- Panel de Resultados y Matemáticas -->
+        <div class="math-section">
+            
+            <!-- Recuadro Principal (Avanzado: 2 Columnas) -->
+            <div class="result-box highlight two-columns">
+                <!-- Columna 1: Proporción -->
+                <div>
+                    <div class="result-title">Proporción</div>
+                    <div class="big-percent" style="justify-content: center;">
+                        <span id="proportion-val">0</span>
+                        <span class="decimal-view">de 100</span>
+                    </div>
+                </div>
+                <!-- Columna 2: Porcentaje -->
+                <div style="border-left: 2px solid #fed7d7; padding-left: 15px;">
+                    <div class="result-title">Porcentaje Marcado</div>
+                    <div class="big-percent" style="justify-content: center;">
+                        <span id="percent-val">0%</span>
+                        <span class="decimal-view" style="font-size: 1rem;">(= <span id="decimal-val">0,00</span>)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="math-grid">
+                <!-- Fracción Base -->
+                <div class="math-card">
+                    <div class="result-title">Fracción Base</div>
+                    <div>
+                        <div class="fraction">
+                            <span class="numerator" id="frac-num">0</span>
+                            <span class="denominator">100</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fracción Simplificada -->
+                <div class="math-card">
+                    <div class="result-title">Fracción Simplificada</div>
+                    <div>
+                        <div class="fraction" id="simplified-frac">
+                            <span class="numerator">0</span>
+                            <span class="denominator">1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fórmula Detallada (Avanzada) -->
+            <div class="result-box">
+                <div class="result-title">Estructura del Cálculo</div>
+                <div class="formula-display">
+                    <div class="fraction">
+                        <span class="numerator" id="form-num-base">0</span>
+                        <span class="denominator">100</span>
+                    </div>
+                    <span>&times; 100% &nbsp;=</span>
+                    
+                    <div class="fraction" id="form-frac-simp">
+                        <span class="numerator">0</span>
+                        <span class="denominator">1</span>
+                    </div>
+                    <span>&times; 100% &nbsp;=</span>
+                    
+                    <span style="color: var(--accent-color); font-size: 1.4rem;">
+                        <span id="form-res">0</span>%
+                    </span>
+                </div>
+                
+                <!-- Mensaje Pedagógico: Adelantando -->
+                <div class="adelantando-note">
+                    <strong>Adelantando:</strong> Nota que <strong id="adel-num">0</strong> es el <strong id="adel-porc" style="color: var(--accent-color);">0%</strong> de <strong id="adel-den">1</strong>.
+                </div>
+            </div>
+
+            <div class="pedagogical-note" id="note-text">
+                Haz clic o arrastra sobre las casillas para explorar. Cada cuadrito representa exactamente la centésima parte (1%) del total del tablero.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const grid = document.getElementById('grid');
+    const totalCells = 100;
+    let isMouseDown = false;
+    let toggleMode = true;
+
+    function gcd(a, b) {
+        return b === 0 ? a : gcd(b, a % b);
+    }
+
+    function initGrid() {
+        for (let i = 0; i < totalCells; i++) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            
+            cell.addEventListener('mousedown', (e) => {
+                isMouseDown = true;
+                toggleMode = !cell.classList.contains('active');
+                toggleCell(cell, toggleMode);
+                e.preventDefault();
+            });
+
+            cell.addEventListener('mouseover', () => {
+                if (isMouseDown) {
+                    toggleCell(cell, toggleMode);
+                }
+            });
+
+            cell.addEventListener('touchstart', (e) => {
+                isMouseDown = true;
+                toggleMode = !cell.classList.contains('active');
+                toggleCell(cell, toggleMode);
+                e.preventDefault();
+            });
+
+            grid.appendChild(cell);
+        }
+
+        grid.addEventListener('touchmove', (e) => {
+            if (!isMouseDown) return;
+            const touch = e.touches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (element && element.classList.contains('cell')) {
+                toggleCell(element, toggleMode);
+            }
+            e.preventDefault();
+        }, { passive: false });
+    }
+
+    function toggleCell(cell, forceState = null) {
+        if (forceState !== null) {
+            cell.classList.toggle('active', forceState);
+        } else {
+            cell.classList.toggle('active');
+        }
+        updateMath();
+    }
+
+    function updateMath() {
+        const activeCells = document.querySelectorAll('.cell.active').length;
+        
+        // 1. Proporción y Porcentaje
+        document.getElementById('proportion-val').textContent = activeCells;
+        document.getElementById('percent-val').textContent = `${activeCells}%`;
+        let decimalValue = (activeCells / 100).toFixed(2).replace('.', ',');
+        document.getElementById('decimal-val').textContent = decimalValue;
+
+        // 2. Fracción Base
+        document.getElementById('frac-num').textContent = activeCells;
+        document.getElementById('form-num-base').textContent = activeCells;
+        document.getElementById('form-res').textContent = activeCells;
+
+        // 3. Fracción Simplificada y Fórmulas
+        const simpContainer = document.getElementById('simplified-frac');
+        const formSimpContainer = document.getElementById('form-frac-simp');
+        
+        let numSimp = 0;
+        let denSimp = 1;
+
+        if (activeCells === 0) {
+            simpContainer.innerHTML = `<span class="numerator">0</span><span class="denominator">1</span>`;
+            formSimpContainer.innerHTML = `<span class="numerator">0</span><span class="denominator">1</span>`;
+        } else if (activeCells === 100) {
+            simpContainer.innerHTML = `<span style="font-size: 1.5rem; padding: 5px 0;">1 <small style="font-size:0.9rem; font-weight:normal; color:#627d98;">(entero)</small></span>`;
+            formSimpContainer.innerHTML = `<span style="font-size: 1.5rem; padding: 5px 0;">1</span>`;
+            numSimp = 1;
+            denSimp = 1;
+        } else {
+            const divisor = gcd(activeCells, 100);
+            numSimp = activeCells / divisor;
+            denSimp = 100 / divisor;
+            const fracHTML = `<span class="numerator">${numSimp}</span><span class="denominator">${denSimp}</span>`;
+            simpContainer.innerHTML = fracHTML;
+            formSimpContainer.innerHTML = fracHTML;
+        }
+
+        // 4. Actualizar texto de "Adelantando"
+        document.getElementById('adel-num').textContent = numSimp;
+        document.getElementById('adel-porc').textContent = `${activeCells}%`;
+        document.getElementById('adel-den').textContent = denSimp;
+
+        // 5. Nota pedagógica dinámica
+        const note = document.getElementById('note-text');
+        if (activeCells === 0) {
+            note.innerHTML = "El tablero está vacío. Selecciona casillas para representar una parte del entero.";
+        } else if (activeCells === 50) {
+            note.innerHTML = "¡Exactamente la mitad! Has coloreado el <strong>50%</strong>, que equivale a la fracción simplificada <strong>1/2</strong> o al decimal <strong>0,50</strong>.";
+        } else if (activeCells === 25) {
+            note.innerHTML = "Has coloreado la cuarta parte del tablero: <strong>25%</strong>, equivalente a <strong>1/4</strong>.";
+        } else if (activeCells === 100) {
+            note.innerHTML = "¡Tablero completo! El <strong>100%</strong> representa la unidad o el entero en su totalidad.";
+        } else {
+            note.innerHTML = `Estás tomando <strong>${activeCells} partes</strong> de un total de <strong>100 partes iguales</strong>.`;
+        }
+    }
+
+    function clearGrid() {
+        document.querySelectorAll('.cell').forEach(c => c.classList.remove('active'));
+        updateMath();
+    }
+
+    function fillGrid() {
+        document.querySelectorAll('.cell').forEach(c => c.classList.add('active'));
+        updateMath();
+    }
+
+    function randomGrid() {
+        document.querySelectorAll('.cell').forEach(c => {
+            c.classList.toggle('active', Math.random() > 0.5);
+        });
+        updateMath();
+    }
+
+    window.addEventListener('mouseup', () => { isMouseDown = false; });
+    window.addEventListener('touchend', () => { isMouseDown = false; });
+
+    initGrid();
+    updateMath();
+</script>
+</body>
+</html>

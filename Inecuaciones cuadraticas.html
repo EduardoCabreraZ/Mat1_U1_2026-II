@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analizador Pedagógico de Inecuaciones Cuadráticas</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --sol-bg: rgba(56, 189, 248, 0.15);
+      --code-bg: #0b1120;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 2rem 1rem;
+      min-height: 100vh;
+    }
+    .container {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    }
+    h1 { font-size: 1.4rem; margin-bottom: 1rem; color: var(--accent); text-align: center; }
+    .input-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+    input, select, button {
+      font-size: 1rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background-color: var(--bg);
+      color: var(--text);
+      outline: none;
+    }
+    input[type="number"] { width: 85px; text-align: center; }
+    input:focus, select:focus { border-color: var(--accent); }
+    button {
+      background-color: var(--accent);
+      color: var(--bg);
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s;
+    }
+    button:hover { background-color: var(--accent-hover); }
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 220px;
+      margin-top: 1rem;
+      background-color: var(--code-bg);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    canvas { display: block; width: 100%; height: 100%; }
+    .results { display: flex; flex-direction: column; gap: 1rem; }
+    .step-card {
+      background-color: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .step-title {
+      font-weight: bold;
+      color: var(--accent);
+      font-size: 1.05rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.4rem;
+    }
+    .math-expr {
+      font-family: 'Courier New', Courier, monospace;
+      background-color: var(--code-bg);
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      display: inline-block;
+      margin: 0.3rem 0;
+      color: #38bdf8;
+    }
+    .solution-box {
+      background-color: var(--sol-bg);
+      border: 2px solid var(--accent);
+      padding: 1.2rem;
+      border-radius: 8px;
+      font-size: 1.25rem;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="card">
+    <h1>Analizador Pedagógico de Inecuaciones Cuadráticas</h1>
+    
+    <div class="input-group">
+      <input type="number" id="valA" value="1" step="any">
+      <span>x² +</span>
+      <input type="number" id="valB" value="-2" step="any">
+      <span>x +</span>
+      <input type="number" id="valC" value="-3" step="any">
+      <select id="ineqSign">
+        <option value=">">&gt;</option>
+        <option value=">=">&ge;</option>
+        <option value="<">&lt;</option>
+        <option value="<=">&le;</option>
+      </select>
+      <span>0</span>
+    </div>
+
+    <div style="text-align: center;">
+      <button onclick="calcular()">Analizar e Ilustrar</button>
+    </div>
+
+    <div class="canvas-container">
+      <canvas id="graphCanvas"></canvas>
+    </div>
+  </div>
+
+  <div class="card results" id="outputCard" style="display: none;">
+    <div class="solution-box" id="solutionText"></div>
+    <div class="results" id="stepsContainer"></div>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById('graphCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function resizeCanvas() {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+  }
+  window.addEventListener('resize', () => { resizeCanvas(); calcular(); });
+
+  function fmtNum(n) {
+    if (Math.abs(n) < 1e-9) return "0";
+    return Number.isInteger(n) ? n.toString() : n.toFixed(2).replace('.', ',');
+  }
+
+  function fmtPoly(a, b, c) {
+    let res = "";
+    if (a === 1) res += "x²";
+    else if (a === -1) res += "-x²";
+    else res += `${fmtNum(a)}x²`;
+
+    if (b > 0) res += ` + ${fmtNum(b)}x`;
+    else if (b < 0) res += ` - ${fmtNum(-b)}x`;
+
+    if (c > 0) res += ` + ${fmtNum(c)}`;
+    else if (c < 0) res += ` - ${fmtNum(-c)}`;
+
+    return res;
+  }
+
+  function fmtFactor(r) {
+    if (Math.abs(r) < 1e-9) return "x";
+    return r > 0 ? `(x - ${fmtNum(r)})` : `(x + ${fmtNum(-r)})`;
+  }
+
+  function calcular() {
+    resizeCanvas();
+    const a = parseFloat(document.getElementById('valA').value);
+    const b = parseFloat(document.getElementById('valB').value);
+    const c = parseFloat(document.getElementById('valC').value);
+    const sign = document.getElementById('ineqSign').value;
+
+    if (isNaN(a) || isNaN(b) || isNaN(c) || a === 0) {
+      alert("Ingrese valores válidos. El coeficiente 'a' debe ser distinto de 0.");
+      return;
+    }
+
+    const polyStr = fmtPoly(a, b, c);
+    const disc = b * b - 4 * a * c;
+    let roots = [];
+
+    if (disc > 0) {
+      const r1 = (-b - Math.sqrt(disc)) / (2 * a);
+      const r2 = (-b + Math.sqrt(disc)) / (2 * a);
+      roots = [Math.min(r1, r2), Math.max(r1, r2)];
+    } else if (disc === 0) {
+      roots = [-b / (2 * a)];
+    }
+
+    const sol = obtenerSolucion(a, b, c, sign, roots, disc);
+
+    document.getElementById('outputCard').style.display = 'flex';
+    document.getElementById('solutionText').innerHTML = `Conjunto Solución: <span style="color: #38bdf8;">${sol.intervalo}</span>`;
+
+    const container = document.getElementById('stepsContainer');
+    container.innerHTML = "";
+
+    // Paso 1: Discriminante y Análisis de Raíces
+    let htmlPaso1 = `<div class="step-card">
+      <div class="step-title">Paso 1: Cálculo del Discriminante (Δ) y Raíces de la Ecuación</div>
+      <p>Igualamos la expresión a cero para hallar sus puntos críticos: <span class="math-expr">${polyStr} = 0</span></p>
+      <p>Calculamos el discriminante: <span class="math-expr">Δ = b² - 4ac = (${fmtNum(b)})² - 4(${fmtNum(a)})(${fmtNum(c)}) = ${fmtNum(disc)}</span></p>`;
+
+    if (disc > 0) {
+      htmlPaso1 += `<p>Como <strong>Δ > 0</strong>, la expresión tiene <strong>dos soluciones reales distintas</strong>:</p>
+      <p>• <span class="math-expr">x₁ = ${fmtNum(roots[0])}</span></p>
+      <p>• <span class="math-expr">x₂ = ${fmtNum(roots[1])}</span></p></div>`;
+    } else if (disc === 0) {
+      htmlPaso1 += `<p>Como <strong>Δ = 0</strong>, la expresión tiene <strong>una sola solución real (raíz doble)</strong>:</p>
+      <p>• Solución: <span class="math-expr">x = ${fmtNum(roots[0])}</span></p></div>`;
+    } else {
+      htmlPaso1 += `<p>Como <strong>Δ < 0</strong>, la ecuación <strong>no tiene soluciones reales</strong>. La expresión nunca se hace cero para ningún número real.</p></div>`;
+    }
+    container.innerHTML += htmlPaso1;
+
+    // Paso 2: Factorización
+    let htmlPaso2 = `<div class="step-card"><div class="step-title">Paso 2: Factorización de la Expresión</div>`;
+    if (disc > 0) {
+      const pref = a === 1 ? "" : (a === -1 ? "-" : `${fmtNum(a)}·`);
+      htmlPaso2 += `<p>Al tener dos soluciones reales, la expresión se factoriza como producto de dos factores simples:</p>
+      <div class="math-expr">P(x) = ${pref}${fmtFactor(roots[0])}${fmtFactor(roots[1])}</div></div>`;
+    } else if (disc === 0) {
+      const pref = a === 1 ? "" : (a === -1 ? "-" : `${fmtNum(a)}·`);
+      htmlPaso2 += `<p>Al poseer una raíz doble, la expresión se escribe como:</p>
+      <div class="math-expr">P(x) = ${pref}${fmtFactor(roots[0])}²</div></div>`;
+    } else {
+      htmlPaso2 += `<p>Al no tener soluciones reales, la expresión <strong>no se puede factorizar en los números reales</strong>.</p>
+      <p>Su signo depende únicamente del coeficiente principal <span class="math-expr">a = ${fmtNum(a)}</span>. Por lo tanto, la expresión dará siempre un resultado <strong>${a > 0 ? 'positivo (+)' : 'negativo (-)'}</strong> para cualquier valor de x.</p></div>`;
+    }
+    container.innerHTML += htmlPaso2;
+
+    // Paso 3: Análisis de Signos e Intervalos
+    let htmlPaso3 = `<div class="step-card"><div class="step-title">Paso 3: Análisis de Signos en la Recta Numérica</div>`;
+    const isGreater = sign.includes('>');
+    if (disc > 0) {
+      htmlPaso3 += `<p>Las dos soluciones dividen la recta numérica en 3 zonas o intervalos de signos intercalados.</p>
+      <p>Buscamos las zonas con signo <strong>${isGreater ? 'positivo (+)' : 'negativo (-)'}</strong> para cumplir con la desigualdad P(x) ${sign} 0.</p>`;
+    } else if (disc === 0) {
+      htmlPaso3 += `<p>La única solución divide la recta en 2 zonas. Como la raíz es doble, la expresión conserva el mismo signo a ambos lados de ese valor.</p>`;
+    } else {
+      htmlPaso3 += `<p>Al no haber soluciones reales, la recta numérica no se divide en zonas. La expresión conserva el mismo signo en todos los números reales.</p>
+      <p>Dado que el resultado es siempre <strong>${a > 0 ? 'positivo (+)' : 'negativo (-)'}</strong>, lo comparamos con la condición requerida (P(x) ${sign} 0) para obtener el conjunto solución.</p>`;
+    }
+    htmlPaso3 += `</div>`;
+    container.innerHTML += htmlPaso3;
+
+    dibujarRecta(a, b, c, roots, sign, sol);
+  }
+
+  function obtenerSolucion(a, b, c, sign, roots, disc) {
+    const incEq = sign.includes('=');
+    const isGreater = sign.includes('>');
+    
+    const izq = incEq ? '[' : ']' ;
+    const der = incEq ? ']' : '[' ;
+
+    if (disc < 0) {
+      const satisfies = isGreater ? (a > 0) : (a < 0);
+      return { intervalo: satisfies ? "x ∈ ] -∞; +∞ [ (recta horizontal)" : "x ∈ ∅" };
+    }
+
+    if (disc === 0) {
+      const r = fmtNum(roots[0]);
+      if (sign === '>') return { intervalo: a > 0 ? `x ∈ ] -∞; ${r} [ ∪ ] ${r}; +∞ [` : "x ∈ ∅" };
+      if (sign === '>=') return { intervalo: a > 0 ? "x ∈ ] -∞; +∞ [ (recta horizontal)" : `x ∈ {${r}} (un punto)` };
+      if (sign === '<') return { intervalo: a < 0 ? `x ∈ ] -∞; ${r} [ ∪ ] ${r}; +∞ [` : "x ∈ ∅" };
+      if (sign === '<=') return { intervalo: a < 0 ? "x ∈ ] -∞; +∞ [ (recta horizontal)" : `x ∈ {${r}} (un punto)` };
+    }
+
+    const x1 = fmtNum(roots[0]);
+    const x2 = fmtNum(roots[1]);
+
+    if ((a > 0 && isGreater) || (a < 0 && !isGreater)) {
+      return { intervalo: `x ∈ ] -∞; ${x1} ${der} ∪ ${izq} ${x2}; +∞ [` };
+    } else {
+      return { intervalo: `x ∈ ${izq} ${x1}; ${x2} ${der}` };
+    }
+  }
+
+  function dibujarRecta(a, b, c, roots, sign, sol) {
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const centerY = h / 2 + 10;
+    const padding = 80;
+
+    let p1X, p2X;
+    if (roots.length === 2) {
+      p1X = padding + (w - 2 * padding) * 0.33;
+      p2X = padding + (w - 2 * padding) * 0.66;
+    } else if (roots.length === 1) {
+      p1X = w / 2;
+    }
+
+    const isGreater = sign.includes('>');
+    const incEq = sign.includes('=');
+
+    function evalSign(xVal) {
+      const val = a * xVal * xVal + b * xVal + c;
+      return val > 0 ? '+' : (val < 0 ? '-' : '0');
+    }
+
+    if (roots.length === 2) {
+      const r1 = roots[0];
+      const r2 = roots[1];
+      const mid = (r1 + r2) / 2;
+
+      const s1 = evalSign(r1 - 1);
+      const s2 = evalSign(mid);
+      const s3 = evalSign(r2 + 1);
+
+      const isSol1 = isGreater ? (s1 === '+') : (s1 === '-');
+      const isSol2 = isGreater ? (s2 === '+') : (s2 === '-');
+      const isSol3 = isGreater ? (s3 === '+') : (s3 === '-');
+
+      dibujarZona(0, p1X, centerY, isSol1, s1);
+      dibujarZona(p1X, p2X, centerY, isSol2, s2);
+      dibujarZona(p2X, w, centerY, isSol3, s3);
+
+      dibujarPunto(p1X, centerY, fmtNum(r1), incEq && (isSol1 || isSol2));
+      dibujarPunto(p2X, centerY, fmtNum(r2), incEq && (isSol2 || isSol3));
+
+    } else if (roots.length === 1) {
+      const r = roots[0];
+      const s1 = evalSign(r - 1);
+      const s2 = evalSign(r + 1);
+
+      const isSol1 = isGreater ? (s1 === '+') : (s1 === '-');
+      const isSol2 = isGreater ? (s2 === '+') : (s2 === '-');
+
+      dibujarZona(0, p1X, centerY, isSol1, s1);
+      dibujarZona(p1X, w, centerY, isSol2, s2);
+
+      const incPoint = incEq || sol.intervalo.includes('{');
+      dibujarPunto(p1X, centerY, fmtNum(r), incPoint && !sol.intervalo.includes('∪'));
+
+    } else {
+      const s = evalSign(0);
+      const isSol = isGreater ? (s === '+') : (s === '-');
+      dibujarZona(0, w, centerY, isSol, s);
+    }
+
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(15, centerY);
+    ctx.lineTo(w - 15, centerY);
+    ctx.stroke();
+
+    dibujarFlechas(w, centerY);
+  }
+
+  function dibujarZona(x1, x2, y, esSolucion, signo) {
+    if (esSolucion) {
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
+      ctx.fillRect(x1, y - 35, x2 - x1, 70);
+      
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(x1, y);
+      ctx.lineTo(x2, y);
+      ctx.stroke();
+    }
+
+    const midX = (x1 + x2) / 2;
+    ctx.font = 'bold 20px system-ui';
+    ctx.fillStyle = signo === '+' ? '#22c55e' : '#ef4444';
+    ctx.textAlign = 'center';
+    ctx.fillText(`(${signo})`, midX, y - 45);
+  }
+
+  function dibujarPunto(x, y, etiqueta, cerrado) {
+    ctx.fillStyle = '#0b1120';
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 3;
+
+    ctx.beginPath();
+    ctx.arc(x, y, 7, 0, Math.PI * 2);
+    ctx.fill();
+    if (cerrado) {
+      ctx.fillStyle = '#38bdf8';
+      ctx.fill();
+    }
+    ctx.stroke();
+
+    ctx.font = '14px system-ui';
+    ctx.fillStyle = '#f8fafc';
+    ctx.textAlign = 'center';
+    ctx.fillText(etiqueta, x, y + 28);
+  }
+
+  function dibujarFlechas(w, y) {
+    ctx.fillStyle = '#94a3b8';
+    ctx.beginPath();
+    ctx.moveTo(10, y);
+    ctx.lineTo(20, y - 6);
+    ctx.lineTo(20, y + 6);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(w - 10, y);
+    ctx.lineTo(w - 20, y - 6);
+    ctx.lineTo(w - 20, y + 6);
+    ctx.fill();
+
+    ctx.font = '12px system-ui';
+    ctx.fillText('-∞', 25, y + 22);
+    ctx.fillText('+∞', w - 25, y + 22);
+  }
+
+  calcular();
+</script>
+
+</body>
+</html>

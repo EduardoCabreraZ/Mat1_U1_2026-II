@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora y Visualizador de Intervalos</title>
+    <!-- Elaborado por Eduardo Cabrera con asistencia de Gemini -->
+    <!-- ECCZ % Gem -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        input[type=number]::-webkit-inner-spin-button { opacity: 1; }
+        .bracket-select { font-family: serif; font-size: 1.25rem; background-color: #334155; color: white; border-radius: 0.25rem; padding: 0.25rem; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans h-screen flex flex-col items-center py-8">
+
+    <div class="w-full max-w-5xl bg-slate-800 rounded-xl shadow-2xl overflow-hidden border border-slate-700 flex flex-col md:flex-row">
+        
+        <!-- PANEL DE CONTROL -->
+        <div class="w-full md:w-1/3 p-6 bg-slate-800/80 border-r border-slate-700 flex flex-col gap-6">
+            <h2 class="text-xl font-bold text-blue-400 border-b border-slate-600 pb-2">Definir intervalos:</h2>
+            
+            <!-- Intervalo A -->
+            <div class="bg-slate-700 p-4 rounded-lg">
+                <div class="text-sm text-slate-300 font-bold mb-2">Intervalo A (Azul)</div>
+                <div class="flex items-center gap-2 justify-center">
+                    <select id="a-start-bracket" class="bracket-select">
+                        <option value="closed">[</option>
+                        <option value="open">]</option>
+                    </select>
+                    <input type="number" id="a-start" value="-3" class="w-16 bg-slate-900 text-center rounded p-1 border border-slate-600">
+                    <span class="text-slate-400">,</span>
+                    <input type="number" id="a-end" value="2" class="w-16 bg-slate-900 text-center rounded p-1 border border-slate-600">
+                    <select id="a-end-bracket" class="bracket-select">
+                        <option value="open">[</option>
+                        <option value="closed">]</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Intervalo B -->
+            <div class="bg-slate-700 p-4 rounded-lg">
+                <div class="text-sm text-slate-300 font-bold mb-2">Intervalo B (Rojo)</div>
+                <div class="flex items-center gap-2 justify-center">
+                    <select id="b-start-bracket" class="bracket-select">
+                        <option value="open">]</option>
+                        <option value="closed" selected>[</option>
+                    </select>
+                    <input type="number" id="b-start" value="0" class="w-16 bg-slate-900 text-center rounded p-1 border border-slate-600">
+                    <span class="text-slate-400">,</span>
+                    <input type="number" id="b-end" value="5" class="w-16 bg-slate-900 text-center rounded p-1 border border-slate-600">
+                    <select id="b-end-bracket" class="bracket-select">
+                        <option value="closed">]</option>
+                        <option value="open">[</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Operación -->
+            <div class="bg-slate-700 p-4 rounded-lg">
+                <div class="text-sm text-slate-300 font-bold mb-2">Operación</div>
+                <select id="operation" class="w-full bg-slate-900 text-white p-2 rounded border border-slate-600 font-serif text-lg text-center">
+                    <option value="union">A ∪ B (Unión)</option>
+                    <option value="intersection">A ∩ B (Intersección)</option>
+                    <option value="diffAB">A \ B (Diferencia A-B)</option>
+                    <option value="diffBA">B \ A (Diferencia B-A)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- PANEL DE VISUALIZACIÓN -->
+        <div class="w-full md:w-2/3 p-6 flex flex-col justify-between">
+            <div>
+                <h2 class="text-xl font-bold text-green-400 border-b border-slate-700 pb-2 mb-4">Visualización de intervalos:</h2>
+                <canvas id="math-canvas" width="600" height="350" class="w-full bg-slate-900 border border-slate-700 rounded-lg shadow-inner"></canvas>
+            </div>
+            
+            <div class="mt-6 bg-slate-700/50 p-4 rounded border border-slate-600 text-center">
+                <span class="text-sm text-slate-400 block mb-1">Resultado:</span>
+                <span id="result-text" class="text-2xl font-serif text-white tracking-widest">Calculando...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('math-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Elementos del DOM
+        const inputs = [
+            'a-start', 'a-end', 'a-start-bracket', 'a-end-bracket',
+            'b-start', 'b-end', 'b-start-bracket', 'b-end-bracket',
+            'operation'
+        ].map(id => document.getElementById(id));
+        const resultText = document.getElementById('result-text');
+
+        // Escucha de eventos
+        inputs.forEach(el => el.addEventListener('input', updateState));
+        inputs.forEach(el => el.addEventListener('change', updateState));
+
+        // Dimensiones del Canvas
+        const cfg = { padding: 40, baseY: 280, scale: 1 };
+
+        function updateState() {
+            // Leer y ordenar valores
+            let a1 = parseFloat(inputs[0].value);
+            let a2 = parseFloat(inputs[1].value);
+            if(a1 > a2) { let temp = a1; a1 = a2; a2 = temp; }
+            
+            let b1 = parseFloat(inputs[4].value);
+            let b2 = parseFloat(inputs[5].value);
+            if(b1 > b2) { let temp = b1; b1 = b2; b2 = temp; }
+
+            const A = { 
+                start: a1, end: a2, 
+                startClosed: inputs[2].value === 'closed', 
+                endClosed: inputs[3].value === 'closed' 
+            };
+            
+            const B = { 
+                start: b1, end: b2, 
+                startClosed: inputs[6].value === 'closed', 
+                endClosed: inputs[7].value === 'closed' 
+            };
+
+            const op = inputs[8].value;
+            
+            // Autoajustar Escala
+            const minX = Math.min(A.start, B.start) - 2;
+            const maxX = Math.max(A.end, B.end) + 2;
+            cfg.minX = minX; cfg.maxX = maxX;
+
+            // Calcular Resultado Matemático
+            const result = computeOperation(A, B, op);
+            
+            // Renderizar
+            render(A, B, result);
+            printResult(result);
+        }
+
+        // MOTOR MATEMÁTICO DE INTERVALOS
+        function computeOperation(A, B, op) {
+            if (op === 'intersection') {
+                const s = Math.max(A.start, B.start);
+                const e = Math.min(A.end, B.end);
+                if (s > e) return []; // Vacío
+                
+                let sC = (s === A.start ? A.startClosed : true) && (s === B.start ? B.startClosed : true);
+                let eC = (e === A.end ? A.endClosed : true) && (e === B.end ? B.endClosed : true);
+                
+                if (s === e && (!sC || !eC)) return []; // Punto abierto
+                return [{ start: s, end: e, startClosed: sC, endClosed: eC }];
+            } 
+            
+            else if (op === 'union') {
+                // Simplificación geométrica: Retornar los arreglos separados si no se solapan
+                if (A.end < B.start || (A.end === B.start && !A.endClosed && !B.startClosed)) return [A, B];
+                if (B.end < A.start || (B.end === A.start && !B.endClosed && !A.startClosed)) return [A, B];
+                
+                // Si se solapan, fusionar
+                const s = Math.min(A.start, B.start);
+                const e = Math.max(A.end, B.end);
+                let sC = (s === A.start ? A.startClosed : B.startClosed);
+                let eC = (e === A.end ? A.endClosed : B.endClosed);
+                if(A.start === B.start) sC = A.startClosed || B.startClosed;
+                if(A.end === B.end) eC = A.endClosed || B.endClosed;
+                
+                return [{ start: s, end: e, startClosed: sC, endClosed: eC }];
+            }
+            
+            else if (op === 'diffAB' || op === 'diffBA') {
+                const base = op === 'diffAB' ? A : B;
+                const sub = op === 'diffAB' ? B : A;
+                
+                // Si no se tocan, queda intacto
+                if (base.end < sub.start || sub.end < base.start) return [base];
+                
+                let res = [];
+                // Cortar lado izquierdo
+                if (base.start < sub.start) {
+                    res.push({ start: base.start, end: sub.start, startClosed: base.startClosed, endClosed: !sub.startClosed });
+                } else if (base.start === sub.start && base.startClosed && !sub.startClosed) {
+                    res.push({ start: base.start, end: base.start, startClosed: true, endClosed: true });
+                }
+                
+                // Cortar lado derecho
+                if (base.end > sub.end) {
+                    res.push({ start: sub.end, end: base.end, startClosed: !sub.endClosed, endClosed: base.endClosed });
+                } else if (base.end === sub.end && base.endClosed && !sub.endClosed) {
+                    res.push({ start: base.end, end: base.end, startClosed: true, endClosed: true });
+                }
+                return res;
+            }
+            return [];
+        }
+
+        // FORMATO DE TEXTO (Notación Peruana)
+        function formatInterval(inv) {
+            if(inv.start === inv.end && inv.startClosed && inv.endClosed) return `{${inv.start}}`; // Un solo punto
+            const left = inv.startClosed ? '[' : ']';
+            const right = inv.endClosed ? ']' : '[';
+            return `${left}${inv.start}; ${inv.end}${right}`;
+        }
+
+        function printResult(res) {
+            if (res.length === 0) resultText.innerHTML = '∅ (Intervalo Vacío)';
+            else if (res.length === 1) resultText.innerHTML = formatInterval(res[0]);
+            else resultText.innerHTML = `${formatInterval(res[0])} ∪ ${formatInterval(res[1])}`;
+        }
+
+        // MOTOR DE GRÁFICOS (Canvas)
+        function getX(val) {
+            const range = cfg.maxX - cfg.minX;
+            const w = canvas.width - (cfg.padding * 2);
+            return cfg.padding + ((val - cfg.minX) / range) * w;
+        }
+
+        function drawInterval(inv, color, yOffset, label, highlight = false) {
+            const y = cfg.baseY - yOffset;
+            const x1 = getX(inv.start);
+            const x2 = getX(inv.end);
+            const r = 5;
+
+            ctx.lineWidth = highlight ? 6 : 4;
+            ctx.strokeStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(x1, y);
+            ctx.lineTo(x2, y);
+            ctx.stroke();
+
+            // Círculos
+            [ {x: x1, closed: inv.startClosed}, {x: x2, closed: inv.endClosed} ].forEach(pt => {
+                ctx.beginPath();
+                ctx.arc(pt.x, y, r, 0, Math.PI*2);
+                if (pt.closed) {
+                    ctx.fillStyle = color; ctx.fill();
+                } else {
+                    ctx.fillStyle = '#0f172a'; ctx.fill();
+                    ctx.lineWidth = 2; ctx.strokeStyle = color; ctx.stroke();
+                }
+            });
+
+            if (label) {
+                ctx.fillStyle = color;
+                ctx.font = 'bold 16px sans-serif';
+                ctx.fillText(label, x1 - 20, y + 5);
+            }
+        }
+
+        function render(A, B, resArr) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Dibujar Recta Real
+            ctx.strokeStyle = '#64748b'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(cfg.padding, cfg.baseY); ctx.lineTo(canvas.width - cfg.padding, cfg.baseY); ctx.stroke();
+            
+            // Marcas numéricas
+            ctx.fillStyle = '#cbd5e1'; ctx.font = '12px monospace'; ctx.textAlign = 'center';
+            for(let i = Math.floor(cfg.minX); i <= Math.ceil(cfg.maxX); i++) {
+                const x = getX(i);
+                ctx.beginPath(); ctx.moveTo(x, cfg.baseY - 4); ctx.lineTo(x, cfg.baseY + 4); ctx.stroke();
+                ctx.fillText(i, x, cfg.baseY + 20);
+            }
+
+            // Dibujar A y B
+            drawInterval(A, '#3b82f6', 60, 'A'); // Azul
+            drawInterval(B, '#ef4444', 100, 'B'); // Rojo
+
+            // Dibujar Resultado
+            if (resArr.length > 0) {
+                // Sombreado vertical del área resultante
+                ctx.fillStyle = 'rgba(34, 197, 94, 0.15)'; // Verde transparente
+                resArr.forEach(inv => {
+                    const x1 = getX(inv.start); const x2 = getX(inv.end);
+                    ctx.fillRect(x1, 0, x2 - x1, cfg.baseY);
+                    drawInterval(inv, '#22c55e', 20, 'R', true); // Verde Brillante
+                });
+            }
+        }
+
+        // Inicializar
+        updateState();
+    </script>
+</body>
+</html>

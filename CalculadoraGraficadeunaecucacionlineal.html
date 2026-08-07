@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Gráfica de Ecuaciones Lineales en el Plano Real</title>
+    <!-- Cargamos Chart.js para el renderizado del plano cartesiano -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --primary: #1a5276;
+            --accent: #2980b9;
+            --text: #2c3e50;
+            --border: #d6dbdf;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-top: 0;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+            text-align: center;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .equation-builder {
+            font-size: 1.1rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        input[type="number"] {
+            width: 70px;
+            padding: 8px;
+            font-size: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--accent);
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .info-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #ebf5fb;
+            border-left: 5px solid var(--accent);
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Calculadora Gráfica de Ecuaciones Lineales en el Plano Real</h1>
+
+    <div class="input-group">
+        <div class="equation-builder">
+            <input type="number" id="coeffA" value="2" step="any">
+            <span>x +</span>
+            <input type="number" id="coeffB" value="-1" step="any">
+            <span>y =</span>
+            <input type="number" id="coeffC" value="4" step="any">
+        </div>
+        <button onclick="graficarEcuacion()">Graficar</button>
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="planoCartesiano"></canvas>
+    </div>
+
+    <div class="info-panel" id="resultados">
+        <!-- Interpretación y pares ordenados -->
+    </div>
+</div>
+
+<script>
+    let miGrafico = null;
+
+    function formatNumber(num) {
+        return num.toLocaleString('es-PE', { maximumFractionDigits: 2 });
+    }
+
+    function graficarEcuacion() {
+        const A = parseFloat(document.getElementById('coeffA').value);
+        const B = parseFloat(document.getElementById('coeffB').value);
+        const C = parseFloat(document.getElementById('coeffC').value);
+
+        const info = document.getElementById('resultados');
+
+        if (isNaN(A) || isNaN(B) || isNaN(C)) {
+            info.innerHTML = "Por favor, ingrese valores numéricos válidos.";
+            return;
+        }
+
+        if (A === 0 && B === 0) {
+            info.innerHTML = C === 0 
+                ? "<strong>Conjunto solución:</strong> Todo el plano real ℝ² (0 = 0)." 
+                : "<strong>Conjunto solución:</strong> Conjunto vacío ∅ (Inconsistencia: 0 = " + formatNumber(C) + ").";
+            return;
+        }
+
+        // Generación de puntos para la recta en x ∈ [-10, 10]
+        const puntos = [];
+        const xMin = -10, xMax = 10;
+
+        if (B !== 0) {
+            // Recta no vertical: y = (C - Ax) / B
+            const y1 = (C - A * xMin) / B;
+            const y2 = (C - A * xMax) / B;
+            puntos.push({ x: xMin, y: y1 });
+            puntos.push({ x: xMax, y: y2 });
+        } else {
+            // Recta vertical: x = C / A
+            const xFijo = C / A;
+            puntos.push({ x: xFijo, y: -10 });
+            puntos.push({ x: xFijo, y: 10 });
+        }
+
+        // Cálculo de interceptos
+        let interceptosTexto = "<strong>Interceptos con los ejes:</strong><br>";
+        if (A !== 0) {
+            const xInt = C / A;
+            interceptosTexto += `• Eje X: (${formatNumber(xInt)}; 0)<br>`;
+        } else {
+            interceptosTexto += `• Eje X: No hay intercepto (recta horizontal)<br>`;
+        }
+
+        if (B !== 0) {
+            const yInt = C / B;
+            interceptosTexto += `• Eje Y: (0; ${formatNumber(yInt)})`;
+        } else {
+            interceptosTexto += `• Eje Y: No hay intercepto (recta vertical)`;
+        }
+
+        info.innerHTML = interceptosTexto;
+
+        // Renderizado del gráfico
+        const ctx = document.getElementById('planoCartesiano').getContext('2d');
+
+        if (miGrafico) {
+            miGrafico.destroy();
+        }
+
+        miGrafico = new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: `${A}x + (${B})y = ${C}`,
+                    data: puntos,
+                    showLine: true,
+                    borderColor: '#1a5276',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                aspectRatio: 1,
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'center',
+                        min: -10,
+                        max: 10,
+                        title: { display: true, text: 'X' },
+                        grid: { color: '#d6dbdf' }
+                    },
+                    y: {
+                        type: 'linear',
+                        position: 'center',
+                        min: -10,
+                        max: 10,
+                        title: { display: true, text: 'Y' },
+                        grid: { color: '#d6dbdf' }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `(${formatNumber(context.parsed.x)}; ${formatNumber(context.parsed.y)})`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Gráfica inicial al cargar la página
+    window.onload = graficarEcuacion;
+</script>
+
+</body>
+</html>

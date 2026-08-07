@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora Gráfica de Ecuaciones Lineales</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Math.js para parsing algebraico -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+  <!-- Plotly.js para graficar con escala dinámica -->
+  <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+  <!-- MathJax v3 para renderizar notación matemática LaTeX en el HTML -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 flex flex-col justify-center items-center font-sans">
+
+  <div class="max-w-6xl w-full flex flex-col gap-6">
+
+    <!-- TÍTULO PRINCIPAL -->
+    <header class="text-center py-2 border-b border-slate-700/80">
+      <h1 class="text-2xl md:text-3xl font-black text-emerald-400 tracking-wide uppercase">
+        Calculadora Gráfica de Ecuaciones Lineales
+      </h1>
+    </header>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- CHASIS DE LA CALCULADORA -->
+      <div class="lg:col-span-5 bg-slate-800 p-6 rounded-3xl border-4 border-slate-700 shadow-2xl flex flex-col">
+        
+        <div class="flex justify-between items-center mb-3">
+          <span class="text-xs font-bold tracking-widest text-slate-400 uppercase">Panel de Entrada</span>
+          <div class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
+        </div>
+
+        <!-- PANTALLA LCD -->
+        <div class="bg-emerald-950/40 border-2 border-emerald-800/60 p-4 rounded-xl mb-4 font-mono">
+          <label for="eq1" class="text-xs text-emerald-400 block mb-1">Ecuación 1:</label>
+          <input type="text" id="eq1" value="3y - 2 = 5" 
+                 class="w-full bg-slate-950 text-emerald-300 px-3 py-2 rounded-lg border border-emerald-700/50 focus:outline-none focus:border-emerald-400 mb-3 font-semibold">
+          
+          <label for="eq2" class="text-xs text-emerald-400 block mb-1">Ecuación 2 (Opcional):</label>
+          <input type="text" id="eq2" placeholder="ej: x - y = 1" 
+                 class="w-full bg-slate-950 text-emerald-300 px-3 py-2 rounded-lg border border-emerald-700/50 focus:outline-none focus:border-emerald-400 font-semibold">
+        </div>
+
+        <!-- TECLADO COMPLETO -->
+        <div class="grid grid-cols-4 gap-2 mb-4">
+          <!-- Fila 1 -->
+          <button onclick="insertChar('7')" class="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg font-bold">7</button>
+          <button onclick="insertChar('8')" class="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg font-bold">8</button>
+          <button onclick="insertChar('9')" class="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg font-bold">9</button>
+          <button onclick="insertChar('/')" class="bg-slate-700 hover:bg-slate-600 text-emerald-400 p-3 rounded-lg font-bold">/</button>
+
+          <!-- Fila 2 -->
+          <button onclick="insertChar('4')" class="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg font-bold">4</button>
+          <button onclick="insertChar('5')" class="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg font-bold">5</button>
+          <button onclick="insertChar('6')" class="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg font-bold">6</button>
+          <button onclick="insertChar('*')" class="bg-slate-700 hover:bg-slate-600 text-emerald-400 p-3 rounded-lg font-bold">*</button>
+
+          <!-- Fila 3 -->
+          <button onclick="insertChar('1')" class="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg font-bold">1</button>
+          <button onclick="insertChar('2')" class="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg font-bold">2</button>
+          <button onclick="insertChar('3')" class="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg font-bold">3</button>
+          <button onclick="insertChar('-')" class="bg-slate-700 hover:bg-slate-600 text-emerald-400 p-3 rounded-lg font-bold">-</button>
+
+          <!-- Fila 4 -->
+          <button onclick="insertChar('0')" class="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg font-bold">0</button>
+          <button onclick="insertChar('.')" class="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg font-bold">.</button>
+          <button onclick="insertChar('=')" class="bg-slate-700 hover:bg-slate-600 text-emerald-300 p-3 rounded-lg font-bold">=</button>
+          <button onclick="insertChar('+')" class="bg-slate-700 hover:bg-slate-600 text-emerald-400 p-3 rounded-lg font-bold">+</button>
+
+          <!-- Fila 5 -->
+          <button onclick="insertChar('x')" class="bg-slate-700 hover:bg-slate-600 text-amber-300 p-3 rounded-lg font-bold">x</button>
+          <button onclick="insertChar('y')" class="bg-slate-700 hover:bg-slate-600 text-amber-300 p-3 rounded-lg font-bold">y</button>
+          <button onclick="clearInputs()" class="col-span-2 bg-rose-700 hover:bg-rose-600 text-white p-3 rounded-lg font-bold uppercase tracking-wider">AC</button>
+        </div>
+
+        <button onclick="processAndPlot()" 
+                class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black py-3 rounded-xl transition shadow-lg text-lg">
+          CALCULAR Y GRAFICAR
+        </button>
+
+        <!-- RESULTADO NUMÉRICO -->
+        <div id="solution-box" class="mt-4 p-3 bg-slate-950/80 rounded-xl border border-slate-700/80 text-sm font-mono text-emerald-300">
+          Esperando datos...
+        </div>
+      </div>
+
+      <!-- PANTALLA GRÁFICA Y SECCIÓN INFERIOR -->
+      <div class="lg:col-span-7 flex flex-col gap-6 w-full">
+        <div class="bg-slate-800 p-4 rounded-3xl border-4 border-slate-700 shadow-2xl w-full">
+          <div id="plot" class="w-full h-[480px] rounded-xl overflow-hidden bg-slate-950"></div>
+        </div>
+
+        <!-- INSTRUCCIONES DE USO -->
+        <div class="bg-slate-800 p-5 rounded-3xl border-2 border-slate-700 text-xs text-slate-300">
+          <h3 class="font-bold text-amber-400 text-sm mb-2 flex items-center gap-1">
+            <span>📌</span> Instrucciones de uso
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p class="font-semibold text-slate-200 mb-1">1. Ecuación única:</p>
+              <ul class="list-disc pl-4 space-y-1 text-slate-400">
+                <li><code class="text-emerald-300">3y - 2 = 5</code> &rarr; Muestra la gráfica <b class="text-slate-200">(recta horizontal)</b>.</li>
+                <li><code class="text-emerald-300">2x + 4 = 10</code> &rarr; Muestra la gráfica <b class="text-slate-200">(recta vertical)</b>.</li>
+                <li><code class="text-emerald-300">2x + y = 4</code> &rarr; Muestra la recta oblicua y sus cortes con los ejes.</li>
+              </ul>
+            </div>
+            <div>
+              <p class="font-semibold text-slate-200 mb-1">2. Sistema de ecuaciones (2x2):</p>
+              <ul class="list-disc pl-4 space-y-1 text-slate-400">
+                <li>Ingrese ambas ecuaciones en las casillas correspondientes.</li>
+                <li>Si tienen intersección, la solución será <b class="text-slate-200">(un punto)</b> marcado en rojo $(x; y)$.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    let activeInput = document.getElementById('eq1');
+    document.getElementById('eq1').addEventListener('focus', () => activeInput = document.getElementById('eq1'));
+    document.getElementById('eq2').addEventListener('focus', () => activeInput = document.getElementById('eq2'));
+
+    function insertChar(char) {
+      activeInput.value += char;
+      activeInput.focus();
+    }
+
+    function clearInputs() {
+      document.getElementById('eq1').value = '';
+      document.getElementById('eq2').value = '';
+      document.getElementById('solution-box').innerText = 'Esperando datos...';
+      Plotly.purge('plot');
+    }
+
+    function parseEquation(str) {
+      if (!str.includes('=')) throw new Error("Falta el signo '='");
+      
+      let [lhs, rhs] = str.split('=').map(s => s.trim());
+      if (!lhs || !rhs) throw new Error("Ecuación incompleta");
+
+      lhs = lhs.replace(/(\d)([a-zA-Z])/g, '$1*$2');
+      rhs = rhs.replace(/(\d)([a-zA-Z])/g, '$1*$2');
+
+      const expr = math.parse(`(${lhs}) - (${rhs})`);
+      
+      const c = -expr.evaluate({x: 0, y: 0});
+      const a = expr.evaluate({x: 1, y: 0}) + c;
+      const b = expr.evaluate({x: 0, y: 1}) + c;
+
+      return { a, b, c };
+    }
+
+    function formatNumber(num) {
+      return num.toFixed(2).replace('.', ',');
+    }
+
+    function processAndPlot() {
+      const eq1Str = document.getElementById('eq1').value.trim();
+      const eq2Str = document.getElementById('eq2').value.trim();
+      const solBox = document.getElementById('solution-box');
+
+      try {
+        if (!eq1Str) return;
+        const eq1 = parseEquation(eq1Str);
+        let eq2 = eq2Str ? parseEquation(eq2Str) : null;
+
+        let xSol = null, ySol = null;
+        let xMin = -10, xMax = 10, yMin = -10, yMax = 10;
+        let infoText = "";
+
+        // CASO 1: SISTEMA DE DOS ECUACIONES
+        if (eq2) {
+          const det = eq1.a * eq2.b - eq2.a * eq1.b;
+          
+          if (Math.abs(det) < 1e-9) {
+            const detX = eq1.c * eq2.b - eq2.c * eq1.b;
+            const detY = eq1.a * eq2.c - eq2.a * eq1.c;
+            
+            if (Math.abs(detX) < 1e-9 && Math.abs(detY) < 1e-9) {
+              infoText = "<b>Solución:</b> Infinitas soluciones (rectas coincidentes).";
+            } else {
+              infoText = "<span class='text-amber-400'><b>Solución:</b> Sin solución (rectas paralelas).</span>";
+            }
+          } else {
+            xSol = (eq1.c * eq2.b - eq2.c * eq1.b) / det;
+            ySol = (eq1.a * eq2.c - eq2.a * eq1.c) / det;
+            
+            infoText = `<b>Solución (un punto):</b> Intersección en (${formatNumber(xSol)}; ${formatNumber(ySol)})`;
+
+            const margin = Math.max(Math.abs(xSol), Math.abs(ySol), 5) * 1.5;
+            xMin = xSol - margin; xMax = xSol + margin;
+            yMin = ySol - margin; yMax = ySol + margin;
+          }
+        } 
+        // CASO 2: UNA SOLA ECUACIÓN
+        else {
+          if (Math.abs(eq1.a) < 1e-9 && Math.abs(eq1.b) < 1e-9) {
+            infoText = Math.abs(eq1.c) < 1e-9 ? "Todo el plano R² es solución." : "Ecuación inconsistente (sin solución).";
+          } 
+          else if (Math.abs(eq1.a) < 1e-9) {
+            ySol = eq1.c / eq1.b;
+            infoText = `<b>Solución (recta horizontal):</b> y = ${formatNumber(ySol)}`;
+            yMin = ySol - 5; yMax = ySol + 5;
+          } 
+          else if (Math.abs(eq1.b) < 1e-9) {
+            xSol = eq1.c / eq1.a;
+            infoText = `<b>Solución (recta vertical):</b> x = ${formatNumber(xSol)}`;
+            xMin = xSol - 5; xMax = xSol + 5;
+          } 
+          else {
+            const xInt = eq1.c / eq1.a;
+            const yInt = eq1.c / eq1.b;
+            infoText = `<b>Cortes con ejes:</b> X = ${formatNumber(xInt)}; Y = ${formatNumber(yInt)}`;
+            const margin = Math.max(Math.abs(xInt), Math.abs(yInt), 5) * 1.5;
+            xMin = -margin; xMax = margin; yMin = -margin; yMax = margin;
+          }
+        }
+
+        solBox.innerHTML = infoText;
+
+        const traces = [];
+
+        function generateLineTrace(eq, color, name) {
+          if (Math.abs(eq.a) < 1e-9 && Math.abs(eq.b) < 1e-9) return null;
+
+          let xVals = [], yVals = [];
+          if (Math.abs(eq.b) < 1e-9) {
+            const xVal = eq.c / eq.a;
+            xVals = [xVal, xVal];
+            yVals = [yMin * 2, yMax * 2];
+          } else {
+            const step = (xMax - xMin) / 100;
+            for (let x = xMin - Math.abs(xMin); x <= xMax + Math.abs(xMax); x += step) {
+              xVals.push(x);
+              yVals.push((eq.c - eq.a * x) / eq.b);
+            }
+          }
+          return {
+            x: xVals, y: yVals, mode: 'lines', name: name,
+            line: { color: color, width: 3 }
+          };
+        }
+
+        const t1 = generateLineTrace(eq1, '#10b981', 'Ecuación 1');
+        if (t1) traces.push(t1);
+
+        if (eq2) {
+          const t2 = generateLineTrace(eq2, '#f59e0b', 'Ecuación 2');
+          if (t2) traces.push(t2);
+        }
+
+        if (xSol !== null && ySol !== null && eq2) {
+          traces.push({
+            x: [xSol], y: [ySol], mode: 'markers', name: 'Solución (un punto)',
+            marker: { color: '#ef4444', size: 12, symbol: 'circle' }
+          });
+        }
+
+        const layout = {
+          paper_bgcolor: '#0f172a',
+          plot_bgcolor: '#0f172a',
+          margin: { l: 40, r: 20, t: 30, b: 40 },
+          xaxis: { range: [xMin, xMax], zerolinecolor: '#64748b', gridcolor: '#1e293b', color: '#94a3b8' },
+          yaxis: { range: [yMin, yMax], zerolinecolor: '#64748b', gridcolor: '#1e293b', color: '#94a3b8' },
+          legend: { font: { color: '#94a3b8' }, orientation: 'h', y: 1.1 }
+        };
+
+        Plotly.newPlot('plot', traces, layout, { responsive: true, displayModeBar: false });
+
+      } catch (err) {
+        solBox.innerHTML = `<span class="text-rose-400">Error de sintaxis: Verifique la ecuación.</span>`;
+      }
+    }
+
+    processAndPlot();
+  </script>
+</body>
+</html>

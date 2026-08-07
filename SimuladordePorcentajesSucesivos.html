@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Variaciones Porcentuales 1D</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8fafc; 
+        }
+        canvas {
+            background-color: #ffffff;
+            background-image: linear-gradient(#f1f5f9 1px, transparent 1px), linear-gradient(90deg, #f1f5f9 1px, transparent 1px);
+            background-size: 20px 20px;
+            border-radius: 0.75rem;
+        }
+        .history-item {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 text-slate-800 flex flex-col items-center">
+
+    <div class="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Panel Izquierdo: Controles y Lienzo -->
+        <div class="lg:col-span-2 flex flex-col gap-5">
+            <div class="text-center">
+                <h1 class="text-3xl font-bold text-sky-900 mb-2">Simulador de Porcentajes Sucesivos</h1>
+                <p class="text-sky-700">Explora aumentos y descuentos. El área del rectángulo cambia proporcionalmente al total.</p>
+            </div>
+
+            <!-- Contenedor del Canvas -->
+            <div id="canvasContainer" class="relative flex justify-center w-full bg-white p-4 rounded-xl shadow-md border border-slate-200">
+                <canvas id="simulationCanvas" width="700" height="250" class="w-full border border-slate-200 rounded-lg"></canvas>
+            </div>
+
+            <!-- Controles de Configuración T0 -->
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <label class="text-sm font-bold text-sky-800 uppercase tracking-wider">Valor Inicial (T₀):</label>
+                <div class="flex items-center gap-2">
+                    <input type="number" id="inputInitial" value="100" min="1" class="border border-slate-300 rounded-lg px-3 py-1.5 w-24 font-bold text-slate-700 text-center focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200">
+                    <button id="btnSetInitial" class="px-4 py-1.5 bg-sky-100 hover:bg-sky-200 text-sky-700 font-semibold rounded-lg transition-colors border border-sky-200">Establecer Nuevo T₀</button>
+                </div>
+            </div>
+
+            <!-- Botones de Acción Rápida -->
+            <div class="flex flex-wrap justify-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-slate-400 uppercase tracking-wider mr-1">Aumentos</span>
+                    <button class="action-btn px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-lg transition-colors border border-emerald-200" data-action="increase" data-value="10">+10%</button>
+                    <button class="action-btn px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-lg transition-colors border border-emerald-200" data-action="increase" data-value="25">+25%</button>
+                    <button class="action-btn px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-lg transition-colors border border-emerald-200" data-action="increase" data-value="50">+50%</button>
+                </div>
+                
+                <div class="w-px bg-slate-200 mx-1 hidden md:block"></div>
+
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-slate-400 uppercase tracking-wider mr-1">Descuentos</span>
+                    <button class="action-btn px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg transition-colors border border-rose-200" data-action="decrease" data-value="10">-10%</button>
+                    <button class="action-btn px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg transition-colors border border-rose-200" data-action="decrease" data-value="25">-25%</button>
+                    <button class="action-btn px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg transition-colors border border-rose-200" data-action="decrease" data-value="50">-50%</button>
+                </div>
+            </div>
+            
+            <!-- Slider Personalizado -->
+            <div class="flex flex-col gap-3 bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm11 1H6v8l4-2 4 2V6z" clip-rule="evenodd" /></svg>
+                        Escoja la variación porcentual:
+                    </span>
+                    <span id="sliderLabel" class="text-xl font-black text-slate-400">0%</span>
+                </div>
+                <input type="range" id="percentSlider" min="-100" max="200" value="0" step="1" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                <div class="flex justify-between text-xs text-slate-400 font-semibold px-1">
+                    <span>-100% (Pierde todo)</span>
+                    <span>0% (Sin cambio)</span>
+                    <span>+200% (Triple)</span>
+                </div>
+                <div class="flex justify-center mt-2">
+                    <button id="btnApplySlider" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed" disabled>Aplicar Variación</button>
+                </div>
+            </div>
+
+            <div class="flex justify-center">
+                <button id="resetBtn" class="px-6 py-2 bg-slate-700 hover:bg-slate-800 text-white font-semibold rounded-lg transition-colors shadow-md">Reiniciar Todo</button>
+            </div>
+        </div>
+
+        <!-- Panel Derecho: Historial y Matemáticas -->
+        <div class="bg-white p-5 rounded-2xl shadow-lg border border-slate-200 flex flex-col h-full max-h-[800px]">
+            <h2 class="text-xl font-bold text-sky-900 mb-4 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Historial Sucesivo
+            </h2>
+            
+            <div class="bg-sky-50 p-4 rounded-xl border border-sky-100 mb-4 flex flex-col items-center shadow-inner relative">
+                <div class="text-sm text-sky-700 font-bold mb-1 uppercase tracking-wider" id="currentLabel">Total Actual (T₀)</div>
+                <div class="text-4xl font-black text-sky-900" id="currentValueDisplay">100.00</div>
+                <div id="accumulatedBadge" class="mt-2 text-sm font-bold px-2 py-1 rounded hidden transition-all duration-300"></div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto pr-2 space-y-3" id="historyContainer">
+                <!-- Items se inyectan aquí -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const canvasContainer = document.getElementById('canvasContainer');
+        const canvas = document.getElementById('simulationCanvas');
+        const ctx = canvas.getContext('2d');
+        const historyContainer = document.getElementById('historyContainer');
+        const currentValueDisplay = document.getElementById('currentValueDisplay');
+        const currentLabel = document.getElementById('currentLabel');
+        const accumulatedBadge = document.getElementById('accumulatedBadge');
+        const buttons = document.querySelectorAll('.action-btn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        const inputInitial = document.getElementById('inputInitial');
+        const btnSetInitial = document.getElementById('btnSetInitial');
+        const percentSlider = document.getElementById('percentSlider');
+        const sliderLabel = document.getElementById('sliderLabel');
+        const btnApplySlider = document.getElementById('btnApplySlider');
+
+        let INITIAL_VALUE = 100;
+        let currentScale = 1; 
+        const BAR_HEIGHT = 60;
+        const START_X = 50; // Margen izquierdo
+        const START_Y = canvas.height / 2 - BAR_HEIGHT / 2;
+        
+        let currentValue = INITIAL_VALUE;
+        let previewValue = null;
+        let previewType = null;
+        let previewPercentage = null; // NUEVA VARIABLE PARA GUARDAR EL % EN PREVIEW
+        let history = [];
+
+        // Función para adaptar el tamaño del canvas al celular
+        function resizeCanvas() {
+            // Obtener el ancho del contenedor restando el padding (32px = 16px por lado)
+            const containerWidth = canvasContainer.clientWidth - 32;
+            
+            // Limitamos a un máximo de 700px, pero en celulares será menor (ej: 320px)
+            const newWidth = Math.min(containerWidth, 700);
+            
+            // Solo redibujamos si el tamaño realmente cambió
+            if (canvas.width !== newWidth) {
+                canvas.width = newWidth;
+                draw();
+            }
+        }
+
+        // Escuchar cuando el usuario voltea el celular o cambia el tamaño de ventana
+        window.addEventListener('resize', resizeCanvas);
+
+        // Inicializa la app
+        function init(newValue = null) {
+            if (newValue !== null && !isNaN(newValue) && newValue > 0) {
+                INITIAL_VALUE = newValue;
+                inputInitial.value = newValue;
+            }
+            
+            currentValue = INITIAL_VALUE;
+            previewValue = null;
+            previewType = null;
+            previewPercentage = null;
+            
+            percentSlider.value = 0;
+            updateSliderLabel();
+
+            history = [{
+                step: 0,
+                operation: 'Inicio',
+                percentage: null,
+                factor: null,
+                value: INITIAL_VALUE
+            }];
+            
+            updateHistoryUI();
+            resizeCanvas(); // Ajustar el tamaño inicial antes de dibujar
+        }
+
+        // Calcula el ancho visual multiplicando por la escala dinámica
+        function getWidthForValue(val) {
+            return Math.max(0, val) * currentScale;
+        }
+
+        function draw() {
+            const allValues = history.map(h => h.value);
+            if (previewValue !== null) allValues.push(previewValue);
+            
+            // maxValToDraw será el valor más grande que necesitamos mostrar
+            const maxValToDraw = Math.max(...allValues, INITIAL_VALUE, 10);
+            
+            const availableWidth = canvas.width - START_X - 60; 
+            
+            // NUEVA LÓGICA DE ESCALA: El T0 siempre ocupará el 40% del canvas visualmente.
+            const idealScale = (canvas.width * 0.4) / INITIAL_VALUE;
+            // Escala de rescate: Solo si el valor crece demasiado y se sale de la pantalla
+            const fitScale = availableWidth / maxValToDraw;
+            
+            // Aplicamos la escala ideal. Si se sale, aplicamos la de rescate (la menor de ambas).
+            currentScale = Math.min(idealScale, fitScale);
+
+            // Limpiar lienzo
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Dibujar línea de Eje Base Horizontal y Escala Porcentual
+            ctx.beginPath();
+            ctx.moveTo(START_X - 10, START_Y + BAR_HEIGHT);
+            ctx.lineTo(canvas.width - 20, START_Y + BAR_HEIGHT);
+            ctx.strokeStyle = '#cbd5e1'; // slate-300
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Dibujar marcas de porcentaje en el eje horizontal
+            ctx.fillStyle = '#64748b'; // slate-500
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            
+            // Calculamos las marcas porcentuales razonables (ej: cada 25% o 50%)
+            // Si la escala es muy chica, marcamos de 100 en 100. Si no, de 50 en 50.
+            let percentStep = 50; 
+            if (currentScale < 0.5) percentStep = 100;
+            if (currentScale < 0.2) percentStep = 200;
+
+            // Dibujar marca del 0%
+            ctx.beginPath();
+            ctx.moveTo(START_X, START_Y + BAR_HEIGHT);
+            ctx.lineTo(START_X, START_Y + BAR_HEIGHT + 15);
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.fillText("0%", START_X, START_Y + BAR_HEIGHT + 25);
+
+            // Dibujar el resto de marcas hasta llenar el ancho disponible
+            const maxVisiblePercent = (availableWidth / getWidthForValue(INITIAL_VALUE)) * 100;
+            
+            for(let p = percentStep; p <= maxVisiblePercent; p += percentStep) {
+                // El valor numérico real correspondiente a ese porcentaje
+                const valAtPercent = (p / 100) * INITIAL_VALUE;
+                const xPos = START_X + getWidthForValue(valAtPercent);
+                
+                // Marca (pequeña línea vertical)
+                ctx.beginPath();
+                ctx.moveTo(xPos, START_Y + BAR_HEIGHT);
+                ctx.lineTo(xPos, START_Y + BAR_HEIGHT + 8); // Marca corta
+                ctx.strokeStyle = '#e2e8f0'; // slate-200
+                ctx.stroke();
+                
+                // Texto (excepto el 100% que lo hacemos más notorio luego)
+                if (p !== 100) {
+                     ctx.fillStyle = '#94a3b8'; // color más claro
+                     ctx.fillText(`${p}%`, xPos, START_Y + BAR_HEIGHT + 20);
+                }
+            }
+
+            // Marca especial y notoria para el 100% (Valor Inicial)
+            const xPos100 = START_X + getWidthForValue(INITIAL_VALUE);
+            ctx.beginPath();
+            ctx.moveTo(xPos100, START_Y + BAR_HEIGHT);
+            ctx.lineTo(xPos100, START_Y + BAR_HEIGHT + 15);
+            ctx.strokeStyle = '#94a3b8'; // slate-400
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#334155'; // slate-700
+            ctx.font = 'bold 12px Arial';
+            ctx.fillText("100%", xPos100, START_Y + BAR_HEIGHT + 28);
+
+
+            // 2. Eje vertical 0 (Ya lo integré en el paso 1)
+            // ctx.beginPath(); ... (eliminamos el eje vertical redundante) ...
+
+            // 3. Dibujar "Rastros" (Líneas de los valores históricos)
+            history.forEach((item, index) => {
+                const w = getWidthForValue(item.value);
+                const isCurrentState = index === history.length - 1;
+                
+                ctx.beginPath();
+                ctx.moveTo(START_X + w, START_Y - 10);
+                ctx.lineTo(START_X + w, START_Y + BAR_HEIGHT + 10);
+                
+                if (isCurrentState && previewValue === null) {
+                    ctx.strokeStyle = '#0ea5e9'; // sky-500 para el actual
+                    ctx.setLineDash([]);
+                } else {
+                    ctx.strokeStyle = 'rgba(148, 163, 184, 0.7)'; // slate-400
+                    ctx.setLineDash([4, 4]);
+                }
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.setLineDash([]); // Reset
+                
+                // Etiqueta del rastro (T0, T1...)
+                ctx.fillStyle = isCurrentState && previewValue === null ? '#0284c7' : '#64748b';
+                ctx.font = 'bold 12px Arial';
+                ctx.fillText(`T${item.step}`, START_X + w, START_Y - 15);
+            });
+
+            // 4. Dibujar Barra del Valor Actual
+            const currentWidth = getWidthForValue(currentValue);
+            
+            // Degradado de la barra principal
+            const gradient = ctx.createLinearGradient(START_X, 0, START_X + currentWidth, 0);
+            gradient.addColorStop(0, '#38bdf8'); // sky-400
+            gradient.addColorStop(1, '#0284c7'); // sky-600
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(START_X, START_Y, currentWidth, BAR_HEIGHT);
+            ctx.strokeStyle = '#0369a1'; // sky-700
+            ctx.lineWidth = 2;
+            ctx.strokeRect(START_X, START_Y, currentWidth, BAR_HEIGHT);
+
+            // Texto dentro de la barra
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 18px "Segoe UI", Arial';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            if (currentWidth > 60) {
+                ctx.fillText(currentValue.toFixed(2), START_X + currentWidth - 10, START_Y + BAR_HEIGHT / 2);
+            }
+
+            // 5. Dibujar Previsualización (Aumento o Descuento)
+            if (previewValue !== null && previewValue !== currentValue) {
+                const previewWidth = getWidthForValue(previewValue);
+                const diffValue = Math.abs(previewValue - currentValue);
+                
+                if (previewType === 'increase') {
+                    // AUMENTO: Dibuja un bloque verde extra a la derecha
+                    const extraWidth = previewWidth - currentWidth;
+                    ctx.fillStyle = 'rgba(16, 185, 129, 0.25)'; // emerald-500 transparente
+                    ctx.fillRect(START_X + currentWidth, START_Y, extraWidth, BAR_HEIGHT);
+                    
+                    ctx.strokeStyle = '#10b981'; 
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]);
+                    ctx.strokeRect(START_X + currentWidth, START_Y, extraWidth, BAR_HEIGHT);
+                    
+                    // Texto del valor sumado (+X.XX)
+                    ctx.fillStyle = '#059669'; // emerald-600
+                    ctx.textAlign = 'center';
+                    if (extraWidth > 50) {
+                        ctx.fillText(`+${previewPercentage}% (+${diffValue.toFixed(2)})`, START_X + currentWidth + extraWidth/2, START_Y + BAR_HEIGHT/2);
+                    } else {
+                        // Si no cabe, lo pone ABAJO para no chocar con las etiquetas de los rastros T
+                        ctx.fillText(`+${previewPercentage}% (+${diffValue.toFixed(2)})`, START_X + currentWidth + extraWidth/2, START_Y + BAR_HEIGHT + 20);
+                    }
+
+                } else {
+                    // DESCUENTO: Dibuja un bloque rojo sobre la parte que se pierde
+                    const lostWidth = currentWidth - previewWidth;
+                    ctx.fillStyle = 'rgba(244, 63, 94, 0.35)'; // rose-500 transparente
+                    ctx.fillRect(START_X + previewWidth, START_Y, lostWidth, BAR_HEIGHT);
+                    
+                    ctx.strokeStyle = '#f43f5e'; 
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]);
+                    ctx.strokeRect(START_X + previewWidth, START_Y, lostWidth, BAR_HEIGHT);
+
+                    // Texto del valor restado (-X.XX)
+                    ctx.fillStyle = '#be123c'; // rose-700
+                    ctx.textAlign = 'center';
+                    if (lostWidth > 50) {
+                        ctx.fillText(`-${previewPercentage}% (-${diffValue.toFixed(2)})`, START_X + previewWidth + lostWidth/2, START_Y + BAR_HEIGHT/2);
+                    } else {
+                        // Si no cabe, lo pone ABAJO
+                        ctx.fillText(`-${previewPercentage}% (-${diffValue.toFixed(2)})`, START_X + previewWidth + lostWidth/2, START_Y + BAR_HEIGHT + 20);
+                    }
+                }
+                ctx.setLineDash([]); // Reset
+
+                // Línea vertical que marca el próximo T
+                ctx.beginPath();
+                ctx.moveTo(START_X + previewWidth, START_Y - 25);
+                ctx.lineTo(START_X + previewWidth, START_Y + BAR_HEIGHT + 10);
+                ctx.strokeStyle = previewType === 'increase' ? '#10b981' : '#f43f5e';
+                ctx.setLineDash([4, 2]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                // Etiqueta del "Próximo T" un poco más arriba para evitar superposiciones
+                ctx.fillStyle = previewType === 'increase' ? '#10b981' : '#f43f5e';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`Proyección`, START_X + previewWidth, START_Y - 30);
+            }
+        }
+
+        // Actualiza el panel lateral derecho con el historial matemático
+        function updateHistoryUI() {
+            currentValueDisplay.textContent = currentValue.toFixed(2);
+            const currentStepIndex = history.length - 1;
+            currentLabel.innerHTML = `Total Actual (T<sub class="text-[10px]">${currentStepIndex}</sub>)`;
+            
+            // Calcular y mostrar variación acumulada total
+            if (currentStepIndex > 0) {
+                const totalPercentChange = ((currentValue - INITIAL_VALUE) / INITIAL_VALUE) * 100;
+                accumulatedBadge.classList.remove('hidden');
+                
+                if (totalPercentChange > 0) {
+                    accumulatedBadge.className = 'mt-2 text-[13px] font-bold px-3 py-1 rounded bg-emerald-100 text-emerald-700 border border-emerald-200';
+                    accumulatedBadge.textContent = `Variación porcentual neta: +${totalPercentChange.toFixed(2)}%`;
+                } else if (totalPercentChange < 0) {
+                    accumulatedBadge.className = 'mt-2 text-[13px] font-bold px-3 py-1 rounded bg-rose-100 text-rose-700 border border-rose-200';
+                    accumulatedBadge.textContent = `Variación porcentual neta: ${totalPercentChange.toFixed(2)}%`;
+                } else {
+                    accumulatedBadge.className = 'mt-2 text-[13px] font-bold px-3 py-1 rounded bg-slate-200 text-slate-700 border border-slate-300';
+                    accumulatedBadge.textContent = `Variación porcentual neta: 0.00%`;
+                }
+            } else {
+                accumulatedBadge.classList.add('hidden');
+            }
+
+            historyContainer.innerHTML = '';
+            
+            [...history].reverse().forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'history-item p-4 border-l-4 bg-slate-50 shadow-sm rounded-r-xl border border-slate-100 relative mb-3';
+                
+                const badge = document.createElement('div');
+                badge.className = 'absolute top-2 right-2 text-xs font-black text-slate-300';
+                badge.innerHTML = `T<sub>${item.step}</sub>`;
+                div.appendChild(badge);
+
+                if (item.step === 0) {
+                    div.classList.add('border-l-slate-400');
+                    div.innerHTML += `
+                        <div class="text-xs text-slate-500 font-bold mb-1 uppercase">Paso Inicial</div>
+                        <div class="text-slate-700">Total Inicial (T<sub class="text-[10px]">0</sub>) = <strong class="text-lg">${item.value.toFixed(2)}</strong></div>
+                    `;
+                } else {
+                    const isIncrease = item.operation === 'increase';
+                    div.classList.add(isIncrease ? 'border-l-emerald-500' : 'border-l-rose-500');
+                    
+                    const sign = isIncrease ? '+' : '-';
+                    const colorText = isIncrease ? 'text-emerald-700' : 'text-rose-700';
+                    const bgBadge = isIncrease ? 'bg-emerald-100' : 'bg-rose-100';
+                    const labelOperation = isIncrease ? 'Aumento' : 'Descuento';
+                    
+                    const prevT = `T<sub class="text-[10px]">${item.step - 1}</sub>`;
+                    const currentT = `T<sub class="text-[10px]">${item.step}</sub>`;
+                    
+                    div.innerHTML += `
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs text-slate-500 font-bold uppercase tracking-wide">${labelOperation}</span>
+                            <span class="${bgBadge} ${colorText} font-bold px-2 py-1 rounded text-sm">${sign}${Math.abs(item.percentage)}%</span>
+                        </div>
+                        
+                        <!-- NUEVA LÓGICA PEDAGÓGICA: Explicar de dónde sale el factor -->
+                        <div class="text-[13px] text-slate-600 mb-2 pl-2 border-l-2 ${isIncrease ? 'border-emerald-300' : 'border-rose-300'}">
+                            <p>El total anterior (${prevT}) siempre es el <strong>100%</strong>.</p>
+                            <p>Nuevo % = 100% ${sign} ${Math.abs(item.percentage)}% = <strong>${100 + item.percentage}%</strong></p>
+                        </div>
+
+                        <!-- Ecuación Ti = factor * T(i-1) -->
+                        <div class="bg-white border border-slate-200 py-1.5 px-3 rounded text-[15px] font-mono text-slate-800 shadow-inner text-center flex flex-col items-center justify-center gap-1 mb-2">
+                            <div class="text-xs text-slate-400 font-sans">Aplicando factor decimal (${100 + item.percentage}% / 100):</div>
+                            <div>
+                                <span>${currentT} = </span>
+                                <span class="font-bold text-sky-700">${item.factor.toFixed(2)}</span>
+                                <span>×</span>
+                                <span>${prevT}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center mt-1 border-t border-slate-200 pt-2">
+                            <span class="text-slate-500 text-sm">Resultado:</span>
+                            <span class="text-slate-800 font-bold text-lg">${item.value.toFixed(2)}</span>
+                        </div>
+                    `;
+                }
+                historyContainer.appendChild(div);
+            });
+        }
+
+        // Función centralizada para aplicar matemáticas
+        function applyVariation(action, percentage) {
+            const factor = action === 'increase' ? (1 + percentage / 100) : (1 - percentage / 100);
+            currentValue = currentValue * factor;
+            previewValue = null; 
+            
+            history.push({
+                step: history.length,
+                operation: action,
+                percentage: action === 'increase' ? percentage : -percentage,
+                factor: factor,
+                value: currentValue
+            });
+            updateHistoryUI();
+        }
+
+        // Lógica Botones Rápidos
+        buttons.forEach(btn => {
+            btn.addEventListener('mouseenter', (e) => {
+                const action = e.target.dataset.action;
+                const percentage = parseFloat(e.target.dataset.value);
+                previewType = action;
+                previewPercentage = percentage; // Guardamos el % para mostrarlo en el canvas
+                
+                const factor = action === 'increase' ? (1 + percentage / 100) : (1 - percentage / 100);
+                previewValue = currentValue * factor;
+                draw();
+            });
+
+            btn.addEventListener('mouseleave', () => {
+                previewValue = null;
+                previewType = null;
+                previewPercentage = null;
+                draw();
+            });
+
+            btn.addEventListener('click', (e) => {
+                const action = e.target.dataset.action;
+                const percentage = parseFloat(e.target.dataset.value);
+                applyVariation(action, percentage);
+
+                // Mantener hover visualmente
+                const newEvent = new MouseEvent('mouseenter');
+                btn.dispatchEvent(newEvent);
+            });
+        });
+
+        // Configurar T0
+        btnSetInitial.addEventListener('click', () => {
+            const val = parseFloat(inputInitial.value);
+            if (!isNaN(val) && val > 0) init(val);
+        });
+
+        // Lógica del Slider
+        function updateSliderLabel() {
+            const val = parseFloat(percentSlider.value);
+            btnApplySlider.disabled = (val === 0);
+            
+            if (val > 0) {
+                sliderLabel.textContent = `+${val}% (Aumento)`;
+                sliderLabel.className = 'text-lg font-black text-emerald-600';
+            } else if (val < 0) {
+                sliderLabel.textContent = `${val}% (Descuento)`;
+                sliderLabel.className = 'text-lg font-black text-rose-600';
+            } else {
+                sliderLabel.textContent = `0% (Sin cambio)`;
+                sliderLabel.className = 'text-lg font-black text-slate-400';
+            }
+        }
+
+        percentSlider.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            updateSliderLabel();
+            
+            if (val === 0) {
+                previewValue = null;
+                previewType = null;
+                previewPercentage = null;
+            } else {
+                previewType = val > 0 ? 'increase' : 'decrease';
+                previewPercentage = Math.abs(val);
+                const factor = (100 + val) / 100;
+                previewValue = currentValue * factor;
+            }
+            draw();
+        });
+
+        btnApplySlider.addEventListener('click', () => {
+            const val = parseFloat(percentSlider.value);
+            if (val !== 0) {
+                const action = val > 0 ? 'increase' : 'decrease';
+                applyVariation(action, Math.abs(val));
+                
+                percentSlider.value = 0;
+                updateSliderLabel();
+                previewValue = null;
+                draw();
+            }
+        });
+
+        resetBtn.addEventListener('click', () => init(parseFloat(inputInitial.value) || 100));
+
+        // Arrancar
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magnate de los Negocios I: Fundamentos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body { font-family: 'Inter', 'Segoe UI', sans-serif; }
+        @keyframes pulse-soft {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        .animate-pulse-soft { animation: pulse-soft 2s infinite ease-in-out; }
+        .glass-panel { 
+            background: rgba(15, 23, 42, 0.85); 
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-center p-4 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+
+    <!-- Elaborado por Eduardo Cabrera con asistencia de Gemini -->
+    <!-- ECCZ % Gem -->
+
+    <div id="screen-intro" class="max-w-2xl w-full glass-panel rounded-2xl shadow-2xl p-8 text-center transition-all duration-300 relative">
+        <button onclick="toggleMute()" class="absolute top-4 right-4 text-slate-400 hover:text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+            <i id="audio-icon" class="fa-solid fa-volume-high"></i>
+        </button>
+
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-600/20 text-blue-400 rounded-full mb-6 shadow-inner border border-blue-500/30">
+            <i class="fa-solid fa-cash-register text-4xl"></i>
+        </div>
+        <h1 class="text-3xl md:text-4xl font-black tracking-tight text-white mb-3">
+            Magnate de los Negocios I
+        </h1>
+        <p class="text-blue-400 font-semibold mb-8 uppercase tracking-widest text-sm">
+            Fundamentos: Ingreso, Costo y Utilidad
+        </p>
+
+        <div class="bg-slate-900/80 border border-slate-700/60 rounded-xl p-6 text-left mb-8 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-200 flex items-center gap-2 border-b border-slate-800 pb-3 mb-4">
+                <i class="fa-solid fa-clipboard-list text-amber-400"></i> Tu Misión Financiera:
+            </h2>
+            <ul class="space-y-4 text-slate-300 text-sm leading-relaxed">
+                <li class="flex items-start gap-3">
+                    <span class="text-blue-400 font-bold mt-0.5"><i class="fa-solid fa-building"></i></span>
+                    <span><strong>Análisis:</strong> Evalúa los datos financieros. ¡Cuidado, cambiarán de posición para poner a prueba tu atención! Identifica Cantidad (q), Precio (p), Costo Fijo (CF) y Costo Unitario (cᵤ).</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="text-emerald-400 font-bold mt-0.5"><i class="fa-solid fa-calculator"></i></span>
+                    <span><strong>Secuencia:</strong> Para cada caso calcularás paso a paso: 1º Ingreso, 2º Costo Total, 3º Utilidad. <strong class="text-emerald-300">Para que tu respuesta sea válida debes decir la justificación correcta en voz alta.</strong></span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="text-rose-400 font-bold mt-0.5"><i class="fa-solid fa-heart"></i></span>
+                    <span><strong>Riesgo:</strong> Tienes <strong>2 vidas</strong> para demostrar tu habilidad. Un error de cálculo te restará una vida.</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <button onclick="startGame()" class="w-full sm:w-auto px-10 py-4 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-lg rounded-xl shadow-lg transition-all transform hover:-translate-y-1">
+                <i class="fa-solid fa-play mr-2"></i> INICIAR NEGOCIO
+            </button>
+            <button onclick="showLeaderboard()" class="w-full sm:w-auto px-6 py-4 bg-slate-800 hover:bg-slate-700 text-white font-bold text-lg rounded-xl shadow-lg transition-all border border-slate-600">
+                <i class="fa-solid fa-ranking-star text-amber-400 mr-2"></i> FORBES TOP 5
+            </button>
+        </div>
+    </div>
+
+    <div id="screen-game" class="max-w-5xl w-full glass-panel rounded-2xl shadow-2xl overflow-hidden hidden flex-col border border-slate-700/50">
+        
+        <!-- Top Bar -->
+        <div class="bg-slate-900/80 px-4 md:px-6 py-4 border-b border-slate-700/50 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3 md:gap-5">
+                <span class="px-3 py-1 bg-blue-600/20 border border-blue-500/30 text-blue-400 font-bold text-xs uppercase tracking-wider rounded-md">
+                    Fase de Entrenamiento
+                </span>
+                <div id="lives-container" class="flex gap-1.5 text-rose-500 text-lg drop-shadow-md">
+                    <!-- JS: 2 vidas -->
+                </div>
+            </div>
+
+            <div class="text-2xl font-black tracking-widest bg-slate-950 px-4 py-1.5 rounded-lg border border-slate-800 font-mono text-amber-400 flex items-center gap-3">
+                <i class="fa-regular fa-clock text-base text-slate-500"></i>
+                <span id="timer-display">01:00</span>
+            </div>
+
+            <div class="text-sm font-semibold text-slate-400 flex flex-col items-end">
+                <span class="text-[10px] uppercase tracking-widest mb-0.5">Capital Generado</span>
+                <span id="score-display" class="text-emerald-400 font-bold text-xl font-mono leading-none">$ 0</span>
+            </div>
+        </div>
+
+        <!-- Layout 2 Columnas -->
+        <div class="p-4 md:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1">
+            
+            <!-- Columna Izquierda: Caso y Datos -->
+            <div class="flex flex-col gap-4">
+                
+                <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-5 shadow-inner">
+                    <h2 class="text-sm font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2 mb-3">
+                        <i class="fa-solid fa-file-contract"></i> Reporte del Mes
+                    </h2>
+                    <p id="business-case" class="text-slate-200 text-sm md:text-base leading-relaxed">
+                        <!-- Generado por JS -->
+                    </p>
+                </div>
+
+                <!-- Indicadores Visuales Aleatorizados -->
+                <div id="financial-data" class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <!-- Las cajas se inyectan dinámicamente para cambiar de posición -->
+                </div>
+
+                <!-- Panel de Decisión (Botones en 1 Fila) -->
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 mt-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 id="question-text" class="font-bold text-slate-200 text-lg">1. Calcula el Ingreso Total</h3>
+                        <span id="step-badge" class="px-2 py-1 bg-slate-700 text-slate-300 text-xs font-bold rounded">Paso 1/3</span>
+                    </div>
+                    <!-- GRID DE 3 COLUMNAS -->
+                    <div id="options-container" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <!-- Alternativas JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Gráfico Canvas -->
+            <div class="bg-slate-900 border border-slate-700 rounded-xl p-4 flex flex-col shadow-inner relative">
+                <div class="flex justify-between items-center mb-2 px-2">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Flujo de Caja</span>
+                    <span id="chart-status" class="text-xs font-bold bg-slate-800 text-slate-400 px-2 py-1 rounded">Construyendo...</span>
+                </div>
+                
+                <div class="flex-1 w-full bg-slate-950 rounded-lg relative overflow-hidden min-h-[300px]">
+                    <canvas id="barCanvas" class="w-full h-full absolute inset-0"></canvas>
+                </div>
+
+                <!-- Feedback Visual (Fórmula) -->
+                <div id="feedback-msg" class="mt-4 text-center font-mono text-sm bg-slate-800 p-3 rounded-lg border border-slate-700 opacity-0 transition-opacity duration-300">
+                    <!-- Ecuación resuelta JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-victory" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-slate-800 border-2 border-blue-500/50 rounded-2xl max-w-md w-full p-8 text-center shadow-[0_0_40px_rgba(59,130,246,0.2)] animate-pulse-soft">
+            <div class="w-20 h-20 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner">
+                <i class="fa-solid fa-award"></i>
+            </div>
+            <h2 class="text-3xl font-extrabold text-white mb-2">¡Fundamentos Dominados!</h2>
+            <p class="text-slate-300 mb-6 text-sm">Has demostrado un control total sobre el Ingreso, Costo y Utilidad en todas tus rondas.</p>
+            
+            <div class="bg-slate-900/80 p-5 rounded-xl mb-8 border border-slate-700">
+                <span class="text-xs text-slate-500 font-bold block mb-2 tracking-widest uppercase">Capital Final Generado</span>
+                <span id="final-score-val" class="text-5xl font-black text-emerald-400 font-mono drop-shadow-md">$0</span>
+            </div>
+
+            <div class="mb-8 text-left bg-slate-700/30 p-4 rounded-xl border border-slate-600/50">
+                <label class="block text-xs font-bold text-blue-300 uppercase mb-3"><i class="fa-solid fa-signature mr-1"></i> Firma del Estudiante (Nombre):</label>
+                <input type="text" id="player-name" maxlength="12" placeholder="Ej: WARREN B." 
+                       class="w-full bg-slate-900 border-2 border-slate-600 rounded-lg px-4 py-3 text-white font-mono text-center uppercase tracking-widest text-lg focus:outline-none focus:border-blue-500 transition-colors">
+            </div>
+
+            <button onclick="saveScore()" class="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-lg rounded-xl shadow-lg transition-all focus:outline-none">
+                <i class="fa-solid fa-save mr-2"></i> Registrar Récord
+            </button>
+        </div>
+    </div>
+
+    <!-- PANTALLA 4: LEADERBOARD -->
+    <div id="modal-leaderboard" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-slate-800 border border-slate-600 rounded-2xl max-w-lg w-full p-6 shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-4 mb-4">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+                    <i class="fa-solid fa-ranking-star text-amber-400 text-3xl"></i> Forbes Top 5
+                </h2>
+                <button onclick="returnToMenu()" class="text-slate-400 hover:text-white bg-slate-700 hover:bg-slate-600 rounded-full w-8 h-8 flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto pr-2 space-y-2 mb-6" id="leaderboard-list">
+                <!-- Data inyectada JS -->
+            </div>
+
+            <button onclick="returnToMenu()" class="w-full py-4 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-all shadow-md focus:outline-none">
+                <i class="fa-solid fa-house mr-2"></i> Volver al Menú Principal
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL GAME OVER -->
+    <div id="modal-gameover" class="fixed inset-0 bg-rose-950/90 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-slate-900 border-2 border-rose-500/50 rounded-2xl max-w-sm w-full p-8 text-center shadow-[0_0_30px_rgba(244,63,94,0.3)]">
+            <div class="w-20 h-20 bg-rose-500/20 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">
+                <i class="fa-solid fa-chart-line-down"></i>
+            </div>
+            <h2 class="text-3xl font-black text-white mb-2 uppercase tracking-widest text-rose-500">Bancarrota</h2>
+            <p id="gameover-cause" class="text-base text-slate-300 mb-8 font-medium">Cometiste demasiados errores.</p>
+            <button onclick="returnToMenuFromGameOver()" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-colors border border-slate-600">
+                <i class="fa-solid fa-rotate-right mr-2"></i> Intentar Nueva Inversión
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let isAudioInitialized = false;
+        let isMuted = false;
+        let synthCash, synthWrong, synthTick, synthWin;
+
+        async function initAudio() {
+            if (isAudioInitialized) return;
+            await Tone.start();
+            
+            synthCash = new Tone.PolySynth(Tone.MetalSynth, {
+                envelope: { attack: 0.001, decay: 0.1, release: 0.01 },
+                harmonicity: 5.1,
+                modulationIndex: 32,
+                resonance: 4000,
+                octaves: 1.5
+            }).toDestination();
+            synthCash.volume.value = -12;
+
+            synthWrong = new Tone.MembraneSynth().toDestination();
+            synthWrong.volume.value = -5;
+
+            synthTick = new Tone.PluckSynth().toDestination();
+            synthTick.volume.value = -10;
+
+            synthWin = new Tone.PolySynth(Tone.Synth).toDestination();
+            synthWin.volume.value = -8;
+
+            isAudioInitialized = true;
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            Tone.Destination.mute = isMuted;
+            const icon = document.getElementById('audio-icon');
+            icon.className = isMuted ? "fa-solid fa-volume-xmark text-rose-400" : "fa-solid fa-volume-high text-slate-300";
+        }
+
+        function playSfx(type) {
+            if (!isAudioInitialized || isMuted) return;
+            const now = Tone.now();
+            if(type === 'correct') {
+                synthCash.triggerAttackRelease(["E5", "G5", "C6"], "16n", now);
+            } else if (type === 'wrong') {
+                synthWrong.triggerAttackRelease("C2", "8n", now);
+            } else if (type === 'tick') {
+                synthTick.triggerAttackRelease("C4", now);
+            } else if (type === 'gameover') {
+                synthWin.triggerAttackRelease(["C3", "Eb3"], "2n", now);
+            } else if (type === 'victory') {
+                synthWin.triggerAttackRelease(["C4", "E4", "G4", "C5"], "4n", now);
+            }
+        }
+
+        // Solo 2 vidas solicitadas
+        let lives = 2; 
+        let score = 0;
+        let timer = null;
+        let timeLeft = 60;
+        let roundsCompleted = 0; 
+        
+        let state = {
+            q: 0, p: 0, cu: 0, CF: 0,
+            I: 0, C: 0, U: 0,
+            step: 0 // 0=Ingreso, 1=Costo, 2=Utilidad
+        };
+
+        async function startGame() {
+            await initAudio();
+            document.getElementById('screen-intro').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+            document.getElementById('screen-game').classList.add('flex');
+            
+            lives = 2; 
+            score = 0;
+            roundsCompleted = 0;
+            
+            updateLivesDisplay();
+            updateScoreDisplay();
+            
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            generateNewRound();
+        }
+
+        function generateNewRound() {
+            state.step = 0;
+            
+            state.q = Math.floor(Math.random() * 40) + 10; 
+            state.cu = Math.floor(Math.random() * 20) + 5; 
+            state.p = state.cu + Math.floor(Math.random() * 15) + 5; 
+            state.CF = Math.floor(Math.random() * 200) + 100; 
+            
+            state.I = state.p * state.q;
+            state.C = state.CF + (state.cu * state.q);
+            state.U = state.I - state.C;
+
+            document.getElementById('business-case').innerHTML = `
+                Estás administrando la venta de un nuevo producto. Para este periodo, lograste vender <strong>${state.q} unidades</strong> 
+                a un precio de <strong>$${state.p} cada una</strong>. <br><br>
+                El alquiler y otros <strong>costos fijos suman $${state.CF}</strong>, 
+                mientras que fabricar cada unidad te cuesta <strong>$${state.cu}</strong>.
+            `;
+            
+            // ALEATORIZACIÓN DE LAS CAJAS DE DATOS (Anti-memoria posicional)
+            const dataBoxes = [
+                { label: 'Cantidad (q)', val: state.q, color: 'text-white' },
+                { label: 'Precio (p)', val: `$${state.p}`, color: 'text-emerald-400' },
+                { label: 'C. Fijo (C<sub>F</sub>)', val: `$${state.CF}`, color: 'text-rose-400' },
+                { label: 'Costo Unit. (c<sub>u</sub>)', val: `$${state.cu}`, color: 'text-orange-400' }
+            ];
+            
+            // BARAJADO ROBUSTO (Algoritmo Fisher-Yates) para garantizar que siempre cambien de lugar
+            for (let i = dataBoxes.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [dataBoxes[i], dataBoxes[j]] = [dataBoxes[j], dataBoxes[i]];
+            }
+
+            const dataContainer = document.getElementById('financial-data');
+            dataContainer.innerHTML = '';
+            dataBoxes.forEach(box => {
+                dataContainer.innerHTML += `
+                    <div class="bg-slate-900 p-3 rounded-lg border border-slate-700/50 flex flex-col items-center text-center">
+                        <span class="text-[10px] text-slate-400 font-bold mb-1 uppercase">${box.label}</span>
+                        <span class="font-mono text-base font-bold ${box.color}">${box.val}</span>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('feedback-msg').style.opacity = '0';
+            document.getElementById('chart-status').innerText = "Análisis en progreso...";
+            document.getElementById('chart-status').className = "text-xs font-bold bg-slate-800 text-slate-400 px-2 py-1 rounded";
+            
+            drawBars();
+            renderQuestionStep();
+            startTimer(60);
+        }
+
+        function renderQuestionStep() {
+            const optContainer = document.getElementById('options-container');
+            optContainer.innerHTML = '';
+            let options = [];
+            
+            document.getElementById('step-badge').innerText = `Paso ${state.step + 1}/3`;
+
+            if(state.step === 0) {
+                document.getElementById('question-text').innerHTML = `<span class="text-emerald-400">1. Calcula el INGRESO TOTAL (I)</span>`;
+                options = generateDistractors(state.I, [
+                    (state.cu * state.q), // Error: usar costo unitario en vez de precio
+                    (state.p + state.q)   // Error: sumar en vez de multiplicar
+                ]);
+            } else if (state.step === 1) {
+                document.getElementById('question-text').innerHTML = `<span class="text-rose-400">2. Calcula el COSTO TOTAL (C)</span>`;
+                options = generateDistractors(state.C, [
+                    (state.cu * state.q), // Error: olvidar costo fijo
+                    (state.CF + (state.p * state.q)) // Error: usar precio en vez de costo unitario
+                ]);
+            } else if (state.step === 2) {
+                document.getElementById('question-text').innerHTML = `<span class="text-blue-400">3. Calcula la UTILIDAD TOTAL (U)</span>`;
+                options = generateDistractors(state.U, [
+                    Math.abs(state.C - state.I) + 100, // Error artificial
+                    (state.I + state.C)  // Error: sumar en vez de restar
+                ]);
+            }
+
+            // Crear 3 botones en una sola fila (Controlado por grid-cols-3 en el padre)
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-center py-3 rounded-xl border-2 border-slate-600 bg-slate-700/50 hover:bg-slate-600 hover:border-blue-400 font-bold text-white text-lg transition-all focus:outline-none shadow-sm font-mono";
+                btn.innerHTML = `$${opt.val}`;
+                btn.onclick = () => checkAnswer(opt.correct, opt.val);
+                optContainer.appendChild(btn);
+            });
+        }
+
+        function generateDistractors(correctValue, logicalWrongValues) {
+            let ops = [
+                { val: correctValue, correct: true },
+                { val: logicalWrongValues[0], correct: false },
+                { val: logicalWrongValues[1], correct: false }
+            ];
+            // Asegurar que no haya duplicados que confundan
+            ops.forEach((o, index) => {
+                if(!o.correct && o.val === correctValue) o.val += (index * 10) + 5;
+            });
+            return ops.sort(() => Math.random() - 0.5);
+        }
+
+        function startTimer(seconds) {
+            clearInterval(timer);
+            timeLeft = seconds;
+            updateTimerDisplay();
+            
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft > 0 && timeLeft <= 10) playSfx('tick');
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    handleError("El tiempo se agotó.");
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = String(Math.floor(Math.max(0, timeLeft) / 60)).padStart(2, '0');
+            const secs = String(Math.max(0, timeLeft) % 60).padStart(2, '0');
+            const display = document.getElementById('timer-display');
+            display.innerText = `${mins}:${secs}`;
+            if (timeLeft <= 10) display.classList.add('text-rose-500', 'animate-pulse');
+            else display.classList.remove('text-rose-500', 'animate-pulse');
+        }
+
+        function updateLivesDisplay() {
+            const container = document.getElementById('lives-container');
+            container.innerHTML = '';
+            for (let i = 0; i < 2; i++) {
+                container.innerHTML += i < lives ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-solid fa-heart-crack text-slate-700"></i>';
+            }
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('score-display').innerText = `$ ${score.toLocaleString()}`;
+        }
+
+        function checkAnswer(isCorrect, value) {
+            const buttons = document.getElementById('options-container').querySelectorAll('button');
+            buttons.forEach(b => b.disabled = true); 
+
+            if (isCorrect) {
+                playSfx('correct');
+                const bonus = Math.floor(timeLeft / 3) * 10;
+                score += 300 + bonus;
+                updateScoreDisplay();
+
+                const fb = document.getElementById('feedback-msg');
+                fb.style.opacity = '1';
+
+                state.step++;
+                drawBars(); 
+
+                if(state.step === 1) {
+                    fb.innerHTML = `<span class="text-emerald-400 font-bold mb-1 block">Fórmula de Ingreso: I = p × q</span> I = ${state.p} × ${state.q} = $${state.I}`;
+                    setTimeout(() => renderQuestionStep(), 1500);
+                } else if (state.step === 2) {
+                    fb.innerHTML = `<span class="text-rose-400 font-bold mb-1 block">Fórmula de Costo: C = C<sub>F</sub> + (c<sub>u</sub> × q)</span> C = ${state.CF} + (${state.cu} × ${state.q}) = $${state.C}`;
+                    setTimeout(() => renderQuestionStep(), 1500);
+                } else {
+                    fb.innerHTML = `<span class="text-blue-400 font-bold mb-1 block">Fórmula de Utilidad: U = I - C</span> U = $${state.I} - $${state.C} = $${state.U}`;
+                    document.getElementById('chart-status').innerText = "Análisis Completado";
+                    document.getElementById('chart-status').className = "text-xs font-bold bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded";
+                    
+                    clearInterval(timer);
+                    roundsCompleted++;
+                    
+                    setTimeout(() => {
+                        if (roundsCompleted >= 1) {
+                            showVictoryModal();
+                        } else {
+                            generateNewRound();
+                        }
+                    }, 2500); 
+                }
+
+            } else {
+                playSfx('wrong');
+                handleError("Cálculo incorrecto. Revisa tus fórmulas.");
+            }
+        }
+
+        function handleError(msg) {
+            lives--;
+            updateLivesDisplay();
+            
+            const mainBox = document.getElementById('screen-game');
+            mainBox.style.transform = "translateX(-10px)";
+            setTimeout(() => mainBox.style.transform = "translateX(10px)", 100);
+            setTimeout(() => mainBox.style.transform = "translateX(0)", 200);
+
+            if (lives <= 0) {
+                playSfx('gameover');
+                document.getElementById('gameover-cause').innerText = msg;
+                document.getElementById('modal-gameover').classList.remove('hidden');
+            } else {
+                const fb = document.getElementById('feedback-msg');
+                fb.style.opacity = '1';
+                fb.innerHTML = `<span class="text-rose-500 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Error. ¡Di tu justificación en voz alta y vuelve a intentar!</span>`;
+                setTimeout(() => {
+                    fb.style.opacity = '0';
+                    const buttons = document.getElementById('options-container').querySelectorAll('button');
+                    buttons.forEach(b => b.disabled = false);
+                }, 2000);
+            }
+        }
+
+        let barCanvas = document.getElementById('barCanvas');
+        let ctx = barCanvas.getContext('2d');
+
+        function resizeCanvas() {
+            const container = barCanvas.parentElement;
+            barCanvas.width = container.clientWidth;
+            barCanvas.height = container.clientHeight;
+            drawBars();
+        }
+
+        function drawBars() {
+            ctx.clearRect(0, 0, barCanvas.width, barCanvas.height);
+            
+            ctx.strokeStyle = "rgba(148, 163, 184, 0.1)"; 
+            ctx.lineWidth = 1;
+            for(let i=1; i<6; i++) {
+                ctx.beginPath(); 
+                ctx.moveTo(0, i*(barCanvas.height/6)); 
+                ctx.lineTo(barCanvas.width, i*(barCanvas.height/6)); 
+                ctx.stroke();
+            }
+
+            const padBottom = 40;
+            const groundY = barCanvas.height - padBottom;
+            
+            ctx.strokeStyle = "#94a3b8";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(10, groundY); 
+            ctx.lineTo(barCanvas.width - 10, groundY); 
+            ctx.stroke();
+
+            const maxVal = Math.max(state.I, state.C, 100); 
+            const scaleY = (barCanvas.height - 70) / maxVal; 
+
+            const barW = Math.min(80, barCanvas.width / 5);
+            const space = (barCanvas.width - (3 * barW)) / 4;
+
+            const drawSingleBar = (x, val, color, label) => {
+                const h = val * scaleY;
+                ctx.fillStyle = color;
+                ctx.fillRect(x, groundY - h, barW, h);
+                ctx.fillStyle = "rgba(255,255,255,0.2)";
+                ctx.fillRect(x, groundY - h, barW, 4);
+
+                ctx.fillStyle = "white";
+                ctx.font = "bold 14px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText(`$${val}`, x + barW/2, groundY - h - 10);
+                
+                ctx.fillStyle = "#94a3b8";
+                ctx.font = "12px uppercase tracking-widest sans-serif";
+                ctx.fillText(label, x + barW/2, groundY + 20);
+            };
+
+            let currentX = space;
+
+            if (state.step >= 1) {
+                drawSingleBar(currentX, state.I, "#10b981", "Ingreso");
+            }
+            
+            currentX += barW + space;
+            if (state.step >= 2) {
+                drawSingleBar(currentX, state.C, "#f43f5e", "Costo");
+            }
+
+            currentX += barW + space;
+            if (state.step >= 3) {
+                let colorU = state.U >= 0 ? "#3b82f6" : "#64748b"; 
+                let labelU = state.U >= 0 ? "Utilidad" : "Pérdida";
+                let valToDraw = Math.abs(state.U); 
+                
+                const h = valToDraw * scaleY;
+                ctx.fillStyle = colorU;
+                ctx.fillRect(currentX, groundY - h, barW, h);
+                
+                ctx.fillStyle = "rgba(255,255,255,0.2)";
+                ctx.fillRect(currentX, groundY - h, barW, 4);
+
+                ctx.fillStyle = "white";
+                ctx.font = "bold 14px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText(`$${state.U}`, currentX + barW/2, groundY - h - 10);
+                
+                ctx.fillStyle = "#94a3b8";
+                ctx.font = "12px sans-serif";
+                ctx.fillText(labelU, currentX + barW/2, groundY + 20);
+
+                ctx.strokeStyle = "rgba(255,255,255,0.3)";
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(space + barW, groundY - (state.I * scaleY) + 10);
+                ctx.lineTo(currentX, groundY - (valToDraw * scaleY) + 10);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            if(state.step === 0) {
+                ctx.fillStyle = "#64748b";
+                ctx.font = "italic 14px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText("Responde las preguntas para construir el gráfico...", barCanvas.width / 2, barCanvas.height / 2);
+            }
+        }
+
+        function showVictoryModal() {
+            playSfx('victory');
+            document.getElementById('final-score-val').innerText = `$ ${score.toLocaleString()}`;
+            document.getElementById('modal-victory').classList.remove('hidden');
+        }
+
+        function saveScore() {
+            const input = document.getElementById('player-name');
+            let name = input.value.trim().toUpperCase();
+            if (!name) name = "INVERSOR";
+
+            const newEntry = { name: name, score: score, level: "FUNDAMENTOS" };
+            let leaderboard = JSON.parse(localStorage.getItem('tycoon1_leaderboard') || "[]");
+            
+            leaderboard.push(newEntry);
+            leaderboard.sort((a, b) => b.score - a.score);
+            leaderboard = leaderboard.slice(0, 5); // Limitar a Top 5
+            localStorage.setItem('tycoon1_leaderboard', JSON.stringify(leaderboard));
+
+            document.getElementById('modal-victory').classList.add('hidden');
+            showLeaderboard();
+        }
+
+        function showLeaderboard() {
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = "";
+            const leaderboard = JSON.parse(localStorage.getItem('tycoon1_leaderboard') || "[]");
+
+            if (leaderboard.length === 0) {
+                list.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Bolsa de valores vacía.</p>`;
+            } else {
+                leaderboard.forEach((entry, idx) => {
+                    const badge = idx === 0 ? 'bg-amber-500 text-slate-900 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : 
+                                 idx === 1 ? 'bg-slate-300 text-slate-900' : 
+                                 idx === 2 ? 'bg-amber-700 text-white' : 'bg-slate-700 text-slate-400';
+                    
+                    list.innerHTML += `
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900/50 border border-slate-700/50 transition-all hover:bg-slate-700/30">
+                            <div class="flex items-center gap-3">
+                                <span class="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs ${badge}">${idx + 1}</span>
+                                <div>
+                                    <div class="font-bold text-white tracking-wider">${entry.name}</div>
+                                    <div class="text-[10px] text-slate-500 uppercase">${entry.level}</div>
+                                </div>
+                            </div>
+                            <span class="font-mono font-black text-blue-400 text-lg">$${entry.score.toLocaleString()}</span>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('screen-intro').classList.add('hidden');
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('modal-leaderboard').classList.remove('hidden');
+        }
+
+        function returnToMenu() {
+            clearInterval(timer);
+            document.getElementById('modal-leaderboard').classList.add('hidden');
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-intro').classList.remove('hidden');
+        }
+
+        function returnToMenuFromGameOver() {
+            document.getElementById('modal-gameover').classList.add('hidden');
+            returnToMenu();
+        }
+    </script>
+</body>
+</html>
