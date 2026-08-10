@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programación Lineal 3D - Optimización Geométrica</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; padding: 20px; background-color: #f5f7fa; color: #333; }
+        .container { display: flex; flex-wrap: wrap; gap: 20px; max-width: 1300px; margin: 0 auto; }
+        .panel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .controls { flex: 1; min-width: 320px; }
+        .plot-container { flex: 2.5; min-width: 500px; }
+        .full-width { flex: 100%; }
+        h2 { margin-top: 0; color: #1a365d; font-size: 1.1rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+        .section-title { font-weight: bold; margin-top: 15px; margin-bottom: 8px; color: #334155; font-size: 0.95rem; }
+        .hint-text { font-size: 0.82rem; color: #64748b; font-style: italic; margin-bottom: 10px; line-height: 1.3; }
+        .ineq-group { background: #f8fafc; padding: 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #e2e8f0; }
+        .ineq-inputs { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+        input[type="number"] { width: 60px; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center; }
+        select { padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; }
+        button { width: 100%; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.2s; margin-top: 15px; }
+        button:hover { background: #1d4ed8; }
+        .results { margin-top: 15px; padding: 12px; background: #f1f5f9; border-radius: 6px; border: 1px solid #cbd5e1; }
+        .res-item { margin-bottom: 6px; font-weight: bold; }
+        #plot { width: 100%; height: 580px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+        th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: center; }
+        th { background-color: #f1f5f9; color: #1e293b; }
+        tr.optimal-row { background-color: #dcfce7; font-weight: bold; color: #15803d; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Panel de Controles -->
+    <div class="panel controls">
+        <h2>Programación Lineal 3D</h2>
+        
+        <!-- Función Objetivo -->
+        <div class="section-title">Función Objetivo (Plano Z = c₁x + c₂y):</div>
+        <div class="ineq-group" style="background: #eff6ff; border-color: #bfdbfe;">
+            <div class="ineq-inputs">
+                <select id="opt-type">
+                    <option value="max">Max Z =</option>
+                    <option value="min">Min Z =</option>
+                </select>
+                <input type="number" id="c_x" value="3" step="any"> <span>x +</span>
+                <input type="number" id="c_y" value="4" step="any"> <span>y</span>
+            </div>
+        </div>
+
+        <!-- Restricciones -->
+        <div class="section-title">Restricciones en la base (x &ge; 0; y &ge; 0):</div>
+        <div class="hint-text">Indicación: Para no considerar una de las 3 inecuaciones, coloca coeficientes cero al lado de x e y.</div>
+        
+        <div id="inequalities-inputs">
+            <!-- Inecuación 1 -->
+            <div class="ineq-group">
+                <div class="ineq-inputs">
+                    <input type="number" id="a1" value="1" step="any"> <span>x +</span>
+                    <input type="number" id="b1" value="1" step="any"> <span>y</span>
+                    <select id="op1">
+                        <option value="<=">&le;</option>
+                        <option value=">=">&ge;</option>
+                    </select>
+                    <input type="number" id="c1" value="6" step="any">
+                </div>
+            </div>
+            
+            <!-- Inecuación 2 -->
+            <div class="ineq-group">
+                <div class="ineq-inputs">
+                    <input type="number" id="a2" value="2" step="any"> <span>x +</span>
+                    <input type="number" id="b2" value="1" step="any"> <span>y</span>
+                    <select id="op2">
+                        <option value="<=" selected>&le;</option>
+                        <option value=">=">&ge;</option>
+                    </select>
+                    <input type="number" id="c2" value="8" step="any">
+                </div>
+            </div>
+
+            <!-- Inecuación 3 -->
+            <div class="ineq-group">
+                <div class="ineq-inputs">
+                    <input type="number" id="a3" value="0" step="any"> <span>x +</span>
+                    <input type="number" id="b3" value="0" step="any"> <span>y</span>
+                    <select id="op3">
+                        <option value="<=">&le;</option>
+                        <option value=">=">&ge;</option>
+                    </select>
+                    <input type="number" id="c3" value="0" step="any">
+                </div>
+            </div>
+        </div>
+
+        <button onclick="calcularYGraficar3D()">Calcular y Visualizar 3D</button>
+
+        <div class="results">
+            <div class="res-item" id="area-result" style="color: #0369a1;">Área base: --</div>
+            <div class="res-item" id="opt-result" style="color: #15803d;">Valor Óptimo: --</div>
+        </div>
+    </div>
+
+    <!-- Panel del Gráfico 3D -->
+    <div class="panel plot-container">
+        <div id="plot"></div>
+    </div>
+
+    <!-- Justificación de Evaluación en Vértices -->
+    <div class="panel full-width">
+        <h2>Evaluación de Vértices en la Superficie Objective Z(x, y)</h2>
+        <div id="table-container"></div>
+    </div>
+</div>
+
+<script>
+function evaluarDesigualdad(a, b, op, c, x, y) {
+    if (a === 0 && b === 0) return true;
+    const lhs = a * x + b * y;
+    const eps = 1e-7;
+    return op === '<=' ? lhs <= c + eps : lhs >= c - eps;
+}
+
+function intersecciónLineas(l1, l2) {
+    const det = l1.a * l2.b - l2.a * l1.b;
+    if (Math.abs(det) < 1e-9) return null;
+    const x = (l1.c * l2.b - l2.c * l1.b) / det;
+    const y = (l1.a * l2.c - l2.a * l1.c) / det;
+    return { x, y };
+}
+
+function calcularAreaPoligono(puntos) {
+    let area = 0;
+    const n = puntos.length;
+    for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n;
+        area += puntos[i].x * puntos[j].y;
+        area -= puntos[j].x * puntos[i].y;
+    }
+    return Math.abs(area) / 2;
+}
+
+function ordenarPuntosConvexos(puntos) {
+    if (puntos.length <= 2) return puntos;
+    const cx = puntos.reduce((p, c) => p + c.x, 0) / puntos.length;
+    const cy = puntos.reduce((p, c) => p + c.y, 0) / puntos.length;
+    return puntos.sort((a, b) => Math.atan2(a.y - cy, a.x - cx) - Math.atan2(b.y - cy, b.x - cx));
+}
+
+function fmtNum(val) {
+    return val.toFixed(2).replace('.', ',');
+}
+
+function calcularYGraficar3D() {
+    const inecs = [];
+    for (let i = 1; i <= 3; i++) {
+        const a = parseFloat(document.getElementById(`a${i}`).value) || 0;
+        const b = parseFloat(document.getElementById(`b${i}`).value) || 0;
+        const op = document.getElementById(`op${i}`).value;
+        const c = parseFloat(document.getElementById(`c${i}`).value) || 0;
+        if (a !== 0 || b !== 0) {
+            inecs.push({ a, b, op, c });
+        }
+    }
+
+    const lineas = [
+        { a: 1, b: 0, c: 0 },
+        { a: 0, b: 1, c: 0 }
+    ];
+    inecs.forEach(ineq => lineas.push({ a: ineq.a, b: ineq.b, c: ineq.c }));
+
+    let vertices = [];
+    for (let i = 0; i < lineas.length; i++) {
+        for (let j = i + 1; j < lineas.length; j++) {
+            const pt = intersecciónLineas(lineas[i], lineas[j]);
+            if (pt) {
+                if (pt.x >= -1e-7 && pt.y >= -1e-7) {
+                    let factible = true;
+                    for (let ineq of inecs) {
+                        if (!evaluarDesigualdad(ineq.a, ineq.b, ineq.op, ineq.c, pt.x, pt.y)) {
+                            factible = false;
+                            break;
+                        }
+                    }
+                    if (factible) {
+                        if (!vertices.some(v => Math.abs(v.x - pt.x) < 1e-5 && Math.abs(v.y - pt.y) < 1e-5)) {
+                            vertices.push({ x: Math.max(0, pt.x), y: Math.max(0, pt.y) });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    vertices = ordenarPuntosConvexos(vertices);
+
+    const optType = document.getElementById('opt-type').value;
+    const cX = parseFloat(document.getElementById('c_x').value) || 0;
+    const cY = parseFloat(document.getElementById('c_y').value) || 0;
+
+    let areaTexto = "Región vacía o no acotada";
+    let optTexto = "Valor Óptimo: --";
+    let mejorVertice = null;
+    let evaluaciones = [];
+
+    if (vertices.length >= 3) {
+        const area = calcularAreaPoligono(vertices);
+        areaTexto = `Área base (XY): ${fmtNum(area)}`;
+        
+        let mejorZ = optType === 'max' ? -Infinity : Infinity;
+        
+        vertices.forEach(v => {
+            const z = cX * v.x + cY * v.y;
+            evaluaciones.push({ vertice: v, z: z });
+            if ((optType === 'max' && z > mejorZ) || (optType === 'min' && z < mejorZ)) {
+                mejorZ = z;
+                mejorVertice = v;
+            }
+        });
+
+        if (mejorVertice) {
+            const tipoLabel = optType === 'max' ? 'Máximo' : 'Mínimo';
+            optTexto = `${tipoLabel} Z = ${fmtNum(mejorZ)} en (${fmtNum(mejorVertice.x)}; ${fmtNum(mejorVertice.y)})`;
+        }
+    }
+
+    // Tabla de Evaluación
+    let htmlTabla = "";
+    if (evaluaciones.length >= 3) {
+        htmlTabla = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>Vértice en Base (x; y; 0)</th>
+                        <th>Cálculo Z = (${fmtNum(cX)})x + (${fmtNum(cY)})y</th>
+                        <th>Punto Evaluado (x; y; Z)</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        evaluaciones.forEach(item => {
+            const esOptimo = item.vertice === mejorVertice;
+            const claseFila = esOptimo ? 'class="optimal-row"' : '';
+            const estado = esOptimo ? (optType === 'max' ? 'ÓPTIMO (MÁXIMO)' : 'ÓPTIMO (MÍNIMO)') : 'Factible';
+            
+            htmlTabla += `
+                <tr ${claseFila}>
+                    <td>(${fmtNum(item.vertice.x)}; ${fmtNum(item.vertice.y)}; 0,00)</td>
+                    <td>Z = (${fmtNum(cX)})(${fmtNum(item.vertice.x)}) + (${fmtNum(cY)})(${fmtNum(item.vertice.y)})</td>
+                    <td>(${fmtNum(item.vertice.x)}; ${fmtNum(item.vertice.y)}; ${fmtNum(item.z)})</td>
+                    <td>${estado}</td>
+                </tr>
+            `;
+        });
+        htmlTabla += `</tbody></table>`;
+    } else {
+        htmlTabla = `<p style="color: #dc2626; font-weight: bold;">No se ha formado una región factible acotada con los datos ingresados.</p>`;
+    }
+    document.getElementById('table-container').innerHTML = htmlTabla;
+
+    document.getElementById('area-result').innerText = areaTexto;
+    document.getElementById('opt-result').innerText = optTexto;
+
+    // Generación de Traces 3D para Plotly
+    const traces = [];
+
+    if (vertices.length >= 3) {
+        const vx = vertices.map(v => v.x);
+        const vy = vertices.map(v => v.y);
+        const vzZero = vertices.map(() => 0);
+        const vzEval = evaluaciones.map(e => e.z);
+
+        // 1. Región Factible Base en el plano XY (z = 0)
+        traces.push({
+            type: 'mesh3d',
+            x: vx, y: vy, z: vzZero,
+            color: '#3b82f6',
+            opacity: 0.4,
+            name: 'Región Factible (z=0)'
+        });
+
+        // Contorno de la base
+        traces.push({
+            type: 'scatter3d',
+            mode: 'lines+markers',
+            x: [...vx, vx[0]],
+            y: [...vy, vy[0]],
+            z: [...vzZero, 0],
+            line: { color: '#1d4ed8', width: 5 },
+            marker: { color: '#1e3a8a', size: 4 },
+            name: 'Vértices Base'
+        });
+
+        // 2. Proyección de la región factible sobre el Plano Z (Plano Objetivo Elevado)
+        traces.push({
+            type: 'mesh3d',
+            x: vx, y: vy, z: vzEval,
+            color: '#8b5cf6',
+            opacity: 0.6,
+            name: 'Plano Objetivo Z(x,y)'
+        });
+
+        // Contorno elevado
+        traces.push({
+            type: 'scatter3d',
+            mode: 'lines+markers',
+            x: [...vx, vx[0]],
+            y: [...vy, vy[0]],
+            z: [...vzEval, vzEval[0]],
+            line: { color: '#6d28d9', width: 4 },
+            marker: { color: '#4c1d95', size: 4 },
+            name: 'Evaluación de Aristas'
+        });
+
+        // 3. Segmentos de proyección vertical (Líneas discontinuas del plano base al elevado)
+        for (let i = 0; i < vertices.length; i++) {
+            traces.push({
+                type: 'scatter3d',
+                mode: 'lines',
+                x: [vx[i], vx[i]],
+                y: [vy[i], vy[i]],
+                z: [0, vzEval[i]],
+                line: { color: '#94a3b8', width: 3, dash: 'dash' },
+                showlegend: false
+            });
+        }
+
+        // 4. Resaltar Punto Óptimo en 3D
+        if (mejorVertice) {
+            const zOpt = cX * mejorVertice.x + cY * mejorVertice.y;
+            traces.push({
+                type: 'scatter3d',
+                mode: 'markers+text',
+                x: [mejorVertice.x],
+                y: [mejorVertice.y],
+                z: [zOpt],
+                text: [` ÓPTIMO (${fmtNum(mejorVertice.x)}; ${fmtNum(mejorVertice.y)}; ${fmtNum(zOpt)})`],
+                textposition: 'top center',
+                marker: { color: '#16a34a', size: 8, symbol: 'diamond' },
+                name: 'Solución Óptima'
+            });
+        }
+    }
+
+    const layout = {
+        title: 'Elevación de la Región Factible sobre Z(x,y) = c₁x + c₂y',
+        scene: {
+            xaxis: { title: 'Eje X' },
+            yaxis: { title: 'Eje Y' },
+            zaxis: { title: 'Eje Z (Objetivo)' },
+            camera: {
+                eye: { x: 1.5, y: -1.5, z: 1.2 }
+            }
+        },
+        margin: { l: 0, r: 0, t: 40, b: 0 },
+        showlegend: false
+    };
+
+    Plotly.newPlot('plot', traces, layout, { responsive: true });
+}
+
+window.onload = calcularYGraficar3D;
+</script>
+
+</body>
+</html>
