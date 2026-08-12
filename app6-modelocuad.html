@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ModeloCuad · Parábola por 3 puntos (ventas)</title>
+<style>
+  :root{--bg:#0D1B2A;--bg2:#0F2233;--panel:rgba(22,35,58,.8);--border:rgba(167,139,250,.25);--text:#E6EDF3;--dim:#94A3B8;--acc:#A78BFA;--accent2:#34D399;--warn:#FBBF24;--err:#F87171;--blue:#38BDF8;--grid:rgba(148,163,184,.14);--axis:rgba(230,237,243,.75)}
+  body.light{--bg:#EEF3F9;--bg2:#fff;--panel:rgba(255,255,255,.92);--border:rgba(124,58,237,.28);--text:#1E293B;--dim:#64748B;--acc:#7C3AED;--accent2:#059669;--warn:#D97706;--err:#DC2626;--blue:#0284C7;--grid:rgba(100,116,139,.18);--axis:rgba(30,41,59,.8)}
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
+  body{background:radial-gradient(1200px 700px at 70% -10%,rgba(167,139,250,.09),transparent),var(--bg);color:var(--text);min-height:100vh;padding:18px;transition:.3s}
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;max-width:1100px;margin:0 auto 14px}
+  .title h1{font-size:1.3rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .title h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--acc);box-shadow:0 0 12px var(--acc)}
+  .title p{color:var(--dim);font-size:.85rem;margin-top:2px}
+  .badge{background:rgba(167,139,250,.14);border:1px solid var(--border);color:var(--acc);padding:3px 10px;border-radius:20px;font-size:.75rem}
+  #themeBtn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:12px;cursor:pointer;font-size:.85rem}
+  .tabs{max-width:1100px;margin:0 auto 14px;display:flex;gap:8px;flex-wrap:wrap}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--dim);padding:9px 16px;border-radius:12px;cursor:pointer;font-size:.9rem}
+  .tab.active{color:#fff;background:var(--acc);border-color:var(--acc);box-shadow:0 0 18px rgba(167,139,250,.4);font-weight:600}
+  main{max-width:1100px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap}
+  .mapbox{flex:1 1 430px;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:14px}
+  svg#map{width:100%;display:block;border-radius:14px;background:var(--bg2);touch-action:none}
+  .hint{color:var(--dim);font-size:.8rem;margin-top:10px;text-align:center}
+  .panel{flex:1 1 330px;display:flex;flex-direction:column;gap:12px}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+  .card .lbl{color:var(--dim);font-size:.72rem}
+  .card .val{font-size:.94rem;font-weight:600;word-break:break-word}
+  .card.hl{border-color:var(--acc)}.card.hl .val{color:var(--acc)}
+  .card.gn .val{color:var(--accent2)}.card.wr .val{color:var(--warn)}
+  .eqbox{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+  .eq .lbl{color:var(--dim);font-size:.72rem}
+  .eq .v{font-size:.98rem;font-weight:600;font-family:'Cambria Math','Segoe UI',serif}
+  .challenge{background:rgba(245,185,66,.08);border:1px solid rgba(245,185,66,.35);border-radius:14px;padding:14px}
+  .challenge p{font-size:.88rem;margin-bottom:8px;line-height:1.45}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:.9rem}
+  th,td{border:1px solid var(--border);padding:6px;text-align:center;color:var(--text)}
+  th{color:var(--dim);font-size:.75rem}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  input[type=text]{flex:1;min-width:70px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:10px;font-size:1rem}
+  .btn{border:none;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:.9rem;font-weight:600;color:#fff;background:#334155;transition:.2s}
+  .btn.primary{background:var(--acc)}.btn.accent{background:var(--accent2)}
+  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--dim)}
+  .btn:hover{filter:brightness(1.12)}
+  .feedback{font-size:.9rem;margin-top:8px;font-weight:600}
+  .feedback.ok{color:var(--accent2)}.feedback.bad{color:var(--err)}
+  .hidden{display:none!important}
+  .note{max-width:1100px;margin:16px auto 0;color:var(--dim);font-size:.75rem;text-align:center}
+  .gridline{stroke:var(--grid)}.axis{stroke:var(--axis);stroke-width:1.5}.axlbl{fill:var(--dim);font-size:11px}
+  .parab{fill:none;stroke:var(--acc);stroke-width:3}
+  .pt{stroke:#fff;stroke-width:2;cursor:grab}.pt:active{cursor:grabbing}
+  .ptA{fill:var(--accent2)}.ptB{fill:var(--warn)}.ptC{fill:var(--blue)}
+  .plabel{fill:var(--text);font-size:12px;font-weight:700;pointer-events:none}
+  @media(max-width:760px){.title h1{font-size:1.08rem}}
+</style>
+</head>
+<body>
+<header>
+  <div class="title">
+    <h1><span class="dot"></span> ModeloCuad · Parábola por 3 puntos <span class="badge">Función cuadrática</span></h1>
+    <p>Modela ventas con f(x)=ax²+bx+c planteando el sistema · Capítulo 2 · USIL</p>
+  </div>
+  <button id="themeBtn">🌙 Tema</button>
+</header>
+<div class="tabs">
+  <button class="tab active" data-mode="explora">🧲 Explora: 3 puntos → parábola</button>
+  <button class="tab" data-mode="reto">📈 Reto: modela las ventas</button>
+</div>
+<main>
+  <div class="mapbox">
+    <svg id="map" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid meet">
+      <g id="grid"></g><g id="axes"></g><g id="labels"></g>
+      <path id="parab" class="parab"/>
+      <circle id="p1" class="pt ptA" r="9"/><circle id="p2" class="pt ptB" r="9"/><circle id="p3" class="pt ptC" r="9"/>
+      <text id="l1" class="plabel"></text><text id="l2" class="plabel"></text><text id="l3" class="plabel"></text>
+    </svg>
+    <p class="hint" id="hintText">Arrastra los tres puntos: siempre existe una única parábola que pasa por ellos (si no están alineados).</p>
+  </div>
+  <div class="panel">
+    <div id="panel-explora">
+      <div class="eqbox">
+        <div class="eq"><span class="lbl">Sistema planteado (con los puntos actuales)</span><span class="v" id="sysExp" style="font-size:.88rem"></span></div>
+      </div>
+      <div class="cards" style="margin-top:10px">
+        <div class="card hl" style="grid-column:1/-1"><span class="lbl">Solución del sistema</span><span class="val" id="solExp"></span></div>
+        <div class="card gn" style="grid-column:1/-1"><span class="lbl">Parábola resultante</span><span class="val" id="eqExp"></span></div>
+      </div>
+      <div class="eqbox" style="margin-top:10px;border-color:var(--warn)">
+        <div class="eq"><span class="v" style="font-size:.85rem;color:var(--dim)">💡 Como en el libro: cada punto (xᵢ; yᵢ) da la ecuación axᵢ²+bxᵢ+c=yᵢ. Tres puntos no alineados determinan a, b y c.</span></div>
+      </div>
+    </div>
+    <div id="panel-reto" class="hidden">
+      <div class="challenge">
+        <p id="retoTxt"></p>
+        <table id="tabla"></table>
+        <div class="eq"><span class="lbl" style="color:var(--dim);font-size:.72rem">Planteamiento (t = años desde 2010)</span><span class="v" id="planTxt" style="font-size:.88rem"></span></div>
+        <p style="margin-top:8px">Con tu calculadora resuelve el sistema y escribe los coeficientes:</p>
+        <div class="row">
+          <input type="text" id="inA" placeholder="a = ?">
+          <input type="text" id="inB" placeholder="b = ?">
+          <input type="text" id="inC" placeholder="c = ?">
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn primary" id="checkBtn">Comprobar</button>
+          <button class="btn ghost" id="revealBtn">Ver solución</button>
+          <button class="btn accent" id="newBtn">🎲 Nuevo caso</button>
+        </div>
+        <p class="feedback" id="fb"></p>
+      </div>
+      <div class="eqbox" style="margin-top:10px">
+        <div class="eq"><span class="lbl">Modelo de ventas</span><span class="val" id="eqReto" style="color:var(--acc)"></span></div>
+      </div>
+    </div>
+  </div>
+</main>
+<p class="note">Puedes usar calculadora: lo importante es PLANTEAR el sistema. Convención Perú: coma decimal · pares ordenados (x; y). Apuntes de Matemática 2 — USIL.</p>
+<script>
+(function(){
+  "use strict";
+  var $=function(id){return document.getElementById(id);};
+  function fmt(n,dec){ if(!isFinite(n))return "—"; if(Math.abs(n)<1e-9)n=0; dec=(dec===undefined)?2:dec;
+    var s=n.toFixed(dec); if(s.indexOf(".")>=0){s=s.replace(/0+$/,"").replace(/\.$/,"");}
+    var neg=s.charAt(0)==="-"; if(neg)s=s.slice(1);
+    var parts=s.split("."); var int=parts[0];
+    if(int.length>=5){int=int.replace(/\B(?=(\d{3})+(?!\d))/g,"\u00A0");}
+    s=int+(parts[1]?","+parts[1]:""); return (neg?"\u2212":"")+s;
+  }
+  function parseNum(s){s=(""+s).trim().replace(",",".");if(s.indexOf("/")>=0){var p=s.split("/");return parseFloat(p[0])/parseFloat(p[1]);}return parseFloat(s);}
+  var W=600,H=600,xMin=-6,xMax=14,yMin=-6,yMax=20;
+  function sx(x){return (x-xMin)/(xMax-xMin)*W;}
+  function sy(y){return H-(y-yMin)/(yMax-yMin)*H;}
+  (function buildGrid(){
+    var NS="http://www.w3.org/2000/svg",i,el,t;
+    for(i=xMin;i<=xMax;i++){
+      el=document.createElementNS(NS,"line");el.setAttribute("class","gridline");el.setAttribute("x1",sx(i));el.setAttribute("x2",sx(i));el.setAttribute("y1",0);el.setAttribute("y2",H);$("grid").appendChild(el);
+    }
+    for(i=yMin;i<=yMax;i++){
+      el=document.createElementNS(NS,"line");el.setAttribute("class","gridline");el.setAttribute("x1",0);el.setAttribute("x2",W);el.setAttribute("y1",sy(i));el.setAttribute("y2",sy(i));$("grid").appendChild(el);
+    }
+    el=document.createElementNS(NS,"line");el.setAttribute("class","axis");el.setAttribute("x1",0);el.setAttribute("x2",W);el.setAttribute("y1",sy(0));el.setAttribute("y2",sy(0));$("axes").appendChild(el);
+    el=document.createElementNS(NS,"line");el.setAttribute("class","axis");el.setAttribute("x1",sx(0));el.setAttribute("x2",sx(0));el.setAttribute("y1",0);el.setAttribute("y2",H);$("axes").appendChild(el);
+    for(i=xMin;i<=xMax;i+=2){ if(i===0)continue;
+      t=document.createElementNS(NS,"text");t.setAttribute("class","axlbl");t.setAttribute("x",sx(i));t.setAttribute("y",sy(0)+14);t.setAttribute("text-anchor","middle");t.textContent=i;$("labels").appendChild(t);
+    }
+    for(i=yMin;i<=yMax;i+=2){ if(i===0)continue;
+      t=document.createElementNS(NS,"text");t.setAttribute("class","axlbl");t.setAttribute("x",sx(0)-6);t.setAttribute("y",sy(i)+4);t.setAttribute("text-anchor","end");t.textContent=i;$("labels").appendChild(t);
+    }
+  })();
+  var mode="explora";
+  var P=[{x:1,y:4},{x:2,y:7},{x:3,y:12}];
+  function det3(m){return m[0][0]*(m[1][1]*m[2][2]-m[1][2]*m[2][1])-m[0][1]*(m[1][0]*m[2][2]-m[1][2]*m[2][0])+m[0][2]*(m[1][0]*m[2][1]-m[1][1]*m[2][0]);}
+  function quadFrom3(p){
+    var D=det3([[p[0].x*p[0].x,p[0].x,1],[p[1].x*p[1].x,p[1].x,1],[p[2].x*p[2].x,p[2].x,1]]);
+    if(Math.abs(D)<1e-9)return null;
+    var Da=det3([[p[0].y,p[0].x,1],[p[1].y,p[1].x,1],[p[2].y,p[2].x,1]]);
+    var Db=det3([[p[0].x*p[0].x,p[0].y,1],[p[1].x*p[1].x,p[1].y,1],[p[2].x*p[2].x,p[2].y,1]]);
+    var Dc=det3([[p[0].x*p[0].x,p[0].x,p[0].y],[p[1].x*p[1].x,p[1].x,p[1].y],[p[2].x*p[2].x,p[2].x,p[2].y]]);
+    return{a:Da/D,b:Db/D,c:Dc/D};
+  }
+  function eqStr(a,b,c){
+    var t="f(x) = ";
+    t+=(Math.abs(a-1)<1e-9?"x²":(Math.abs(a+1)<1e-9?"\u2212x²":fmt(a)+"x²"));
+    if(Math.abs(b)>1e-9)t+=(b>0?" + ":" \u2212 ")+(Math.abs(Math.abs(b)-1)<1e-9?"x":fmt(Math.abs(b))+"x");
+    if(Math.abs(c)>1e-9)t+=(c>0?" + ":" \u2212 ")+fmt(Math.abs(c));
+    return t;
+  }
+  function drawParab(a,b,c){
+    var d="";
+    for(var i=0;i<=160;i++){var x=xMin+(xMax-xMin)*i/160;var y=a*x*x+b*x+c;
+      d+=(i===0?"M":"L")+sx(x).toFixed(1)+" "+sy(y).toFixed(1)+" ";}
+    $("parab").setAttribute("d",d);
+  }
+  function setPt(el,p){el.setAttribute("cx",sx(p.x));el.setAttribute("cy",sy(p.y));}
+  function setLbl(el,p,txt){el.setAttribute("x",sx(p.x)+10);el.setAttribute("y",sy(p.y)-10);el.textContent=txt;}
+  function renderExplora(){
+    setPt($("p1"),P[0]);setPt($("p2"),P[1]);setPt($("p3"),P[2]);
+    setLbl($("l1"),P[0],"("+fmt(P[0].x)+"; "+fmt(P[0].y)+")");
+    setLbl($("l2"),P[1],"("+fmt(P[1].x)+"; "+fmt(P[1].y)+")");
+    setLbl($("l3"),P[2],"("+fmt(P[2].x)+"; "+fmt(P[2].y)+")");
+    var s=quadFrom3(P);
+    var eq1=fmt(P[0].x)+"²·a + "+fmt(P[0].x)+"·b + c = "+fmt(P[0].y);
+    var eq2=fmt(P[1].x)+"²·a + "+fmt(P[1].x)+"·b + c = "+fmt(P[1].y);
+    var eq3=fmt(P[2].x)+"²·a + "+fmt(P[2].x)+"·b + c = "+fmt(P[2].y);
+    $("sysExp").innerHTML=eq1+"<br>"+eq2+"<br>"+eq3;
+    if(s===null){
+      $("parab").setAttribute("d","");
+      $("solExp").textContent="Los tres puntos están alineados: no determinan una parábola (a sería 0).";
+      $("eqExp").textContent="—";
+    }else{
+      drawParab(s.a,s.b,s.c);
+      $("solExp").textContent="a = "+fmt(s.a,3)+"   b = "+fmt(s.b,3)+"   c = "+fmt(s.c,3);
+      $("eqExp").textContent=eqStr(s.a,s.b,s.c);
+    }
+  }
+  // ===== RETO =====
+  var reto=null;
+  // ---- PARCH: generador con ventas siempre positivas ----
+  function genParams(){
+    var As=[-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5];
+    for(var intentos=0;intentos<300;intentos++){
+      var a=As[Math.floor(Math.random()*As.length)];
+      var b=(Math.floor(Math.random()*11)-3)*0.5; // -1.5..3.5
+      var c=[5,10,15,20,25,30][Math.floor(Math.random()*6)];
+      var y5=a*25+b*5+c, y10=a*100+b*10+c;
+      if(c>0 && y5>0 && y10>0){ return {a:a,b:b,c:c}; }
+    }
+    return {a:0.1,b:2.5,c:20}; // respaldo seguro
+  }
+  function newReto(first){
+    var prm;
+    if(first){ prm={a:0.1,b:2.5,c:20}; } else { prm=genParams(); }
+    var a=prm.a,b=prm.b,c=prm.c;
+    var y0=c,y5=a*25+b*5+c,y10=a*100+b*10+c;
+    reto={a:a,b:b,c:c,y:[y0,y5,y10],solved:false};
+    $("retoTxt").innerHTML="📈 Las ventas de una empresa (en miles de soles) se registraron en tres años. Suponiendo el modelo <b>V(t) = at² + bt + c</b>, donde t son los años desde 2010:";
+    $("tabla").innerHTML="<tr><th>Año</th><th>2010</th><th>2015</th><th>2020</th></tr><tr><td>t</td><td>0</td><td>5</td><td>10</td></tr><tr><td>Ventas (miles S/)</td><td>"+fmt(y0,1)+"</td><td>"+fmt(y5,1)+"</td><td>"+fmt(y10,1)+"</td></tr>";
+    $("planTxt").innerHTML="c = "+fmt(y0,1)+"<br>25a + 5b + c = "+fmt(y5,1)+"<br>100a + 10b + c = "+fmt(y10,1);
+    $("inA").value="";$("inB").value="";$("inC").value="";
+    $("fb").textContent="";$("fb").className="feedback";
+    $("eqReto").textContent="(resuelve para ver el modelo)";
+    drawRetoParab(false);
+  }
+  function drawRetoParab(show){
+    if(!show||!reto){$("parab").setAttribute("d","");return;}
+    drawParab(reto.a,reto.b,reto.c);
+  }
+  $("checkBtn").addEventListener("click",function(){
+    if(!reto)return;
+    var a=parseNum($("inA").value),b=parseNum($("inB").value),c=parseNum($("inC").value),fb=$("fb");
+    if(isNaN(a)||isNaN(b)||isNaN(c)){fb.textContent="Escribe los tres coeficientes (acepta coma decimal).";fb.className="feedback bad";return;}
+    var ok=Math.abs(a-reto.a)<1e-6&&Math.abs(b-reto.b)<1e-6&&Math.abs(c-reto.c)<1e-6;
+    if(ok){fb.textContent="✔ ¡Correcto! Modelo: "+eqStr(reto.a,reto.b,reto.c);fb.className="feedback ok";reto.solved=true;$("eqReto").textContent=eqStr(reto.a,reto.b,reto.c);drawRetoParab(true);}
+    else{fb.textContent="✗ Revisa el sistema. Recuerda: t = 0, 5, 10. Puedes apoyarte en la calculadora.";fb.className="feedback bad";}
+  });
+  $("revealBtn").addEventListener("click",function(){
+    if(!reto)return; reto.solved=true;
+    $("fb").textContent="Solución: a = "+fmt(reto.a,3)+", b = "+fmt(reto.b,3)+", c = "+fmt(reto.c,3);
+    $("fb").className="feedback ok";
+    $("eqReto").textContent=eqStr(reto.a,reto.b,reto.c);
+    drawRetoParab(true);
+  });
+  $("newBtn").addEventListener("click",function(){newReto(false);});
+  // arrastre
+  var drag=null;
+  function evtPos(e){var r=$("map").getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*(xMax-xMin)+xMin,y:(H-(e.clientY-r.top)/r.height*H)/H*(yMax-yMin)+yMin};}
+  [["p1",0],["p2",1],["p3",2]].forEach(function(cfg){
+    var el=$(cfg[0]),idx=cfg[1];
+    el.addEventListener("pointerdown",function(e){drag=idx;el.setPointerCapture(e.pointerId);e.preventDefault();});
+    el.addEventListener("pointermove",function(e){if(drag!==idx)return;var p=evtPos(e);
+      P[idx].x=Math.round(Math.max(xMin+0.5,Math.min(xMax-0.5,p.x))*2)/2;
+      P[idx].y=Math.round(Math.max(yMin+0.5,Math.min(yMax-0.5,p.y))*2)/2;
+      renderExplora();});
+    el.addEventListener("pointerup",function(){drag=null;});
+  });
+  var tabs=document.querySelectorAll(".tab");
+  tabs.forEach(function(tEl){tEl.addEventListener("click",function(){
+    tabs.forEach(function(x){x.classList.remove("active");});tEl.classList.add("active");
+    mode=tEl.getAttribute("data-mode");
+    ["p1","p2","p3","l1","l2","l3"].forEach(function(id){$(id).style.display=(mode==="explora")?"":"none";});
+    $("panel-explora").classList.toggle("hidden",mode!=="explora");
+    $("panel-reto").classList.toggle("hidden",mode!=="reto");
+    $("hintText").textContent=(mode==="explora")?"Arrastra los tres puntos: siempre existe una única parábola que pasa por ellos (si no están alineados).":"Resuelve el sistema con tu calculadora y escribe los coeficientes del modelo de ventas.";
+    if(mode==="reto"){drawRetoParab(reto&&reto.solved);}else{renderExplora();}
+  });});
+  $("themeBtn").addEventListener("click",function(){
+    document.body.classList.toggle("light");
+    $("themeBtn").textContent=document.body.classList.contains("light")?"☀️ Tema":"🌙 Tema";
+  });
+  renderExplora(); newReto(true);
+})();
+</script>
+</body>
+</html>
