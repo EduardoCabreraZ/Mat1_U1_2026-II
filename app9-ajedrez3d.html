@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AjedrezExpo 3D · Granos de trigo</title>
+<style>
+  :root{--bg:#0D1B2A;--bg2:#0F2233;--panel:rgba(22,35,58,.85);--border:rgba(45,212,191,.28);--text:#E6EDF3;--dim:#94A3B8;--acc:#2DD4BF;--accent2:#34D399;--warn:#FBBF24;--err:#F87171;--blue:#38BDF8;--gold:#F5B942}
+  body.light{--bg:#EEF3F9;--bg2:#fff;--panel:rgba(255,255,255,.94);--border:rgba(13,148,136,.3);--text:#1E293B;--dim:#64748B;--acc:#0D9488;--accent2:#059669;--warn:#D97706;--err:#DC2626;--blue:#0284C7;--gold:#B45309}
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
+  body{background:radial-gradient(1200px 700px at 70% -10%,rgba(45,212,191,.09),transparent),var(--bg);color:var(--text);min-height:100vh;padding:18px;transition:.3s}
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;max-width:1100px;margin:0 auto 14px}
+  .title h1{font-size:1.3rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .title h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--acc);box-shadow:0 0 12px var(--acc)}
+  .title p{color:var(--dim);font-size:.85rem;margin-top:2px}
+  .badge{background:rgba(45,212,191,.14);border:1px solid var(--border);color:var(--acc);padding:3px 10px;border-radius:20px;font-size:.75rem}
+  #themeBtn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:12px;cursor:pointer;font-size:.85rem}
+  main{max-width:1100px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap}
+  .mapbox{flex:1 1 430px;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:14px}
+  canvas#board{width:100%;display:block;border-radius:14px;background:var(--bg2)}
+  .hint{color:var(--dim);font-size:.8rem;margin-top:10px;text-align:center}
+  .panel{flex:1 1 330px;display:flex;flex-direction:column;gap:12px}
+  .sliders{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+  .srow{display:flex;align-items:center;gap:10px}
+  .srow label{min-width:120px;color:var(--dim);font-size:.83rem}
+  .srow input[type=range]{flex:1;accent-color:var(--acc)}
+  .srow .sval{min-width:44px;text-align:right;font-weight:700;color:var(--acc);font-size:.9rem}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+  .card .lbl{color:var(--dim);font-size:.72rem}
+  .card .val{font-size:.92rem;font-weight:600;word-break:break-word;font-variant-numeric:tabular-nums}
+  .card.hl{border-color:var(--gold)}.card.hl .val{color:var(--gold)}
+  .card.gn .val{color:var(--accent2)}.card.bl .val{color:var(--blue)}
+  .btn{border:none;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:.9rem;font-weight:600;color:#fff;background:var(--acc);transition:.2s}
+  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--dim)}
+  .btn.task{background:transparent;border:1px solid var(--border);color:var(--dim)}
+  .btn.task.on{background:var(--acc);color:#06221d;border-color:var(--acc)}
+  .btn:hover{filter:brightness(1.12)}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .eqbox{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:12px}
+  svg#plot{width:100%;display:block;border-radius:12px;background:var(--bg2)}
+  .gridline{stroke:var(--grid,rgba(148,163,184,.14))}.axis{stroke:var(--axis,rgba(230,237,243,.75));stroke-width:1.2}
+  .axlbl{fill:var(--dim);font-size:10px}
+  .plotLine{fill:none;stroke:var(--acc);stroke-width:2.5}
+  .plotPt{fill:var(--gold)}
+  .note{max-width:1100px;margin:16px auto 0;color:var(--dim);font-size:.75rem;text-align:center}
+  @media(max-width:760px){.title h1{font-size:1.08rem}}
+</style>
+</head>
+<body>
+<header>
+  <div class="title">
+    <h1><span class="dot"></span> AjedrezExpo 3D <span class="badge">Función exponencial</span></h1>
+    <p>El tablero de 8×8 con granos que se duplican · Introducción del Capítulo 3 · USIL</p>
+  </div>
+  <button id="themeBtn">🌙 Tema</button>
+</header>
+<main>
+  <div class="mapbox">
+    <canvas id="board" width="640" height="460"></canvas>
+    <p class="hint">Vista 3D del tablero: cada barra muestra los granos de la casilla (altura en escala log₂, porque ¡los números explotan!).</p>
+  </div>
+  <div class="panel">
+    <div class="sliders">
+      <div class="srow"><label>Casilla k</label><input type="range" id="kS" min="1" max="64" step="1" value="1"><span class="sval" id="kV">1</span></div>
+      <div class="row">
+        <button class="btn" id="playBtn">▶ Animar</button>
+        <button class="btn ghost" id="resetBtn">↺ Reiniciar</button>
+      </div>
+    </div>
+    <div class="cards">
+      <div class="card hl" style="grid-column:1/-1"><span class="lbl">Granos en la casilla k: 2^(k−1)</span><span class="val" id="cardK"></span></div>
+      <div class="card gn" style="grid-column:1/-1"><span class="lbl">Total acumulado: 2^k − 1</span><span class="val" id="cardTot"></span></div>
+      <div class="card bl"><span class="lbl">Peso (20 000 granos/kg)</span><span class="val" id="cardKg"></span></div>
+      <div class="card bl"><span class="lbl">En toneladas</span><span class="val" id="cardTon"></span></div>
+    </div>
+    <div class="eqbox">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="color:var(--dim);font-size:.75rem">Gráfico f(n) = 2^(n−1)</span>
+        <span class="row" style="gap:6px">
+          <button class="btn task on" id="btnLog" style="padding:6px 10px;font-size:.75rem">log₂</button>
+          <button class="btn task" id="btnLin" style="padding:6px 10px;font-size:.75rem">lineal</button>
+        </span>
+      </div>
+      <svg id="plot" viewBox="0 0 340 210" preserveAspectRatio="xMidYMid meet">
+        <g id="pGrid"></g><g id="pAxes"></g><g id="pLbl"></g>
+        <polyline id="pLine" class="plotLine"/><g id="pPts"></g>
+        <text id="pNote" x="170" y="20" text-anchor="middle" font-size="11" fill="#F87171" font-weight="700"></text>
+      </svg>
+    </div>
+    <div class="eqbox" style="border-color:var(--gold)">
+      <span style="font-size:.85rem;color:var(--dim)" id="cardPeru"></span>
+    </div>
+  </div>
+</main>
+<p class="note">Producción arrocera del Perú ≈ 1,4 millones de toneladas/año (referencial). Apuntes de Matemática 2 — USIL.</p>
+<script>
+(function(){
+  "use strict";
+  var $=function(id){return document.getElementById(id);};
+  function fmtBig(bi){
+    var s=bi.toString(),out="",c=0;
+    for(var i=s.length-1;i>=0;i--){out=s[i]+out;c++;if(c%3===0&&i>0)out="\u00A0"+out;}
+    return out;
+  }
+  function fmt(n,dec){ if(!isFinite(n))return "—"; if(Math.abs(n)<1e-9)n=0; dec=(dec===undefined)?2:dec;
+    var s=n.toFixed(dec); if(s.indexOf(".")>=0){s=s.replace(/0+$/,"").replace(/\.$/,"");}
+    var neg=s.charAt(0)==="-"; if(neg)s=s.slice(1);
+    var parts=s.split("."); var int=parts[0];
+    if(int.length>=5){int=int.replace(/\B(?=(\d{3})+(?!\d))/g,"\u00A0");}
+    s=int+(parts[1]?","+parts[1]:""); return (neg?"\u2212":"")+s;
+  }
+  var k=1, playing=false, playTimer=null, plotMode="log";
+  var PERU_TON=1400000;
+  // ===== tablero 3D =====
+  var cv=$("board"),ctx=cv.getContext("2d");
+  var tileW=54,tileH=27,ox=320,oy=140,maxH=118;
+  function isoX(i,j){return ox+(i-j)*tileW/2;}
+  function isoY(i,j){return oy+(i+j)*tileH/2;}
+  function barColor(n){
+    var t=n/64,hue=175-130*t;
+    return{top:"hsl("+hue+",72%,58%)",right:"hsl("+hue+",60%,42%)",left:"hsl("+hue+",55%,32%)"};
+  }
+  function diamond(X,Y,w,h){ctx.beginPath();ctx.moveTo(X,Y-h);ctx.lineTo(X+w/2,Y-h+h/2);ctx.lineTo(X,Y);ctx.lineTo(X-w/2,Y-h+h/2);ctx.closePath();}
+  function drawBoard(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    var order=[];
+    for(var s=0;s<=14;s++){for(var i=0;i<=7;i++){var j=s-i;if(j>=0&&j<=7)order.push([i,j]);}}
+    order.forEach(function(c){
+      var i=c[0],j=c[1],n=i*8+j+1;
+      var X=isoX(i,j),Y=isoY(i,j)+tileH/2;
+      if(n<=k){
+        var h=maxH*n/64;
+        var col=barColor(n);
+        // cara izquierda
+        ctx.fillStyle=col.left;
+        ctx.beginPath();ctx.moveTo(X-tileW/2,Y-h+tileH/2);ctx.lineTo(X,Y-h+tileH);ctx.lineTo(X,Y+tileH);ctx.lineTo(X-tileW/2,Y+tileH/2);ctx.closePath();ctx.fill();
+        // cara derecha
+        ctx.fillStyle=col.right;
+        ctx.beginPath();ctx.moveTo(X+tileW/2,Y-h+tileH/2);ctx.lineTo(X,Y-h+tileH);ctx.lineTo(X,Y+tileH);ctx.lineTo(X+tileW/2,Y+tileH/2);ctx.closePath();ctx.fill();
+        // cara superior
+        ctx.fillStyle=col.top;
+        ctx.beginPath();ctx.moveTo(X,Y-h);ctx.lineTo(X+tileW/2,Y-h+tileH/2);ctx.lineTo(X,Y-h+tileH);ctx.lineTo(X-tileW/2,Y-h+tileH/2);ctx.closePath();ctx.fill();
+        if(n===k){
+          ctx.strokeStyle="rgba(255,255,255,.85)";ctx.lineWidth=1.6;
+          ctx.beginPath();ctx.moveTo(X,Y-h);ctx.lineTo(X+tileW/2,Y-h+tileH/2);ctx.lineTo(X,Y-h+tileH);ctx.lineTo(X-tileW/2,Y-h+tileH/2);ctx.closePath();ctx.stroke();
+        }
+      }else{
+        ctx.strokeStyle="rgba(148,163,184,.4)";ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(X,Y);ctx.lineTo(X+tileW/2,Y+tileH/2);ctx.lineTo(X,Y+tileH);ctx.lineTo(X-tileW/2,Y+tileH/2);ctx.closePath();ctx.stroke();
+      }
+    });
+    ctx.fillStyle="rgba(148,163,184,.8)";ctx.font="12px Segoe UI";
+    ctx.fillText("Casillas llenas: "+k+" / 64",14,22);
+  }
+  // ===== gráficos 2D =====
+  function drawPlot(){
+    var g=$("pGrid");while(g.firstChild)g.removeChild(g.firstChild);
+    var ax=$("pAxes");while(ax.firstChild)ax.removeChild(ax.firstChild);
+    var lb=$("pLbl");while(lb.firstChild)lb.removeChild(lb.firstChild);
+    var pts=$("pPts");while(pts.firstChild)pts.removeChild(pts.firstChild);
+    var NS="http://www.w3.org/2000/svg";
+    var Wp=340,Hp=210,Lp=34,Rp=10,Tp=26,Bp=24,el,t,i;
+    function px(n){return Lp+(n-1)/63*(Wp-Lp-Rp);}
+    if(plotMode==="log"){
+      function pyL(v){return Tp+(63-v)/63*(Hp-Tp-Bp);}
+      for(i=0;i<=63;i+=21){
+        el=document.createElementNS(NS,"line");el.setAttribute("class","gridline");el.setAttribute("x1",Lp);el.setAttribute("x2",Wp-Rp);el.setAttribute("y1",pyL(i));el.setAttribute("y2",pyL(i));g.appendChild(el);
+        t=document.createElementNS(NS,"text");t.setAttribute("class","axlbl");t.setAttribute("x",Lp-4);t.setAttribute("y",pyL(i)+3);t.setAttribute("text-anchor","end");t.textContent=i;lb.appendChild(t);
+      }
+      var dstr="";
+      for(i=1;i<=64;i++){dstr+=px(i).toFixed(1)+","+pyL(i-1).toFixed(1)+" ";}
+      $("pLine").setAttribute("points",dstr);
+      for(i=1;i<=64;i+=9){
+        el=document.createElementNS(NS,"circle");el.setAttribute("class","plotPt");el.setAttribute("cx",px(i));el.setAttribute("cy",pyL(i-1));el.setAttribute("r","3");pts.appendChild(el);
+      }
+      el=document.createElementNS(NS,"circle");el.setAttribute("class","plotPt");el.setAttribute("cx",px(k));el.setAttribute("cy",pyL(k-1));el.setAttribute("r","4.5");el.setAttribute("fill","var(--gold)");pts.appendChild(el);
+      $("pNote").textContent="";
+      t=document.createElementNS(NS,"text");t.setAttribute("class","axlbl");t.setAttribute("x",Lp);t.setAttribute("y",Hp-6);t.textContent="Casilla n";lb.appendChild(t);
+    }else{
+      var nShow=11;
+      function pyV(v){return Tp+(1024-v)/1024*(Hp-Tp-Bp);}
+      for(i=0;i<=1024;i+=256){
+        el=document.createElementNS(NS,"line");el.setAttribute("class","gridline");el.setAttribute("x1",Lp);el.setAttribute("x2",Wp-Rp);el.setAttribute("y1",pyV(i));el.setAttribute("y2",pyV(i));g.appendChild(el);
+        t=document.createElementNS(NS,"text");t.setAttribute("class","axlbl");t.setAttribute("x",Lp-4);t.setAttribute("y",pyV(i)+3);t.setAttribute("text-anchor","end");t.textContent=i;lb.appendChild(t);
+      }
+      var dstr2="";
+      for(i=1;i<=nShow;i++){dstr2+=px(i).toFixed(1)+","+pyV(Math.pow(2,i-1)).toFixed(1)+" ";}
+      $("pLine").setAttribute("points",dstr2);
+      for(i=1;i<=nShow;i++){
+        el=document.createElementNS(NS,"circle");el.setAttribute("class","plotPt");el.setAttribute("cx",px(i));el.setAttribute("cy",pyV(Math.pow(2,i-1)));el.setAttribute("r","3");pts.appendChild(el);
+      }
+      $("pNote").textContent="En escala lineal la curva «explota»: solo se ven las primeras casillas.";
+    }
+    el=document.createElementNS(NS,"line");el.setAttribute("class","axis");el.setAttribute("x1",Lp);el.setAttribute("x2",Wp-Rp);el.setAttribute("y1",Hp-Bp);el.setAttribute("y2",Hp-Bp);ax.appendChild(el);
+    el=document.createElementNS(NS,"line");el.setAttribute("class","axis");el.setAttribute("x1",Lp);el.setAttribute("x2",Lp);el.setAttribute("y1",Tp);el.setAttribute("y2",Hp-Bp);ax.appendChild(el);
+  }
+  // ===== panel =====
+  function update(){
+    $("kV").textContent=k;
+    var grains=(2n**BigInt(k-1));
+    var total=(2n**BigInt(k))-1n;
+    $("cardK").textContent=fmtBig(grains);
+    $("cardTot").textContent=fmtBig(total);
+    var kg=total/20000n;
+    var ton=total/20000000n;
+    $("cardKg").textContent=fmtBig(kg)+" kg";
+    $("cardTon").textContent=fmtBig(ton)+" t";
+    var years=Number(total)/(20000*1000*PERU_TON);
+    $("cardPeru").innerHTML="🇵🇪 Para igualar el total del tablero se necesitarían <b>≈ "+fmt(years,0)+" años</b> de toda la producción arrocera del Perú ("+fmt(PERU_TON,0)+" t/año). ¡Así crece una exponencial!";
+    drawBoard();drawPlot();
+  }
+  $("kS").addEventListener("input",function(){k=parseInt(this.value,10);update();});
+  $("playBtn").addEventListener("click",function(){
+    if(playing){clearInterval(playTimer);playing=false;$("playBtn").textContent="▶ Animar";return;}
+    playing=true;$("playBtn").textContent="⏸ Pausa";
+    playTimer=setInterval(function(){
+      k++;if(k>=64){k=64;clearInterval(playTimer);playing=false;$("playBtn").textContent="▶ Animar";}
+      $("kS").value=k;update();
+    },260);
+  });
+  $("resetBtn").addEventListener("click",function(){
+    if(playing){clearInterval(playTimer);playing=false;$("playBtn").textContent="▶ Animar";}
+    k=1;$("kS").value=1;update();
+  });
+  $("btnLog").addEventListener("click",function(){plotMode="log";$("btnLog").classList.add("on");$("btnLin").classList.remove("on");drawPlot();});
+  $("btnLin").addEventListener("click",function(){plotMode="lin";$("btnLin").classList.add("on");$("btnLog").classList.remove("on");drawPlot();});
+  $("themeBtn").addEventListener("click",function(){
+    document.body.classList.toggle("light");
+    $("themeBtn").textContent=document.body.classList.contains("light")?"☀️ Tema":"🌙 Tema";
+  });
+  update();
+})();
+</script>
+</body>
+</html>

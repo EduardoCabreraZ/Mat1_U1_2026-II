@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LimitesLaterales · Límites laterales</title>
+<style>
+  :root{--bg:#0D1B2A;--bg2:#0F2233;--panel:rgba(22,35,58,.8);--border:rgba(56,189,248,.25);--text:#E6EDF3;--dim:#94A3B8;--acc:#38BDF8;--accent2:#34D399;--warn:#FBBF24;--err:#F87171;--violet:#A78BFA;--grid:rgba(148,163,184,.14);--axis:rgba(230,237,243,.75)}
+  body.light{--bg:#EEF3F9;--bg2:#fff;--panel:rgba(255,255,255,.92);--border:rgba(37,99,235,.28);--text:#1E293B;--dim:#64748B;--acc:#0284C7;--accent2:#059669;--warn:#D97706;--err:#DC2626;--violet:#7C3AED;--grid:rgba(100,116,139,.18);--axis:rgba(30,41,59,.8)}
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
+  body{background:radial-gradient(1200px 700px at 70% -10%,rgba(56,189,248,.09),transparent),var(--bg);color:var(--text);min-height:100vh;padding:18px;transition:.3s}
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;max-width:1100px;margin:0 auto 14px}
+  .title h1{font-size:1.3rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .title h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--acc);box-shadow:0 0 12px var(--acc)}
+  .title p{color:var(--dim);font-size:.85rem;margin-top:2px}
+  .badge{background:rgba(56,189,248,.14);border:1px solid var(--border);color:var(--acc);padding:3px 10px;border-radius:20px;font-size:.75rem}
+  #themeBtn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:12px;cursor:pointer;font-size:.85rem}
+  .tabs{max-width:1100px;margin:0 auto 14px;display:flex;gap:8px;flex-wrap:wrap}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--dim);padding:9px 16px;border-radius:12px;cursor:pointer;font-size:.9rem}
+  .tab.active{color:#fff;background:var(--acc);border-color:var(--acc);box-shadow:0 0 18px rgba(56,189,248,.4);font-weight:600}
+  main{max-width:1100px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap}
+  .mapbox{flex:1 1 430px;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:14px}
+  svg#map{width:100%;display:block;border-radius:14px;background:var(--bg2)}
+  .hint{color:var(--dim);font-size:.8rem;margin-top:10px;text-align:center}
+  .panel{flex:1 1 330px;display:flex;flex-direction:column;gap:12px}
+  .sliders{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+  .srow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .srow label{min-width:120px;color:var(--dim);font-size:.85rem}
+  .srow input[type=range]{flex:1;min-width:140px;accent-color:var(--acc)}
+  .srow .sval{min-width:60px;text-align:right;font-weight:700;color:var(--acc)}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+  .card .lbl{color:var(--dim);font-size:.72rem}
+  .card .val{font-size:.95rem;font-weight:600;word-break:break-word}
+  .card.gn .val{color:var(--accent2)}.card.rd .val{color:var(--err)}.card.wr .val{color:var(--warn)}.card.bl .val{color:var(--acc)}
+  .eqbox{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+  .eq .lbl{color:var(--dim);font-size:.72rem}
+  .eq .v{font-size:.96rem;font-weight:600;font-family:'Cambria Math','Segoe UI',serif}
+  .btn{border:none;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:.9rem;font-weight:600;color:#fff;background:var(--acc);transition:.2s}
+  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--dim)}
+  .btn.gn{background:var(--accent2)}.btn.rd{background:var(--err)}
+  .btn:hover{filter:brightness(1.12)}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .feedback{font-size:.92rem;margin-top:8px;font-weight:600;min-height:22px}
+  .feedback.ok{color:var(--accent2)}.feedback.bad{color:var(--err)}
+  .hidden{display:none!important}
+  .note{max-width:1100px;margin:16px auto 0;color:var(--dim);font-size:.75rem;text-align:center}
+  .gridline{stroke:var(--grid)}.axis{stroke:var(--axis);stroke-width:1.5}.axlbl{fill:var(--dim);font-size:11px}
+  .p1{stroke:var(--acc);stroke-width:3;fill:none}
+  .p2{stroke:var(--accent2);stroke-width:3;fill:none}
+  .p3{stroke:var(--violet);stroke-width:3;fill:none}
+  .ptC{fill:var(--warn);stroke:#fff;stroke-width:2}
+  .ptO{fill:var(--bg2);stroke-width:2.5}
+  .marker{stroke:var(--warn);stroke-width:1.5;stroke-dasharray:5 4;opacity:.8}
+  @media(max-width:760px){.title h1{font-size:1.08rem}}
+</style>
+</head>
+<body>
+<header>
+  <div class="title">
+    <h1><span class="dot"></span> LimitesLaterales <span class="badge">Límites</span></h1>
+    <p>El límite existe si los límites por izquierda y derecha coinciden · Capítulo 6 · USIL</p>
+  </div>
+  <button id="themeBtn">🌙 Tema</button>
+</header>
+<div class="tabs">
+  <button class="tab active" data-mode="exp">🎚️ Explorar límites laterales</button>
+  <button class="tab" data-mode="vf">✅ Verdadero o Falso</button>
+</div>
+<main>
+  <div class="mapbox">
+    <svg id="map" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid meet">
+      <g id="grid"></g><g id="axes"></g><g id="labels"></g>
+      <path id="p1" class="p1"/><path id="p2" class="p2"/><path id="p3" class="p3"/>
+      <circle id="c1" class="ptC" r="6"/><circle id="o1" class="ptO" r="6"/><circle id="o2" class="ptO" r="6"/><circle id="c2" class="ptC" r="6"/>
+      <line id="marker" class="marker"/>
+    </svg>
+    <p class="hint">g(x) = −x+1 si x ≤ 0; &nbsp;g(x) = x²−2x−2 si 0 &lt; x &lt; 3; &nbsp;g(x) = x−2 si x ≥ 3 (ejemplo del libro, p. 178).</p>
+  </div>
+  <div class="panel">
+    <div id="panel-exp">
+      <div class="sliders">
+        <div class="srow"><label>Punto x₀</label><input type="range" id="x0S" min="-3" max="6" step="0.25" value="0"><span class="sval" id="x0V"></span></div>
+        <div class="row">
+          <button class="btn ghost" id="q0">Ir a x₀ = 0</button>
+          <button class="btn ghost" id="q3">Ir a x₀ = 3</button>
+        </div>
+      </div>
+      <div class="cards" style="margin-top:10px">
+        <div class="card bl"><span class="lbl">Límite por la izquierda (x → x₀⁻)</span><span class="val" id="limL"></span></div>
+        <div class="card bl"><span class="lbl">Límite por la derecha (x → x₀⁺)</span><span class="val" id="limR"></span></div>
+        <div class="card" id="exCard" style="grid-column:1/-1"><span class="lbl">¿Existe el límite lím g(x) cuando x → x₀?</span><span class="val" id="exVal"></span></div>
+        <div class="card wr"><span class="lbl">Valor g(x₀)</span><span class="val" id="gVal"></span></div>
+        <div class="card gn"><span class="lbl">Observación</span><span class="val" id="obsVal"></span></div>
+      </div>
+      <div class="eqbox" style="margin-top:10px;border-color:var(--warn)">
+        <div class="eq"><span class="v" style="font-size:.85rem;color:var(--dim)">💡 Teorema de existencia (libro, p. 175): lím g(x) = L si y solo si los dos límites laterales existen y son iguales a L. ¡Pruébalo en x₀ = 0 y x₀ = 3!</span></div>
+      </div>
+    </div>
+    <div id="panel-vf" class="hidden">
+      <div class="eqbox">
+        <div class="eq"><span class="lbl">Afirmación sobre la función g</span><span class="v" id="stTxt" style="font-size:1.05rem;color:var(--acc)"></span></div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn gn" id="btnV">✔ Verdadero</button>
+        <button class="btn rd" id="btnF">✘ Falso</button>
+        <button class="btn ghost" id="btnN">Siguiente ➡</button>
+      </div>
+      <div class="feedback" id="vfFb"></div>
+      <div class="eqbox hidden" id="vfWhy" style="margin-top:8px;border-color:var(--accent2)">
+        <div class="eq"><span class="v" id="vfWhyT" style="font-size:.86rem;color:var(--dim)"></span></div>
+      </div>
+      <div class="card gn" style="margin-top:10px"><span class="lbl">Aciertos en esta sesión</span><span class="val" id="vfScore">0 de 0</span></div>
+    </div>
+  </div>
+</main>
+<p class="note">Convención Perú: coma decimal · pares ordenados (x; y). Apuntes de Matemática 2 — USIL.</p>
+<script>
+(function(){
+  "use strict";
+  var $=function(id){return document.getElementById(id);};
+  function fmt(n,dec){ if(!isFinite(n))return "—"; if(Math.abs(n)<1e-9)n=0; dec=(dec===undefined)?2:dec;
+    var s=n.toFixed(dec); if(s.indexOf(".")>=0){s=s.replace(/0+$/,"").replace(/\.$/,"");}
+    var neg=s.charAt(0)==="-"; if(neg)s=s.slice(1);
+    var parts=s.split("."); var int=parts[0];
+    if(int.length>=5){int=int.replace(/\B(?=(\d{3})+(?!\d))/g,"\u00A0");}
+    s=int+(parts[1]?","+parts[1]:""); return (neg?"\u2212":"")+s;
+  }
+  var W=600,H=600,xMin=-3.5,xMax=6.5,yMin=-4.5,yMax=5.5;
+  function sx(x){return (x-xMin)/(xMax-xMin)*W;}
+  function sy(y){return H-(y-yMin)/(yMax-yMin)*H;}
+  function g(x){ if(x<=0)return -x+1; if(x<3)return x*x-2*x-2; return x-2; }
+  (function build(){
+    var NS="http://www.w3.org/2000/svg",i,el,t;
+    for(i=Math.ceil(xMin);i<=xMax;i++){
+      el=document.createElementNS(NS,"line");el.setAttribute("class","gridline");el.setAttribute("x1",sx(i));el.setAttribute("x2",sx(i));el.setAttribute("y1",0);el.setAttribute("y2",H);$("grid").appendChild(el);
+    }
+    for(i=Math.ceil(yMin);i<=yMax;i++){
+      el=document.createElementNS(NS,"line");el.setAttribute("class","gridline");el.setAttribute("x1",0);el.setAttribute("x2",W);el.setAttribute("y1",sy(i));el.setAttribute("y2",sy(i));$("grid").appendChild(el);
+    }
+    el=document.createElementNS(NS,"line");el.setAttribute("class","axis");el.setAttribute("x1",0);el.setAttribute("x2",W);el.setAttribute("y1",sy(0));el.setAttribute("y2",sy(0));$("axes").appendChild(el);
+    el=document.createElementNS(NS,"line");el.setAttribute("class","axis");el.setAttribute("x1",sx(0));el.setAttribute("x2",sx(0));el.setAttribute("y1",0);el.setAttribute("y2",H);$("axes").appendChild(el);
+    for(i=Math.ceil(xMin);i<=xMax;i++){ if(i===0)continue;
+      t=document.createElementNS(NS,"text");t.setAttribute("class","axlbl");t.setAttribute("x",sx(i));t.setAttribute("y",sy(0)+14);t.setAttribute("text-anchor","middle");t.textContent=i;$("labels").appendChild(t);}
+    for(i=Math.ceil(yMin);i<=yMax;i++){ if(i===0)continue;
+      t=document.createElementNS(NS,"text");t.setAttribute("class","axlbl");t.setAttribute("x",sx(0)-6);t.setAttribute("y",sy(i)+4);t.setAttribute("text-anchor","end");t.textContent=i;$("labels").appendChild(t);}
+  })();
+  (function drawG(){
+    var d1="M"+sx(-3).toFixed(1)+" "+sy(g(-3)).toFixed(1)+" L"+sx(0).toFixed(1)+" "+sy(g(0)).toFixed(1);
+    $("p1").setAttribute("d",d1);
+    var d2="";
+    for(var i=0;i<=80;i++){var x=0.02+(2.98)*i/80;var y=x*x-2*x-2;
+      d2+=(i===0?"M":"L")+sx(x).toFixed(1)+" "+sy(y).toFixed(1)+" ";}
+    $("p2").setAttribute("d",d2);
+    var d3="M"+sx(3).toFixed(1)+" "+sy(g(3)).toFixed(1)+" L"+sx(6).toFixed(1)+" "+sy(g(6)).toFixed(1);
+    $("p3").setAttribute("d",d3);
+    $("c1").setAttribute("cx",sx(0));$("c1").setAttribute("cy",sy(1));
+    $("o1").setAttribute("cx",sx(0));$("o1").setAttribute("cy",sy(-2));$("o1").setAttribute("stroke","var(--accent2)");
+    $("o2").setAttribute("cx",sx(3));$("o2").setAttribute("cy",sy(1));$("o2").setAttribute("stroke","var(--accent2)");
+    $("c2").setAttribute("cx",sx(3));$("c2").setAttribute("cy",sy(1));
+    $("c2").style.display="none"; // (3;1) es continuo: un solo punto cerrado bastaría; mostramos el abierto del tramo medio
+    $("c2").style.display="";
+    $("c2").setAttribute("fill","var(--violet)");
+  })();
+  var mode="exp";
+  function render(){
+    var x0=parseFloat($("x0S").value);
+    $("x0V").textContent=fmt(x0,2);
+    $("marker").setAttribute("x1",sx(x0));$("marker").setAttribute("x2",sx(x0));
+    $("marker").setAttribute("y1",0);$("marker").setAttribute("y2",H);
+    var L=g(x0-1e-6),R=g(x0+1e-6);
+    $("limL").textContent=fmt(L,2);
+    $("limR").textContent=fmt(R,2);
+    var exists=Math.abs(L-R)<1e-3;
+    $("exVal").textContent=exists?("Sí, y vale "+fmt(L,2)):"No existe (los laterales difieren)";
+    $("exCard").className="card "+(exists?"gn":"rd");
+    $("gVal").textContent=fmt(g(x0),2);
+    var obs="";
+    if(!exists){obs="Los laterales son distintos: el límite no existe.";}
+    else if(Math.abs(L-g(x0))<1e-3){obs="El límite coincide con g(x₀): aquí g es continua.";}
+    else{obs="El límite existe pero es diferente de g(x₀).";}
+    $("obsVal").textContent=obs;
+  }
+  $("x0S").addEventListener("input",render);
+  $("q0").addEventListener("click",function(){$("x0S").value=0;render();});
+  $("q3").addEventListener("click",function(){$("x0S").value=3;render();});
+  // ===== V/F =====
+  var BANK=[
+    {t:"lím g(x) cuando x → 0⁻ es igual a 1",v:true,w:"Por la izquierda se usa −x+1: −0+1 = 1."},
+    {t:"lím g(x) cuando x → 0⁺ es igual a 1",v:false,w:"Por la derecha se usa x²−2x−2: da −2, no 1."},
+    {t:"lím g(x) cuando x → 0 no existe",v:true,w:"Los laterales difieren (1 ≠ −2), entonces el límite no existe."},
+    {t:"lím g(x) cuando x → 3 es igual a 1",v:true,w:"Ambos laterales dan 1: por la izquierda 9−6−2 = 1 y por la derecha 3−2 = 1."},
+    {t:"lím g(x) cuando x → −1 es igual a 2",v:true,w:"Cerca de −1 se usa −x+1: 1+1 = 2."},
+    {t:"lím g(x) cuando x → 1 es igual a −3",v:true,w:"Cerca de 1 se usa x²−2x−2: 1−2−2 = −3."},
+    {t:"lím g(x) cuando x → 2 es igual a −2",v:true,w:"4−4−2 = −2 (y además g(2) = −2)."},
+    {t:"Los límites laterales en x₀ = 3 son diferentes",v:false,w:"Ambos valen 1; por eso el límite sí existe."},
+    {t:"g(0) = −2",v:false,w:"Como 0 ≤ 0, se usa el primer tramo: g(0) = −0+1 = 1."},
+    {t:"lím g(x) cuando x → 4 es igual a 2",v:true,w:"Cerca de 4 se usa x−2: 4−2 = 2."}
+  ];
+  var order=[],oi=0,ok=0,tot=0,answered=false;
+  function shuffle(){order=BANK.map(function(_,i){return i;});for(var i=order.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=order[i];order[i]=order[j];order[j]=t;}oi=0;}
+  function showSt(){
+    if(oi>=order.length){shuffle();}
+    var st=BANK[order[oi]];
+    $("stTxt").textContent=st.t;
+    $("vfFb").textContent="";$("vfFb").className="feedback";
+    $("vfWhy").classList.add("hidden");
+    answered=false;
+  }
+  function answer(v){
+    if(answered)return;
+    answered=true;tot++;
+    var st=BANK[order[oi]];
+    if(v===st.v){ok++;$("vfFb").textContent="✔ ¡Correcto!";$("vfFb").className="feedback ok";}
+    else{$("vfFb").textContent="✘ No exactamente. Revisa la explicación.";$("vfFb").className="feedback bad";}
+    $("vfWhy").classList.remove("hidden");
+    $("vfWhyT").textContent="¿Por qué? "+st.w;
+    $("vfScore").textContent=ok+" de "+tot;
+  }
+  $("btnV").addEventListener("click",function(){answer(true);});
+  $("btnF").addEventListener("click",function(){answer(false);});
+  $("btnN").addEventListener("click",function(){oi++;showSt();});
+  var tabs=document.querySelectorAll(".tab");
+  tabs.forEach(function(tEl){tEl.addEventListener("click",function(){
+    tabs.forEach(function(x){x.classList.remove("active");});tEl.classList.add("active");
+    mode=tEl.getAttribute("data-mode");
+    $("panel-exp").classList.toggle("hidden",mode!=="exp");
+    $("panel-vf").classList.toggle("hidden",mode!=="vf");
+  });});
+  $("themeBtn").addEventListener("click",function(){
+    document.body.classList.toggle("light");
+    $("themeBtn").textContent=document.body.classList.contains("light")?"☀️ Tema":"🌙 Tema";
+  });
+  shuffle();showSt();render();
+})();
+</script>
+</body>
+</html>

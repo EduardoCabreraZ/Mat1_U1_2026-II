@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LogLab · Definición y propiedades del logaritmo</title>
+<style>
+  :root{--bg:#0D1B2A;--bg2:#0F2233;--panel:rgba(22,35,58,.8);--border:rgba(56,189,248,.25);--text:#E6EDF3;--dim:#94A3B8;--acc:#38BDF8;--accent2:#34D399;--warn:#FBBF24;--err:#F87171;--violet:#A78BFA;--grid:rgba(148,163,184,.14);--axis:rgba(230,237,243,.75)}
+  body.light{--bg:#EEF3F9;--bg2:#fff;--panel:rgba(255,255,255,.92);--border:rgba(37,99,235,.28);--text:#1E293B;--dim:#64748B;--acc:#0284C7;--accent2:#059669;--warn:#D97706;--err:#DC2626;--violet:#7C3AED;--grid:rgba(100,116,139,.18);--axis:rgba(30,41,59,.8)}
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
+  body{background:radial-gradient(1200px 700px at 70% -10%,rgba(56,189,248,.09),transparent),var(--bg);color:var(--text);min-height:100vh;padding:18px;transition:.3s}
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;max-width:1100px;margin:0 auto 14px}
+  .title h1{font-size:1.3rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .title h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--acc);box-shadow:0 0 12px var(--acc)}
+  .title p{color:var(--dim);font-size:.85rem;margin-top:2px}
+  .badge{background:rgba(56,189,248,.14);border:1px solid var(--border);color:var(--acc);padding:3px 10px;border-radius:20px;font-size:.75rem}
+  #themeBtn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:12px;cursor:pointer;font-size:.85rem}
+  .tabs{max-width:1100px;margin:0 auto 14px;display:flex;gap:8px;flex-wrap:wrap}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--dim);padding:9px 16px;border-radius:12px;cursor:pointer;font-size:.9rem}
+  .tab.active{color:#fff;background:var(--acc);border-color:var(--acc);box-shadow:0 0 18px rgba(56,189,248,.4);font-weight:600}
+  main{max-width:900px;margin:0 auto}
+  .panel{display:flex;flex-direction:column;gap:12px}
+  .sliders{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+  .srow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .srow label{min-width:150px;color:var(--dim);font-size:.85rem}
+  .srow input[type=range]{flex:1;min-width:160px;accent-color:var(--acc)}
+  .srow .sval{min-width:56px;text-align:right;font-weight:700;color:var(--acc)}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+  .card .lbl{color:var(--dim);font-size:.74rem}
+  .card .val{font-size:1rem;font-weight:600;font-family:'Cambria Math','Segoe UI',serif;word-break:break-word}
+  .card.hl{border-color:var(--acc);box-shadow:0 0 14px rgba(56,189,248,.15)}.card.hl .val{color:var(--acc)}
+  .card.gn{border-color:rgba(52,211,153,.4)}.card.gn .val{color:var(--accent2)}
+  .eqbox{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+  .eq .lbl{color:var(--dim);font-size:.74rem}
+  .eq .v{font-size:.96rem;font-weight:600;font-family:'Cambria Math','Segoe UI',serif}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  input[type=text]{flex:1;min-width:120px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:10px;font-size:1rem}
+  .btn{border:none;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:.9rem;font-weight:600;color:#fff;background:var(--acc);transition:.2s}
+  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--dim)}
+  .btn.accent{background:var(--accent2)}
+  .btn:hover{filter:brightness(1.12)}
+  .feedback{font-size:.92rem;margin-top:8px;font-weight:600;min-height:20px}
+  .feedback.ok{color:var(--accent2)}.feedback.bad{color:var(--err)}
+  .hidden{display:none!important}
+  .note{max-width:1100px;margin:16px auto 0;color:var(--dim);font-size:.75rem;text-align:center}
+  .bigEq{font-size:1.35rem;text-align:center;font-family:'Cambria Math','Segoe UI',serif;color:var(--acc);margin:8px 0}
+  @media(max-width:760px){.cards{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="title">
+    <h1><span class="dot"></span> LogLab <span class="badge">Función logarítmica</span></h1>
+    <p>Definición, propiedades y práctica de logaritmos · Capítulo 5 · Apuntes de Matemática 2 · USIL</p>
+  </div>
+  <button id="themeBtn">🌙 Tema</button>
+</header>
+<div class="tabs">
+  <button class="tab active" data-mode="def">🔑 Definición</button>
+  <button class="tab" data-mode="prop">⚗️ Propiedades en vivo</button>
+  <button class="tab" data-mode="prac">✏️ Práctica</button>
+</div>
+<main>
+  <div class="panel">
+    <!-- DEFINICIÓN -->
+    <div id="panel-def">
+      <div class="sliders">
+        <div class="srow"><label>Base b (b &gt; 0, b ≠ 1)</label><input type="range" id="dBS" min="2" max="10" step="1" value="2"><span class="sval" id="dBV"></span></div>
+        <div class="srow"><label>Exponente y</label><input type="range" id="dYS" min="-4" max="4" step="0.5" value="3"><span class="sval" id="dYV"></span></div>
+      </div>
+      <div class="bigEq" id="defEq"></div>
+      <div class="cards">
+        <div class="card hl"><span class="lbl">Forma exponencial</span><span class="val" id="defExp"></span></div>
+        <div class="card hl"><span class="lbl">Forma logarítmica</span><span class="val" id="defLog"></span></div>
+      </div>
+      <div class="eqbox" style="margin-top:10px;border-color:var(--warn)">
+        <div class="eq"><span class="v" style="font-size:.86rem;color:var(--dim)">💡 Libro (p. 148): log<sub>b</sub>(x) = y &nbsp;⟺&nbsp; x = b<sup>y</sup>. El logaritmo pregunta: «¿a qué exponente debo elevar la base b para obtener x?».</span></div>
+      </div>
+    </div>
+    <!-- PROPIEDADES -->
+    <div id="panel-prop" class="hidden">
+      <div class="sliders">
+        <div class="srow"><label>Base b</label><input type="range" id="pBS" min="2" max="10" step="1" value="2"><span class="sval" id="pBV"></span></div>
+        <div class="srow"><label>A</label><input type="range" id="pAS" min="1" max="64" step="1" value="8"><span class="sval" id="pAV"></span></div>
+        <div class="srow"><label>B</label><input type="range" id="pCS" min="1" max="64" step="1" value="4"><span class="sval" id="pCV"></span></div>
+        <div class="srow"><label>Exponente n</label><input type="range" id="pNS" min="1" max="5" step="1" value="2"><span class="sval" id="pNV"></span></div>
+      </div>
+      <div class="cards" style="margin-top:10px">
+        <div class="card"><span class="lbl">a) log<sub>b</sub>(A·B) = log<sub>b</sub>A + log<sub>b</sub>B</span><span class="val" id="pr1"></span></div>
+        <div class="card"><span class="lbl">b) log<sub>b</sub>(A/B) = log<sub>b</sub>A − log<sub>b</sub>B</span><span class="val" id="pr2"></span></div>
+        <div class="card"><span class="lbl">c) log<sub>b</sub>(A<sup>n</sup>) = n·log<sub>b</sub>A</span><span class="val" id="pr3"></span></div>
+        <div class="card"><span class="lbl">d) Cambio de base: log<sub>b</sub>A = ln A / ln b</span><span class="val" id="pr4"></span></div>
+        <div class="card"><span class="lbl">e) log<sub>b</sub>(1) = 0</span><span class="val" id="pr5"></span></div>
+        <div class="card"><span class="lbl">f) log<sub>b</sub>(b) = 1</span><span class="val" id="pr6"></span></div>
+      </div>
+      <div class="eqbox" style="margin-top:10px;border-color:var(--warn)">
+        <div class="eq"><span class="v" style="font-size:.86rem;color:var(--dim)">💡 Mueve los deslizadores: ambos lados de cada igualdad siempre coinciden. Notación del libro: log = log<sub>10</sub> y ln = log<sub>e</sub>.</span></div>
+      </div>
+    </div>
+    <!-- PRÁCTICA -->
+    <div id="panel-prac" class="hidden">
+      <div class="eqbox">
+        <div class="eq"><span class="lbl">Ejercicio</span><span class="v" id="pracQ" style="font-size:1.15rem;color:var(--acc)"></span></div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <input type="text" id="pracIn" placeholder="Tu respuesta (coma decimal o fracción)">
+        <button class="btn" id="pracOk">Comprobar</button>
+      </div>
+      <div class="feedback" id="pracFb"></div>
+      <div class="eqbox hidden" id="pracSolBox" style="margin-top:10px;border-color:var(--accent2)">
+        <div class="eq"><span class="lbl">Solución paso a paso</span><span class="v" id="pracSol" style="font-size:.9rem"></span></div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn ghost" id="pracRev">Ver solución</button>
+        <button class="btn accent" id="pracNew">🎲 Nuevo ejercicio</button>
+      </div>
+    </div>
+  </div>
+</main>
+<p class="note">Propiedades del libro (p. 148). Convención Perú: coma decimal. Apuntes de Matemática 2 — USIL.</p>
+<script>
+(function(){
+  "use strict";
+  var $=function(id){return document.getElementById(id);};
+  function fmt(n,dec){ if(!isFinite(n))return "—"; if(Math.abs(n)<1e-9)n=0; dec=(dec===undefined)?4:dec;
+    var s=n.toFixed(dec); if(s.indexOf(".")>=0){s=s.replace(/0+$/,"").replace(/\.$/,"");}
+    var neg=s.charAt(0)==="-"; if(neg)s=s.slice(1);
+    var parts=s.split("."); var int=parts[0];
+    if(int.length>=5){int=int.replace(/\B(?=(\d{3})+(?!\d))/g,"\u00A0");}
+    s=int+(parts[1]?","+parts[1]:""); return (neg?"\u2212":"")+s;
+  }
+  function parseAns(s){s=(""+s).trim().replace(",",".");if(s.indexOf("/")>=0){var p=s.split("/");return parseFloat(p[0])/parseFloat(p[1]);}return parseFloat(s);}
+  function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+  var mode="def";
+  function renderDef(){
+    var b=parseInt($("dBS").value,10),y=parseFloat($("dYS").value);
+    $("dBV").textContent=b;$("dYV").textContent=fmt(y,1);
+    var x=Math.pow(b,y);
+    $("defEq").innerHTML="log<sub>"+b+"</sub>("+fmt(x,4)+") = "+fmt(y,1);
+    $("defExp").innerHTML=b+"<sup>"+fmt(y,1)+"</sup> = "+fmt(x,4);
+    $("defLog").innerHTML="log<sub>"+b+"</sub>("+fmt(x,4)+") = "+fmt(y,1);
+  }
+  function renderProp(){
+    var b=parseInt($("pBS").value,10),A=parseInt($("pAS").value,10),B=parseInt($("pCS").value,10),n=parseInt($("pNS").value,10);
+    $("pBV").textContent=b;$("pAV").textContent=A;$("pCV").textContent=B;$("pNV").textContent=n;
+    function lb(v){return Math.log(v)/Math.log(b);}
+    $("pr1").textContent=fmt(lb(A*B))+"  =  "+fmt(lb(A))+" + "+fmt(lb(B))+"  ✓";
+    $("pr2").textContent=fmt(lb(A/B))+"  =  "+fmt(lb(A))+" − "+fmt(lb(B))+"  ✓";
+    $("pr3").textContent=fmt(lb(Math.pow(A,n)))+"  =  "+fmt(n)+"·"+fmt(lb(A))+"  ✓";
+    $("pr4").textContent="log<sub>"+b+"</sub>("+A+") = "+fmt(lb(A))+"  =  ln("+A+")/ln("+b+")  ✓";
+    $("pr5").textContent="log<sub>"+b+"</sub>(1) = 0  ✓";
+    $("pr6").textContent="log<sub>"+b+"</sub>("+b+") = 1  ✓";
+  }
+  // ===== práctica =====
+  var ex=null;
+  function genEx(){
+    var type=ri(0,5);
+    if(type===0){ // log_b(N), N=b^n
+      var bs=[2,3,5][ri(0,2)],nn=ri(2,6),N=Math.pow(bs,nn);
+      ex={ans:nn,int:true,html:"Calcula log<sub>"+bs+"</sub>("+N+")",sol:"Como "+N+" = "+bs+"<sup>"+nn+"</sup>, entonces log<sub>"+bs+"</sub>("+N+") = "+nn+"."};
+    }else if(type===1){ // producto
+      var b1=[2,3,5][ri(0,2)],u=ri(1,4),v=ri(1,4);
+      ex={ans:u+v,int:true,html:"Si log<sub>"+b1+"</sub>(A) = "+fmt(u,0)+" y log<sub>"+b1+"</sub>(B) = "+fmt(v,0)+", calcula log<sub>"+b1+"</sub>(A·B)",sol:"Por la propiedad del producto: log<sub>"+b1+"</sub>(A·B) = log<sub>"+b1+"</sub>(A) + log<sub>"+b1+"</sub>(B) = "+u+" + "+v+" = "+(u+v)+"."};
+    }else if(type===2){ // cociente
+      var b2=[2,3,5][ri(0,2)],u2=ri(3,6),v2=ri(1,2);
+      ex={ans:u2-v2,int:true,html:"Si log<sub>"+b2+"</sub>(A) = "+fmt(u2,0)+" y log<sub>"+b2+"</sub>(B) = "+fmt(v2,0)+", calcula log<sub>"+b2+"</sub>(A/B)",sol:"Por la propiedad del cociente: log<sub>"+b2+"</sub>(A/B) = log<sub>"+b2+"</sub>(A) − log<sub>"+b2+"</sub>(B) = "+u2+" − "+v2+" = "+(u2-v2)+"."};
+    }else if(type===3){ // potencia con decimal
+      var b3=[2,3,5][ri(0,2)],A3=[2,3,5,7][ri(0,3)],n3=ri(2,4);
+      if(A3===b3){A3=7;}
+      var u3=Math.log(A3)/Math.log(b3);
+      ex={ans:n3*u3,int:false,html:"Si log<sub>"+b3+"</sub>("+A3+") = "+fmt(u3,4)+", calcula log<sub>"+b3+"</sub>("+A3+"<sup>"+n3+"</sup>)",sol:"Por la propiedad de la potencia: log<sub>"+b3+"</sub>("+A3+"<sup>"+n3+"</sup>) = "+n3+"·log<sub>"+b3+"</sub>("+A3+") = "+n3+"·"+fmt(u3,4)+" = "+fmt(n3*u3,4)+"."};
+    }else if(type===4){ // cambio de base
+      var m=[2,3][ri(0,1)];
+      if(ri(0,1)===0){var base=m*m*m,N2=m*m;ex={ans:2/3,int:false,html:"Calcula log<sub>"+base+"</sub>("+N2+")",sol:"Cambio de base: log<sub>"+base+"</sub>("+N2+") = ln("+N2+")/ln("+base+") = "+fmt(2/3,4)+" (también: "+N2+" = "+m+"² y "+base+" = "+m+"³, entonces el resultado es 2/3)."};}
+      else{var base2=m*m,N3=m*m*m;ex={ans:3/2,int:false,html:"Calcula log<sub>"+base2+"</sub>("+N3+")",sol:"Cambio de base: log<sub>"+base2+"</sub>("+N3+") = ln("+N3+")/ln("+base2+") = "+fmt(3/2,4)+" (pues "+N3+" = "+m+"³ y "+base2+" = "+m+"², resultado 3/2)."};}
+    }else{ // ecuación log_b(x)=n
+      var b4=[2,3,4,5][ri(0,3)],n4=ri(2,5),x4=Math.pow(b4,n4);
+      ex={ans:x4,int:true,html:"Resuelve: log<sub>"+b4+"</sub>(x) = "+n4,sol:"Por definición: x = "+b4+"<sup>"+n4+"</sup> = "+x4+"."};
+    }
+    $("pracQ").innerHTML=ex.html;
+    $("pracIn").value="";$("pracFb").textContent="";$("pracFb").className="feedback";
+    $("pracSolBox").classList.add("hidden");
+    $("pracIn").focus();
+  }
+  $("pracOk").addEventListener("click",checkPrac);
+  $("pracIn").addEventListener("keydown",function(e){if(e.key==="Enter")checkPrac();});
+  function checkPrac(){
+    if(!ex)return;
+    var v=parseAns($("pracIn").value),fb=$("pracFb");
+    if(isNaN(v)){fb.textContent="Escribe un número (acepta coma decimal o fracción como 2/3).";fb.className="feedback bad";return;}
+    var tol=ex.int?1e-6:0.025;
+    if(Math.abs(v-ex.ans)<tol){
+      fb.textContent="✔ ¡Correcto! La respuesta es "+fmt(ex.ans,4)+".";fb.className="feedback ok";
+      $("pracSolBox").classList.remove("hidden");$("pracSol").innerHTML=ex.sol;
+    }else{
+      fb.textContent="✗ Todavía no. Revisa la propiedad que corresponde o pide la solución.";fb.className="feedback bad";
+    }
+  }
+  $("pracRev").addEventListener("click",function(){
+    if(!ex)return;
+    $("pracFb").textContent="La respuesta es "+fmt(ex.ans,4)+".";
+    $("pracFb").className="feedback ok";
+    $("pracSolBox").classList.remove("hidden");$("pracSol").innerHTML=ex.sol;
+  });
+  $("pracNew").addEventListener("click",genEx);
+  var tabs=document.querySelectorAll(".tab");
+  tabs.forEach(function(tEl){tEl.addEventListener("click",function(){
+    tabs.forEach(function(x){x.classList.remove("active");});tEl.classList.add("active");
+    mode=tEl.getAttribute("data-mode");
+    $("panel-def").classList.toggle("hidden",mode!=="def");
+    $("panel-prop").classList.toggle("hidden",mode!=="prop");
+    $("panel-prac").classList.toggle("hidden",mode!=="prac");
+  });});
+  ["dBS","dYS"].forEach(function(id){$(id).addEventListener("input",renderDef);});
+  ["pBS","pAS","pCS","pNS"].forEach(function(id){$(id).addEventListener("input",renderProp);});
+  $("themeBtn").addEventListener("click",function(){
+    document.body.classList.toggle("light");
+    $("themeBtn").textContent=document.body.classList.contains("light")?"☀️ Tema":"🌙 Tema";
+  });
+  renderDef();renderProp();genEx();
+})();
+</script>
+</body>
+</html>

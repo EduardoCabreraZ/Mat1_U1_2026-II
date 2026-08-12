@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ParábolaLab · Laboratorio de la parábola</title>
+<style>
+  :root{--bg:#0D1B2A;--bg2:#0F2233;--panel:rgba(22,35,58,.8);--border:rgba(167,139,250,.25);--text:#E6EDF3;--dim:#94A3B8;--acc:#A78BFA;--accent2:#34D399;--warn:#FBBF24;--err:#F87171;--blue:#38BDF8;--grid:rgba(148,163,184,.14);--axis:rgba(230,237,243,.75)}
+  body.light{--bg:#EEF3F9;--bg2:#fff;--panel:rgba(255,255,255,.92);--border:rgba(124,58,237,.28);--text:#1E293B;--dim:#64748B;--acc:#7C3AED;--accent2:#059669;--warn:#D97706;--err:#DC2626;--blue:#0284C7;--grid:rgba(100,116,139,.18);--axis:rgba(30,41,59,.8)}
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
+  body{background:radial-gradient(1200px 700px at 70% -10%,rgba(167,139,250,.09),transparent),var(--bg);color:var(--text);min-height:100vh;padding:18px;transition:.3s}
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;max-width:1100px;margin:0 auto 14px}
+  .title h1{font-size:1.3rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .title h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--acc);box-shadow:0 0 12px var(--acc)}
+  .title p{color:var(--dim);font-size:.85rem;margin-top:2px}
+  .badge{background:rgba(167,139,250,.14);border:1px solid var(--border);color:var(--acc);padding:3px 10px;border-radius:20px;font-size:.75rem}
+  #themeBtn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:12px;cursor:pointer;font-size:.85rem}
+  .tabs{max-width:1100px;margin:0 auto 14px;display:flex;gap:8px;flex-wrap:wrap}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--dim);padding:9px 16px;border-radius:12px;cursor:pointer;font-size:.9rem}
+  .tab.active{color:#fff;background:var(--acc);border-color:var(--acc);box-shadow:0 0 18px rgba(167,139,250,.4);font-weight:600}
+  main{max-width:1100px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap}
+  .mapbox{flex:1 1 430px;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:14px}
+  svg#map{width:100%;display:block;border-radius:14px;background:var(--bg2);overflow:hidden}
+  .hint{color:var(--dim);font-size:.8rem;margin-top:10px;text-align:center}
+  .panel{flex:1 1 330px;display:flex;flex-direction:column;gap:12px}
+  .sliders{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+  .srow{display:flex;align-items:center;gap:10px}
+  .srow label{min-width:140px;color:var(--dim);font-size:.83rem}
+  .srow input[type=range]{flex:1;accent-color:var(--acc)}
+  .srow .sval{min-width:60px;text-align:right;font-weight:700;color:var(--acc);font-size:.9rem}
+  select{background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:10px;font-size:.9rem;width:100%}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+  .card .lbl{color:var(--dim);font-size:.72rem}
+  .card .val{font-size:.94rem;font-weight:600;word-break:break-word}
+  .card.hl{border-color:var(--acc)}.card.hl .val{color:var(--acc)}
+  .card.gn .val{color:var(--accent2)}.card.wr .val{color:var(--warn)}.card.rd .val{color:var(--err)}.card.bl .val{color:var(--blue)}
+  .eqbox{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+  .eq .lbl{color:var(--dim);font-size:.72rem}
+  .eq .v{font-size:1rem;font-weight:600;font-family:'Cambria Math','Segoe UI',serif}
+  .big{font-size:1.5rem;font-weight:700;text-align:center;padding:8px;border-radius:12px}
+  .hidden{display:none!important}
+  .note{max-width:1100px;margin:16px auto 0;color:var(--dim);font-size:.75rem;text-align:center}
+  .gridline{stroke:var(--grid)}.axis{stroke:var(--axis);stroke-width:1.5}.axlbl{fill:var(--dim);font-size:11px}
+  .parab{fill:none;stroke:var(--acc);stroke-width:3}
+  .parabGhost{fill:none;stroke:var(--acc);stroke-width:1.5;stroke-dasharray:5 5;opacity:.35}
+  .symLine{stroke:var(--acc);stroke-width:1.5;stroke-dasharray:6 5;opacity:.55}
+  .ptVertex{fill:var(--warn);stroke:#fff;stroke-width:2}.vertexGlow{fill:var(--warn);opacity:.25}
+  .ptRoot{fill:var(--accent2);stroke:#fff;stroke-width:2}.ptY{fill:var(--blue);stroke:#fff;stroke-width:2}
+  .ptClosed{fill:var(--acc);stroke:#fff;stroke-width:2}.ptOpen{fill:var(--bg2);stroke:var(--acc);stroke-width:2.5}
+  .vlbl{fill:var(--warn);font-size:12px;font-weight:700}.rlbl{fill:var(--accent2);font-size:11px;font-weight:700}.ylbl{fill:var(--blue);font-size:11px;font-weight:700}
+  @media(max-width:760px){.srow label{min-width:110px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="title">
+    <h1><span class="dot"></span> ParábolaLab <span class="badge">Función cuadrática</span></h1>
+    <p>Vértice, eje de simetría, discriminante, raíces y rango · Apuntes de Matemática 2 · USIL</p>
+  </div>
+  <button id="themeBtn">🌙 Tema</button>
+</header>
+<div class="tabs">
+  <button class="tab active" data-mode="explorador">🎚️ Explorador a, b, c</button>
+  <button class="tab" data-mode="disc">🚦 El rol del discriminante</button>
+  <button class="tab" data-mode="dominio">📏 Dominio restringido</button>
+</div>
+<main>
+  <div class="mapbox">
+    <svg id="map" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid meet">
+      <g id="grid"></g><g id="axes"></g><g id="labels"></g>
+      <line id="symLine" class="symLine"/>
+      <path id="parabGhost" class="parabGhost"/>
+      <path id="parab" class="parab"/>
+      <circle id="vertexGlow" class="vertexGlow" r="13"/>
+      <circle id="ptVertex" class="ptVertex" r="6"/>
+      <circle id="ptRoot1" class="ptRoot" r="5.5"/>
+      <circle id="ptRoot2" class="ptRoot" r="5.5"/>
+      <circle id="ptY" class="ptY" r="5"/>
+      <circle id="ptLow" class="ptClosed" r="6"/>
+      <circle id="ptHigh" class="ptClosed" r="6"/>
+      <text id="lblVertex" class="vlbl"></text>
+      <text id="lblRoot1" class="rlbl"></text>
+      <text id="lblRoot2" class="rlbl"></text>
+      <text id="lblY" class="ylbl"></text>
+    </svg>
+    <p class="hint">Los ejes están fijos: al mover a, b o c, la parábola se transforma y se desplaza.</p>
+  </div>
+  <div class="panel">
+    <div id="panel-explorador">
+      <div class="sliders">
+        <div class="srow"><label>a (apertura/signo)</label><input type="range" id="aS1" min="-5" max="5" step="0.1" value="1"><span class="sval" id="aV1"></span></div>
+        <div class="srow"><label>b</label><input type="range" id="bS1" min="-10" max="10" step="0.5" value="-4"><span class="sval" id="bV1"></span></div>
+        <div class="srow"><label>c (intercepto Y)</label><input type="range" id="cS1" min="-10" max="10" step="0.5" value="3"><span class="sval" id="cV1"></span></div>
+      </div>
+      <div class="eqbox" style="margin-top:10px">
+        <div class="eq"><span class="lbl">Forma general</span><span class="v" id="eqGen" style="color:var(--acc)"></span></div>
+        <div class="eq"><span class="lbl">Forma canónica y = a(x−h)² + k</span><span class="v" id="eqCan" style="color:var(--warn)"></span></div>
+      </div>
+      <div class="cards" style="margin-top:10px">
+        <div class="card hl"><span class="lbl">Apertura</span><span class="val" id="openCard"></span></div>
+        <div class="card wr"><span class="lbl">Vértice V(h; k)</span><span class="val" id="vertCard"></span></div>
+        <div class="card"><span class="lbl">Eje de simetría</span><span class="val" id="symCard"></span></div>
+        <div class="card bl"><span class="lbl">Intercepto Y</span><span class="val" id="yintCard"></span></div>
+        <div class="card" id="discCard" style="grid-column:1/-1"><span class="lbl">Discriminante Δ = b² − 4ac</span><span class="val" id="discVal"></span></div>
+        <div class="card gn" style="grid-column:1/-1"><span class="lbl">Raíces (cortes con el eje X)</span><span class="val" id="rootsCard"></span></div>
+        <div class="card vi" style="grid-column:1/-1"><span class="lbl">Rango</span><span class="val" id="rangeCard"></span></div>
+      </div>
+    </div>
+    <div id="panel-disc" class="hidden">
+      <div class="sliders">
+        <div class="srow"><label>a</label><input type="range" id="aS2" min="-5" max="5" step="0.1" value="1"><span class="sval" id="aV2"></span></div>
+        <div class="srow"><label>b</label><input type="range" id="bS2" min="-10" max="10" step="0.5" value="-4"><span class="sval" id="bV2"></span></div>
+        <div class="srow"><label>c (¡muévelo!)</label><input type="range" id="cS2" min="-10" max="10" step="0.1" value="3"><span class="sval" id="cV2"></span></div>
+      </div>
+      <div class="big" id="discBig" style="margin-top:12px"></div>
+      <div class="eqbox" style="margin-top:10px">
+        <div class="eq"><span class="lbl">Lectura geométrica</span><span class="v" id="discRead" style="font-size:.86rem;color:var(--dim)"></span></div>
+      </div>
+      <div class="eqbox" style="margin-top:10px;border-color:var(--warn)">
+        <div class="eq"><span class="v" style="font-size:.85rem;color:var(--dim)">💡 Δ = b² − 4ac indica cuántas veces la parábola corta al eje X:<br>Δ &gt; 0 → dos raíces · Δ = 0 → una raíz (tangente) · Δ &lt; 0 → ninguna.</span></div>
+      </div>
+    </div>
+    <div id="panel-dominio" class="hidden">
+      <div class="sliders">
+        <div class="srow"><label>a</label><input type="range" id="aS3" min="-5" max="5" step="0.1" value="1"><span class="sval" id="aV3"></span></div>
+        <div class="srow"><label>b</label><input type="range" id="bS3" min="-10" max="10" step="0.5" value="-4"><span class="sval" id="bV3"></span></div>
+        <div class="srow"><label>c</label><input type="range" id="cS3" min="-10" max="10" step="0.5" value="3"><span class="sval" id="cV3"></span></div>
+        <div class="srow"><label>Extremo izq.</label><input type="range" id="loS" min="-8" max="8" step="0.5" value="0"><span class="sval" id="loV"></span></div>
+        <div class="srow"><label>Extremo der.</label><input type="range" id="hiS" min="-8" max="8" step="0.5" value="4"><span class="sval" id="hiV"></span></div>
+        <select id="tipoSel">
+          <option value="cerrado">Cerrado [p; q]</option>
+          <option value="abierto">Abierto ]p; q[</option>
+          <option value="semiIzq">Semiabierto ]p; q]</option>
+          <option value="semiDer">Semiabierto [p; q[</option>
+        </select>
+      </div>
+      <div class="cards" style="margin-top:10px">
+        <div class="card bl"><span class="lbl">Dominio</span><span class="val" id="domCard"></span></div>
+        <div class="card wr"><span class="lbl">Vértice en el dominio</span><span class="val" id="vertDomCard"></span></div>
+        <div class="card gn" style="grid-column:1/-1"><span class="lbl">Rango en ese dominio</span><span class="val" id="ranDomCard"></span></div>
+      </div>
+      <div class="eqbox" style="margin-top:10px;border-color:var(--warn)">
+        <div class="eq"><span class="v" style="font-size:.85rem;color:var(--dim)">💡 Como en el libro: f(x)=x²−4x+3 en 0≤x≤3. El rango depende de si el vértice queda dentro del intervalo y de los valores en los extremos.</span></div>
+      </div>
+    </div>
+  </div>
+</main>
+<p class="note">Convención Perú/libro: coma decimal · pares ordenados (h; k) · intervalos [k; +∞[ · sin derivadas. Apuntes de Matemática 2 — USIL.</p>
+<script>
+(function(){
+  "use strict";
+  var $=function(id){return document.getElementById(id);};
+  function fmt(n,dec){ if(!isFinite(n))return "—"; if(Math.abs(n)<1e-9)n=0; dec=(dec===undefined)?2:dec;
+    var s=n.toFixed(dec); if(s.indexOf(".")>=0){s=s.replace(/0+$/,"").replace(/\.$/,"");}
+    var neg=s.charAt(0)==="-"; if(neg)s=s.slice(1);
+    var parts=s.split("."); var int=parts[0];
+    if(int.length>=5){int=int.replace(/\B(?=(\d{3})+(?!\d))/g,"\u00A0");}
+    s=int+(parts[1]?","+parts[1]:""); return (neg?"\u2212":"")+s;
+  }
+  function pair(x,y){return "("+fmt(x)+"; "+fmt(y)+")";}
+  function intervalStr(lo,hi,loOpen,hiOpen){return (loOpen?"]":"[")+fmt(lo)+"; "+fmt(hi)+(hiOpen?"[":"]");}
+  var W=600,H=600,xMin=-10,xMax=10,yMin=-10,yMax=10;
+  function sx(x){return (x-xMin)/(xMax-xMin)*W;}
+  function sy(y){return H-(y-yMin)/(yMax-yMin)*H;}
+  var mode="explorador";
+  var a=1,b=-4,c=3,lo=0,hi=4,tipo="cerrado";
+  function f(x){return a*x*x+b*x+c;}
+  (function buildGrid(){
+    var NS="http://www.w3.org/2000/svg",i,el,t;
+    var g=$("grid"),ax=$("axes"),lb=$("labels");
+    for(i=xMin;i<=xMax;i++){
+      el=document.createElementNS(NS,"line");el.setAttribute("class","gridline");
+      el.setAttribute("x1",sx(i));el.setAttribute("x2",sx(i));el.setAttribute("y1",0);el.setAttribute("y2",H);g.appendChild(el);
+      el=document.createElementNS(NS,"line");el.setAttribute("class","gridline");
+      el.setAttribute("x1",0);el.setAttribute("x2",W);el.setAttribute("y1",sy(i));el.setAttribute("y2",sy(i));g.appendChild(el);
+    }
+    el=document.createElementNS(NS,"line");el.setAttribute("class","axis");el.setAttribute("x1",0);el.setAttribute("x2",W);el.setAttribute("y1",sy(0));el.setAttribute("y2",sy(0));ax.appendChild(el);
+    el=document.createElementNS(NS,"line");el.setAttribute("class","axis");el.setAttribute("x1",sx(0));el.setAttribute("x2",sx(0));el.setAttribute("y1",0);el.setAttribute("y2",H);ax.appendChild(el);
+    for(i=xMin;i<=xMax;i+=2){ if(i===0)continue;
+      t=document.createElementNS(NS,"text");t.setAttribute("class","axlbl");t.setAttribute("x",sx(i));t.setAttribute("y",sy(0)+14);t.setAttribute("text-anchor","middle");t.textContent=i;lb.appendChild(t);
+      t=document.createElementNS(NS,"text");t.setAttribute("class","axlbl");t.setAttribute("x",sx(0)-6);t.setAttribute("y",sy(i)+4);t.setAttribute("text-anchor","end");t.textContent=i;lb.appendChild(t);
+    }
+    t=document.createElementNS(NS,"text");t.setAttribute("class","axlbl");t.setAttribute("x",sx(0)-6);t.setAttribute("y",sy(0)+14);t.textContent="0";lb.appendChild(t);
+  })();
+  function eqGenStr(){
+    var t="y = ";
+    if(Math.abs(a-1)<1e-9)t+="x²"; else if(Math.abs(a+1)<1e-9)t+="\u2212x²"; else t+=fmt(a)+"x²";
+    if(Math.abs(b)>1e-9){ if(b>0)t+=(Math.abs(b-1)<1e-9?" + x":" + "+fmt(b)+"x"); else t+=(Math.abs(b+1)<1e-9?" \u2212 x":" \u2212 "+fmt(-b)+"x"); }
+    if(Math.abs(c)>1e-9){ t+=(c>0?" + "+fmt(c):" \u2212 "+fmt(-c)); }
+    return t;
+  }
+  function eqCanStr(h,k){
+    var t="y = ";
+    if(Math.abs(a-1)<1e-9)t+=""; else if(Math.abs(a+1)<1e-9)t+="\u2212"; else t+=fmt(a);
+    t+=(h>=0?"(x \u2212 "+fmt(h)+")²":"(x + "+fmt(-h)+")²");
+    if(Math.abs(k)>1e-9){ t+=(k>0?" + "+fmt(k):" \u2212 "+fmt(-k)); }
+    return t;
+  }
+  function parabPath(xA,xB,n){
+    var d="";
+    for(var i=0;i<=n;i++){var x=xA+(xB-xA)*i/n;
+      d+=(i===0?"M":"L")+sx(x).toFixed(1)+" "+sy(f(x)).toFixed(1)+" ";}
+    return d;
+  }
+  function setPt(el,x,y){el.setAttribute("cx",sx(x));el.setAttribute("cy",sy(y));}
+  function sync(){
+    $("aS1").value=a;$("bS1").value=b;$("cS1").value=c;
+    $("aS2").value=a;$("bS2").value=b;$("cS2").value=c;
+    $("aS3").value=a;$("bS3").value=b;$("cS3").value=c;
+    $("loS").value=lo;$("hiS").value=hi;$("tipoSel").value=tipo;
+    $("aV1").textContent=fmt(a);$("bV1").textContent=fmt(b);$("cV1").textContent=fmt(c);
+    $("aV2").textContent=fmt(a);$("bV2").textContent=fmt(b);$("cV2").textContent=fmt(c);
+    $("aV3").textContent=fmt(a);$("bV3").textContent=fmt(b);$("cV3").textContent=fmt(c);
+    $("loV").textContent=fmt(lo);$("hiV").textContent=fmt(hi);
+  }
+  function render(){
+    sync();
+    ["symLine","parabGhost","ptRoot1","ptRoot2","ptY","ptLow","ptHigh","lblRoot1","lblRoot2","lblY","vertexGlow","ptVertex","lblVertex"].forEach(function(id){$(id).style.display="none";});
+    if(Math.abs(a)<1e-9){
+      $("parab").setAttribute("d","");
+      $("eqGen").textContent="a debe ser ≠ 0 para que sea una parábola.";
+      return;
+    }
+    var h=-b/(2*a),k=c-b*b/(4*a),disc=b*b-4*a*c;
+    var r1=null,r2=null;
+    if(disc>=0){var r=Math.sqrt(disc);r1=(-b-r)/(2*a);r2=(-b+r)/(2*a);}
+    $("symLine").style.display="";
+    $("symLine").setAttribute("x1",sx(h));$("symLine").setAttribute("x2",sx(h));
+    $("symLine").setAttribute("y1",0);$("symLine").setAttribute("y2",H);
+    var inView=(h>=xMin&&h<=xMax&&k>=yMin&&k<=yMax);
+    if(inView){
+      setPt($("vertexGlow"),h,k);setPt($("ptVertex"),h,k);
+      $("vertexGlow").style.display="";$("ptVertex").style.display="";
+      $("lblVertex").setAttribute("x",sx(h)+9);$("lblVertex").setAttribute("y",sy(k)-9);
+      $("lblVertex").textContent="V"+pair(h,k);$("lblVertex").style.display="";
+    }
+    if(mode==="explorador"){
+      $("parabGhost").style.display="none";
+      $("parab").setAttribute("d",parabPath(xMin,xMax,200));
+      setPt($("ptY"),0,c);$("ptY").style.display="";
+      $("lblY").setAttribute("x",sx(0)+8);$("lblY").setAttribute("y",sy(c)-6);$("lblY").textContent="(0; "+fmt(c)+")";$("lblY").style.display="";
+      if(r1!==null){
+        setPt($("ptRoot1"),r1,0);$("ptRoot1").style.display="";
+        $("lblRoot1").setAttribute("x",sx(r1));$("lblRoot1").setAttribute("y",sy(0)+16);$("lblRoot1").setAttribute("text-anchor","middle");$("lblRoot1").textContent="x₁="+fmt(r1);$("lblRoot1").style.display="";
+        if(Math.abs(r2-r1)>1e-9){
+          setPt($("ptRoot2"),r2,0);$("ptRoot2").style.display="";
+          $("lblRoot2").setAttribute("x",sx(r2));$("lblRoot2").setAttribute("y",sy(0)+16);$("lblRoot2").setAttribute("text-anchor","middle");$("lblRoot2").textContent="x₂="+fmt(r2);$("lblRoot2").style.display="";
+        }
+      }
+      $("eqGen").textContent=eqGenStr();
+      $("eqCan").textContent=eqCanStr(h,k);
+      $("openCard").textContent=a>0?"Cóncava hacia arriba (a > 0)":"Cóncava hacia abajo (a < 0)";
+      $("vertCard").textContent=pair(h,k)+(inView?"":" (fuera de la vista)");
+      $("symCard").textContent="x = "+fmt(h);
+      $("yintCard").textContent=pair(0,c);
+      $("discVal").textContent="Δ = "+fmt(disc)+(disc>0?"  → dos raíces":(Math.abs(disc)<1e-9?"  → una raíz":"  → sin raíces reales"));
+      $("discCard").className="card "+(disc>0?"gn":(Math.abs(disc)<1e-9?"wr":"rd"));
+      $("rootsCard").textContent=r1===null?"No corta el eje X (Δ < 0)":(Math.abs(r2-r1)<1e-9?"x = "+fmt(r1)+" (raíz doble)":"x₁ = "+fmt(r1)+"   y   x₂ = "+fmt(r2));
+      $("rangeCard").textContent=a>0?("["+fmt(k)+"; +∞["):("]\u2212∞; "+fmt(k)+"]");
+    }
+    else if(mode==="disc"){
+      $("parabGhost").style.display="none";
+      $("parab").setAttribute("d",parabPath(xMin,xMax,200));
+      if(r1!==null){
+        setPt($("ptRoot1"),r1,0);$("ptRoot1").style.display="";
+        if(Math.abs(r2-r1)>1e-9){setPt($("ptRoot2"),r2,0);$("ptRoot2").style.display="";}
+      }
+      var col=disc>0?"var(--accent2)":(Math.abs(disc)<1e-9?"var(--warn)":"var(--err)");
+      $("discBig").textContent="Δ = "+fmt(disc);
+      $("discBig").style.color=col;$("discBig").style.border="1px solid "+col;
+      $("discRead").innerHTML=disc>0?"La parábola <b>corta</b> al eje X en <b>dos puntos</b>"+(r1!==null?(Math.abs(r2-r1)<1e-9?": x = "+fmt(r1):": x₁ = "+fmt(r1)+" y x₂ = "+fmt(r2)):"")+".":(Math.abs(disc)<1e-9?"La parábola <b>toca</b> al eje X en un solo punto (el vértice): x = "+fmt(h)+".":"La parábola <b>no corta</b> al eje X: no hay raíces reales.");
+    }
+    else{
+      if(hi<=lo){hi=lo+0.5;$("hiS").value=hi;}
+      var loOpen=(tipo==="abierto"||tipo==="semiIzq");
+      var hiOpen=(tipo==="abierto"||tipo==="semiDer");
+      $("parabGhost").setAttribute("d",parabPath(xMin,xMax,200));$("parabGhost").style.display="";
+      $("parab").setAttribute("d",parabPath(lo,hi,120));
+      setPt($("ptLow"),lo,f(lo));setPt($("ptHigh"),hi,f(hi));
+      $("ptLow").style.display="";$("ptHigh").style.display="";
+      $("ptLow").setAttribute("class",loOpen?"ptOpen":"ptClosed");
+      $("ptHigh").setAttribute("class",hiOpen?"ptOpen":"ptClosed");
+      $("domCard").textContent=intervalStr(lo,hi,loOpen,hiOpen);
+      var cands=[{y:f(lo),inc:!loOpen},{y:f(hi),inc:!hiOpen}];
+      var hIn=(lo<h&&h<hi);
+      if(hIn)cands.push({y:k,inc:true});
+      var minY=Infinity,maxY=-Infinity,minInc=false,maxInc=false;
+      cands.forEach(function(o){ if(o.y<minY)minY=o.y; if(o.y>maxY)maxY=o.y; });
+      cands.forEach(function(o){ if(Math.abs(o.y-minY)<1e-9&&o.inc)minInc=true; if(Math.abs(o.y-maxY)<1e-9&&o.inc)maxInc=true; });
+      $("ranDomCard").textContent=intervalStr(minY,maxY,!minInc,!maxInc);
+      $("vertDomCard").textContent=hIn?("Sí, V"+pair(h,k)):"No (queda fuera del intervalo)";
+    }
+  }
+  var tabs=document.querySelectorAll(".tab");
+  tabs.forEach(function(t){t.addEventListener("click",function(){
+    tabs.forEach(function(x){x.classList.remove("active");});t.classList.add("active");
+    mode=t.getAttribute("data-mode");
+    $("panel-explorador").classList.toggle("hidden",mode!=="explorador");
+    $("panel-disc").classList.toggle("hidden",mode!=="disc");
+    $("panel-dominio").classList.toggle("hidden",mode!=="dominio");
+    render();
+  });});
+  function bind(id,fn){$(id).addEventListener("input",function(){fn(parseFloat($(id).value));render();});}
+  ["aS1","aS2","aS3"].forEach(function(id){bind(id,function(v){a=v;});});
+  ["bS1","bS2","bS3"].forEach(function(id){bind(id,function(v){b=v;});});
+  ["cS1","cS2","cS3"].forEach(function(id){bind(id,function(v){c=v;});});
+  bind("loS",function(v){lo=v;}); bind("hiS",function(v){hi=v;});
+  $("tipoSel").addEventListener("change",function(){tipo=$("tipoSel").value;render();});
+  $("themeBtn").addEventListener("click",function(){
+    document.body.classList.toggle("light");
+    $("themeBtn").textContent=document.body.classList.contains("light")?"☀️ Tema":"🌙 Tema";
+  });
+  render();
+})();
+</script>
+</body>
+</html>

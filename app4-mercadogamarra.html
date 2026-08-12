@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mercado Gamarra · Oferta y demanda</title>
+<style>
+  :root{
+    --bg:#0D1B2A; --bg2:#0F2233; --panel:rgba(22,35,58,.8);
+    --border:rgba(245,185,66,.22); --text:#E6EDF3; --dim:#94A3B8;
+    --accent:#38BDF8; --accent2:#34D399; --warn:#FBBF24; --err:#F87171; --violet:#A78BFA; --gold:#F5B942;
+    --grid:rgba(148,163,184,.14); --axis:rgba(230,237,243,.75);
+  }
+  body.light{
+    --bg:#EEF3F9; --bg2:#FFFFFF; --panel:rgba(255,255,255,.92);
+    --border:rgba(180,120,20,.3); --text:#1E293B; --dim:#64748B;
+    --accent:#0284C7; --accent2:#059669; --warn:#D97706; --err:#DC2626; --violet:#7C3AED; --gold:#B45309;
+    --grid:rgba(100,116,139,.18); --axis:rgba(30,41,59,.8);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
+  body{background:radial-gradient(1200px 700px at 70% -10%,rgba(245,185,66,.07),transparent),var(--bg);color:var(--text);min-height:100vh;padding:18px;transition:background .3s,color .3s}
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;max-width:1100px;margin:0 auto 14px}
+  .title h1{font-size:1.3rem;letter-spacing:.4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .title h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--gold);box-shadow:0 0 12px var(--gold)}
+  .title p{color:var(--dim);font-size:.85rem;margin-top:2px}
+  .badge{background:rgba(245,185,66,.12);border:1px solid rgba(245,185,66,.35);color:var(--gold);padding:3px 10px;border-radius:20px;font-size:.75rem}
+  #themeBtn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:12px;cursor:pointer;font-size:.85rem}
+  .tabs{max-width:1100px;margin:0 auto 14px;display:flex;gap:8px;flex-wrap:wrap}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--dim);padding:9px 16px;border-radius:12px;cursor:pointer;font-size:.9rem;transition:.2s}
+  .tab.active{color:var(--bg);background:var(--gold);border-color:var(--gold);box-shadow:0 0 18px rgba(245,185,66,.35);font-weight:600}
+  body.light .tab.active{color:#fff}
+  main{max-width:1100px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap}
+  .mapbox{flex:1 1 430px;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:14px;box-shadow:0 0 30px rgba(56,189,248,.06)}
+  svg#map{width:100%;display:block;border-radius:14px;background:var(--bg2)}
+  .hint{color:var(--dim);font-size:.8rem;margin-top:10px;text-align:center}
+  .panel{flex:1 1 330px;display:flex;flex-direction:column;gap:12px}
+  .sliders{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+  .sliders h4{color:var(--gold);font-size:.8rem;letter-spacing:.5px;text-transform:uppercase}
+  .srow{display:flex;align-items:center;gap:10px}
+  .srow label{min-width:120px;color:var(--dim);font-size:.83rem}
+  .srow input[type=range]{flex:1;accent-color:var(--gold)}
+  .srow .sval{min-width:64px;text-align:right;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums;font-size:.9rem}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+  .card .lbl{color:var(--dim);font-size:.72rem;letter-spacing:.3px}
+  .card .val{font-size:.95rem;font-weight:600;font-variant-numeric:tabular-nums;word-break:break-word}
+  .card.hl{border-color:var(--gold);box-shadow:0 0 16px rgba(245,185,66,.16)}
+  .card.hl .val{color:var(--gold)}
+  .card.gn .val{color:var(--accent2)} .card.rd .val{color:var(--err)} .card.bl .val{color:var(--accent)} .card.vi .val{color:var(--violet)}
+  .eqbox{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+  .eq{display:flex;flex-direction:column;gap:2px}
+  .eq .lbl{color:var(--dim);font-size:.72rem}
+  .eq .v{font-size:1rem;font-weight:600;font-family:'Cambria Math','Segoe UI',serif}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .btn{border:none;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:.9rem;font-weight:600;color:#fff;background:#334155;transition:.2s}
+  .btn.task{background:transparent;border:1px solid var(--border);color:var(--dim)}
+  .btn.task.on{background:var(--violet);border-color:var(--violet);color:#fff;box-shadow:0 0 14px rgba(167,139,250,.4)}
+  .btn:hover{filter:brightness(1.12)}
+  .hidden{display:none!important}
+  .note{max-width:1100px;margin:16px auto 0;color:var(--dim);font-size:.75rem;text-align:center}
+  .gridline{stroke:var(--grid);stroke-width:1}
+  .axis{stroke:var(--axis);stroke-width:1.5}
+  .axlbl{fill:var(--dim);font-size:10.5px}
+  .axtitle{fill:var(--dim);font-size:12px;font-weight:600}
+  .lineO{stroke:var(--accent2);stroke-width:3;stroke-linecap:round}
+  .lineD{stroke:var(--accent);stroke-width:3;stroke-linecap:round}
+  .lineO2{stroke:var(--violet);stroke-width:3;stroke-linecap:round}
+  .lineOdim{stroke:var(--accent2);stroke-width:1.5;stroke-dasharray:5 5;opacity:.4}
+  .guide{stroke:var(--gold);stroke-width:1.5;stroke-dasharray:4 4;opacity:.6}
+  .priceLine{stroke:var(--warn);stroke-width:2;stroke-dasharray:6 4;opacity:.9}
+  .excessLine{stroke-width:6;stroke-linecap:round;opacity:.85}
+  .eqDot{fill:var(--gold);stroke:#fff;stroke-width:2}
+  .eqGlow{fill:var(--gold);opacity:.25}
+  .eqDotDim{fill:var(--dim);opacity:.55}
+  .ptO{fill:var(--accent2);stroke:#fff;stroke-width:2}
+  .ptD{fill:var(--accent);stroke:#fff;stroke-width:2}
+  .eqLbl{fill:var(--gold);font-size:12px;font-weight:700}
+  .legendtxt{fill:var(--dim);font-size:11px}
+  @media(max-width:760px){.cards{grid-template-columns:1fr 1fr}.title h1{font-size:1.08rem}.srow label{min-width:100px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="title">
+    <h1><span class="dot"></span> Mercado Gamarra · Oferta y demanda <span class="badge">Función lineal</span></h1>
+    <p>Equilibrio, exceso de oferta/demanda, impuesto y subsidio · Apuntes de Matemática 2 · USIL</p>
+  </div>
+  <button id="themeBtn">🌙 Tema</button>
+</header>
+
+<div class="tabs">
+  <button class="tab active" data-mode="equilibrio">⚖️ Equilibrio de mercado</button>
+  <button class="tab" data-mode="exceso">📊 Exceso de oferta/demanda</button>
+  <button class="tab" data-mode="politica">🏛️ Impuesto y subsidio</button>
+</div>
+
+<main>
+  <div class="mapbox">
+    <svg id="map" viewBox="0 0 640 470" preserveAspectRatio="xMidYMid meet">
+      <g id="grid"></g><g id="axes"></g><g id="labels"></g>
+      <line id="lineOdim" class="lineOdim"/>
+      <line id="lineO" class="lineO"/>
+      <line id="lineD" class="lineD"/>
+      <line id="lineO2" class="lineO2"/>
+      <line id="guideQ" class="guide"/>
+      <line id="guideP" class="guide"/>
+      <line id="priceLine" class="priceLine"/>
+      <line id="excessLine" class="excessLine"/>
+      <circle id="eqGlow" class="eqGlow" r="14"/>
+      <circle id="eqDot" class="eqDot" r="6"/>
+      <circle id="eqDot2" class="eqDot" r="6"/>
+      <circle id="eqDotOrig" class="eqDotDim" r="5"/>
+      <circle id="dotO" class="ptO" r="5.5"/>
+      <circle id="dotD" class="ptD" r="5.5"/>
+      <text id="eqLbl" class="eqLbl"></text>
+      <text id="eqLbl2" class="eqLbl"></text>
+      <text id="xTitle" class="axtitle"></text><text id="yTitle" class="axtitle"></text>
+      <text id="legO" class="legendtxt"></text><text id="legD" class="legendtxt"></text><text id="legO2" class="legendtxt"></text>
+    </svg>
+    <p class="hint" id="hintText">Un emprendedor de Gamarra vende polos. q = cantidad (docenas de polos/semana), p = precio (S/ por polo).</p>
+  </div>
+
+  <div class="panel">
+    <!-- EQUILIBRIO -->
+    <div id="panel-equilibrio">
+      <div class="sliders">
+        <h4>Oferta &nbsp;O: p = m·q + b &nbsp;(m &gt; 0)</h4>
+        <div class="srow"><label>Pendiente m</label><input type="range" id="mO" min="0.5" max="6" step="0.5" value="2"><span class="sval" id="mOv"></span></div>
+        <div class="srow"><label>Intercepto b</label><input type="range" id="bO" min="0" max="30" step="1" value="8"><span class="sval" id="bOv"></span></div>
+        <h4 style="margin-top:6px">Demanda &nbsp;D: p = m·q + b &nbsp;(m &lt; 0)</h4>
+        <div class="srow"><label>Pendiente m</label><input type="range" id="mD" min="-6" max="-0.5" step="0.5" value="-2.5"><span class="sval" id="mDv"></span></div>
+        <div class="srow"><label>Intercepto b</label><input type="range" id="bD" min="20" max="80" step="1" value="26"><span class="sval" id="bDv"></span></div>
+      </div>
+      <div class="eqbox" style="margin-top:10px">
+        <div class="eq"><span class="lbl">Oferta</span><span class="v" id="eqO" style="color:var(--accent2)"></span></div>
+        <div class="eq"><span class="lbl">Demanda</span><span class="v" id="eqD" style="color:var(--accent)"></span></div>
+      </div>
+      <div class="cards" style="margin-top:10px">
+        <div class="card hl"><span class="lbl">Cantidad de equilibrio qe</span><span class="val" id="qeCard"></span></div>
+        <div class="card hl"><span class="lbl">Precio de equilibrio pe</span><span class="val" id="peCard"></span></div>
+        <div class="card vi" style="grid-column:1/-1"><span class="lbl">Punto de equilibrio (qe; pe)</span><span class="val" id="ptCard"></span></div>
+      </div>
+      <div class="eqbox" style="margin-top:10px">
+        <div class="eq"><span class="lbl">Interpretación de pendientes</span><span class="v" id="interp" style="font-size:.85rem;color:var(--dim)"></span></div>
+      </div>
+    </div>
+
+    <!-- EXCESO -->
+    <div id="panel-exceso" class="hidden">
+      <div class="sliders">
+        <div class="srow"><label>💵 Precio fijado p (S/)</label><input type="range" id="pSlider" min="0" max="40" step="0.5" value="16"><span class="sval" id="pVal"></span></div>
+      </div>
+      <div class="cards" style="margin-top:10px">
+        <div class="card gn"><span class="lbl">Cantidad ofertada qo</span><span class="val" id="qoCard"></span></div>
+        <div class="card bl"><span class="lbl">Cantidad demandada qd</span><span class="val" id="qdCard"></span></div>
+        <div class="card" id="excCard" style="grid-column:1/-1"><span class="lbl">Resultado en el mercado</span><span class="val" id="excVal"></span></div>
+      </div>
+      <div class="eqbox" style="margin-top:10px">
+        <div class="eq"><span class="lbl">Lectura</span><span class="v" id="excRead" style="font-size:.85rem;color:var(--dim)"></span></div>
+      </div>
+    </div>
+
+    <!-- IMPUESTO / SUBSIDIO -->
+    <div id="panel-politica" class="hidden">
+      <div class="row" style="margin-bottom:10px">
+        <span style="color:var(--dim);font-size:.85rem">Política del Estado:</span>
+        <button class="btn task on" id="btnImp">🏛️ Impuesto</button>
+        <button class="btn task" id="btnSub">🤝 Subsidio</button>
+      </div>
+      <div class="sliders">
+        <div class="srow"><label id="amtLbl">Impuesto (S/ por polo)</label><input type="range" id="amtSlider" min="0" max="20" step="1" value="5"><span class="sval" id="amtVal"></span></div>
+      </div>
+      <div class="eqbox" style="margin-top:10px">
+        <div class="eq"><span class="lbl">Nueva oferta</span><span class="v" id="eqO2" style="color:var(--violet)"></span></div>
+      </div>
+      <div class="cards" style="margin-top:10px">
+        <div class="card"><span class="lbl">Equilibrio original</span><span class="val" id="origCard"></span></div>
+        <div class="card hl"><span class="lbl">Nuevo equilibrio</span><span class="val" id="newCard"></span></div>
+        <div class="card vi"><span class="lbl">Cambio en cantidad Δq</span><span class="val" id="dqCard"></span></div>
+        <div class="card vi"><span class="lbl">Cambio en precio Δp</span><span class="val" id="dpCard"></span></div>
+      </div>
+      <div class="eqbox" style="margin-top:10px">
+        <div class="eq"><span class="lbl">Lectura</span><span class="v" id="polRead" style="font-size:.85rem;color:var(--dim)"></span></div>
+      </div>
+    </div>
+  </div>
+</main>
+<p class="note">Convención Perú: decimal con coma · miles con espacio desde 10 000 · pares ordenados (qe; pe) · moneda S/. Apuntes de Matemática 2 — USIL.</p>
+
+<script>
+(function(){
+  "use strict";
+  var $=function(id){return document.getElementById(id);};
+  function fmt(n,dec){ if(!isFinite(n))return "—"; if(Math.abs(n)<1e-9)n=0; dec=(dec===undefined)?2:dec;
+    var s=n.toFixed(dec); if(s.indexOf(".")>=0){s=s.replace(/0+$/,"").replace(/\.$/,"");}
+    var neg=s.charAt(0)==="-"; if(neg)s=s.slice(1);
+    var parts=s.split("."); var int=parts[0];
+    if(int.length>=5){int=int.replace(/\B(?=(\d{3})+(?!\d))/g,"\u00A0");}
+    s=int+(parts[1]?","+parts[1]:""); return (neg?"\u2212":"")+s;
+  }
+  function soles(n){return "S/ "+fmt(n);}
+
+  var W=640,H=470,L=62,R=16,T=16,B=46;
+  var view={qMax:10,pMax:40};
+  function sx(q){return L+q/view.qMax*(W-L-R);}
+  function sy(p){return T+(view.pMax-p)/view.pMax*(H-T-B);}
+  function niceStep(range){var raw=range/5,pow=Math.pow(10,Math.floor(Math.log10(raw))),n=raw/pow,st;
+    if(n<1.5)st=1;else if(n<3.5)st=2;else if(n<7.5)st=5;else st=10;return st*pow;}
+  function setLineXY(el,q1,p1,q2,p2){el.setAttribute("x1",sx(q1));el.setAttribute("y1",sy(p1));el.setAttribute("x2",sx(q2));el.setAttribute("y2",sy(p2));}
+  function setPt(el,q,p){el.setAttribute("cx",sx(q));el.setAttribute("cy",sy(p));}
+
+  var mode="equilibrio";
+  var policyType="imp";
+
+  function equil(mO,bO,mD,bD){var qe=(bD-bO)/(mO-mD);var pe=mO*qe+bO;return{qe:qe,pe:pe};}
+
+  function drawGrid(){
+    var NS="http://www.w3.org/2000/svg";
+    var g=$("grid");while(g.firstChild)g.removeChild(g.firstChild);
+    var ax=$("axes");while(ax.firstChild)ax.removeChild(ax.firstChild);
+    var lb=$("labels");while(lb.firstChild)lb.removeChild(lb.firstChild);
+    var stepQ=niceStep(view.qMax), stepP=niceStep(view.pMax), q,p,el,t;
+    for(q=0;q<=view.qMax+1e-9;q+=stepQ){
+      el=document.createElementNS(NS,"line");el.setAttribute("class","gridline");
+      el.setAttribute("x1",sx(q));el.setAttribute("x2",sx(q));el.setAttribute("y1",sy(view.pMax));el.setAttribute("y2",sy(0));g.appendChild(el);
+      t=document.createElementNS(NS,"text");t.setAttribute("class","axlbl");t.setAttribute("x",sx(q));t.setAttribute("y",sy(0)+16);t.setAttribute("text-anchor","middle");t.textContent=fmt(q,0);lb.appendChild(t);
+    }
+    for(p=0;p<=view.pMax+1e-9;p+=stepP){
+      el=document.createElementNS(NS,"line");el.setAttribute("class","gridline");
+      el.setAttribute("x1",sx(0));el.setAttribute("x2",sx(view.qMax));el.setAttribute("y1",sy(p));el.setAttribute("y2",sy(p));g.appendChild(el);
+      t=document.createElementNS(NS,"text");t.setAttribute("class","axlbl");t.setAttribute("x",sx(0)-6);t.setAttribute("y",sy(p)+4);t.setAttribute("text-anchor","end");t.textContent=fmt(p,0);lb.appendChild(t);
+    }
+    el=document.createElementNS(NS,"line");el.setAttribute("class","axis");el.setAttribute("x1",sx(0));el.setAttribute("x2",sx(view.qMax));el.setAttribute("y1",sy(0));el.setAttribute("y2",sy(0));ax.appendChild(el);
+    el=document.createElementNS(NS,"line");el.setAttribute("class","axis");el.setAttribute("x1",sx(0));el.setAttribute("x2",sx(0));el.setAttribute("y1",sy(view.pMax));el.setAttribute("y2",sy(0));ax.appendChild(el);
+    $("xTitle").setAttribute("x",sx(view.qMax/2));$("xTitle").setAttribute("y",H-8);$("xTitle").setAttribute("text-anchor","middle");
+    $("xTitle").textContent="Cantidad q (docenas de polos por semana)";
+    $("yTitle").setAttribute("x",14);$("yTitle").setAttribute("y",T+4);$("yTitle").textContent="Precio p (S/ por polo)";
+  }
+
+  function readParams(){
+    return{mO:parseFloat($("mO").value),bO:parseFloat($("bO").value),mD:parseFloat($("mD").value),bD:parseFloat($("bD").value)};
+  }
+
+  function render(){
+    var pr=readParams(), mO=pr.mO,bO=pr.bO,mD=pr.mD,bD=pr.bD;
+    $("mOv").textContent=fmt(mO);$("bOv").textContent=fmt(bO);
+    $("mDv").textContent=fmt(mD);$("bDv").textContent=fmt(bD);
+    var eq=equil(mO,bO,mD,bD);
+    var qdInt=-bD/mD;
+    view.qMax=Math.max(eq.qe*1.7,qdInt*1.2,6);
+    view.pMax=Math.max(bD*1.2,eq.pe*1.35,20);
+    drawGrid();
+
+    setLineXY($("lineO"),0,bO,view.qMax,mO*view.qMax+bO);
+    setLineXY($("lineD"),0,bD,view.qMax,mD*view.qMax+bD);
+    $("legO").setAttribute("x",sx(view.qMax)-4);$("legO").setAttribute("y",sy(mO*view.qMax+bO)-6);$("legO").setAttribute("text-anchor","end");$("legO").textContent="Oferta O";
+    $("legD").setAttribute("x",sx(view.qMax)-4);$("legD").setAttribute("y",sy(mD*view.qMax+bD)-6);$("legD").setAttribute("text-anchor","end");$("legD").textContent="Demanda D";
+
+    // ecuaciones
+    $("eqO").textContent="O: p = "+fmt(mO)+"·q + "+fmt(bO);
+    $("eqD").textContent="D: p = "+fmt(mD)+"·q + "+fmt(bD);
+
+    // ocultar todo lo específico primero
+    ["lineO2","lineOdim","guideQ","guideP","priceLine","excessLine","eqGlow","eqDot","eqDot2","eqDotOrig","dotO","dotD","eqLbl","eqLbl2","legO2"].forEach(function(id){$(id).style.display="none";});
+
+    var valid = eq.qe>0 && eq.pe>0;
+
+    if(mode==="equilibrio"){
+      if(valid){
+        $("eqGlow").style.display="";$("eqDot").style.display="";$("eqLbl").style.display="";
+        $("guideQ").style.display="";$("guideP").style.display="";
+        setPt($("eqGlow"),eq.qe,eq.pe);setPt($("eqDot"),eq.qe,eq.pe);
+        setLineXY($("guideQ"),eq.qe,eq.pe,eq.qe,0);
+        setLineXY($("guideP"),eq.qe,eq.pe,0,eq.pe);
+        $("eqLbl").setAttribute("x",sx(eq.qe)+10);$("eqLbl").setAttribute("y",sy(eq.pe)-10);
+        $("eqLbl").textContent="(qe; pe) = ("+fmt(eq.qe)+"; "+fmt(eq.pe)+")";
+        $("qeCard").textContent=fmt(eq.qe)+" docenas";
+        $("peCard").textContent=soles(eq.pe);
+        $("ptCard").textContent="(qe; pe) = ("+fmt(eq.qe)+"; "+fmt(eq.pe)+")";
+      }else{
+        $("qeCard").textContent="No existe";$("peCard").textContent="—";
+        $("ptCard").textContent="El intercepto de la demanda debe superar al de la oferta para que haya equilibrio.";
+      }
+      $("interp").innerHTML="Demanda (m="+fmt(mD)+"): por cada docena adicional demandada, el precio baja "+soles(Math.abs(mD))+".<br>Oferta (m="+fmt(mO)+"): por cada docena adicional ofrecida, el precio sube "+soles(mO)+".";
+    }
+    else if(mode==="exceso"){
+      // mostrar equilibrio de referencia tenue
+      if(valid){setPt($("eqDotOrig"),eq.qe,eq.pe);$("eqDotOrig").style.display="";}
+      var ps=$("pSlider");ps.max=Math.round(view.pMax*2)/2;
+      var p=Math.min(parseFloat(ps.value),view.pMax);
+      $("pVal").textContent=soles(p);
+      setLineXY($("priceLine"),0,p,view.qMax,p);
+      var qo=Math.max(0,(p-bO)/mO);
+      var qd=Math.max(0,(p-bD)/mD);
+      setPt($("dotO"),qo,p);setPt($("dotD"),qd,p);$("dotO").style.display="";$("dotD").style.display="";
+      var exc=qo-qd;
+      var lo=Math.min(qo,qd),hi=Math.max(qo,qd);
+      if(Math.abs(exc)>1e-6){
+        $("excessLine").style.display="";
+        setLineXY($("excessLine"),lo,p,hi,p);
+        $("excessLine").setAttribute("stroke",exc>0?"var(--err)":"var(--accent)");
+      }
+      $("qoCard").textContent=fmt(qo)+" docenas";
+      $("qdCard").textContent=fmt(qd)+" docenas";
+      if(Math.abs(exc)<1e-6){
+        $("excVal").textContent="⚖ Equilibrio: qo = qd";
+        $("excCard").className="card hl";
+        $("excRead").textContent="Al precio "+soles(p)+" la cantidad ofertada iguala a la demandada: estamos en el punto de equilibrio.";
+      }else if(exc>0){
+        $("excVal").textContent="Exceso de oferta de "+fmt(exc)+" docenas";
+        $("excCard").className="card rd";
+        $("excRead").textContent="Al precio "+soles(p)+" se ofrecen "+fmt(qo)+" docenas pero solo se demandan "+fmt(qd)+". Sobran "+fmt(exc)+" docenas sin vender (presión a la baja del precio).";
+      }else{
+        $("excVal").textContent="Exceso de demanda de "+fmt(-exc)+" docenas";
+        $("excCard").className="card bl";
+        $("excRead").textContent="Al precio "+soles(p)+" se demandan "+fmt(qd)+" docenas pero solo se ofrecen "+fmt(qo)+". Faltan "+fmt(-exc)+" docenas (escasez, presión al alza del precio).";
+      }
+    }
+    else if(mode==="politica"){
+      var amt=parseFloat($("amtSlider").value);
+      $("amtVal").textContent=soles(amt,0);
+      var shift=(policyType==="imp")?amt:-amt;
+      var bO2=bO+shift;
+      var eq2=equil(mO,bO2,mD,bD);
+      // oferta original tenue + nueva oferta
+      setLineXY($("lineOdim"),0,bO,view.qMax,mO*view.qMax+bO);$("lineOdim").style.display="";
+      $("lineO").style.display="none"; // ocultar oferta sólida original, la mostramos tenue
+      setLineXY($("lineO2"),0,bO2,view.qMax,mO*view.qMax+bO2);$("lineO2").style.display="";
+      $("legO2").setAttribute("x",sx(view.qMax)-4);$("legO2").setAttribute("y",sy(mO*view.qMax+bO2)-6);$("legO2").setAttribute("text-anchor","end");
+      $("legO2").textContent=(policyType==="imp")?"Oferta con impuesto":"Oferta con subsidio";
+      $("legO2").style.display="";
+      $("eqO2").textContent=(policyType==="imp")?("O′: p = "+fmt(mO)+"·q + "+fmt(bO)+" + "+fmt(amt,0)):("O″: p = "+fmt(mO)+"·q + "+fmt(bO)+" − "+fmt(amt,0));
+      // equilibrio original (tenue) y nuevo
+      if(valid){setPt($("eqDotOrig"),eq.qe,eq.pe);$("eqDotOrig").style.display="";}
+      if(eq2.qe>0 && eq2.pe>0){
+        setPt($("eqDot2"),eq2.qe,eq2.pe);$("eqDot2").style.display="";
+        $("eqLbl2").setAttribute("x",sx(eq2.qe)+10);$("eqLbl2").setAttribute("y",sy(eq2.pe)-10);
+        $("eqLbl2").textContent="("+fmt(eq2.qe)+"; "+fmt(eq2.pe)+")";$("eqLbl2").style.display="";
+        $("origCard").textContent="("+fmt(eq.qe)+"; "+fmt(eq.pe)+")";
+        $("newCard").textContent="("+fmt(eq2.qe)+"; "+fmt(eq2.pe)+")";
+        var dq=eq2.qe-eq.qe, dp=eq2.pe-eq.pe;
+        $("dqCard").textContent=(dq>=0?"+":"")+fmt(dq)+" docenas";
+        $("dpCard").textContent=(dp>=0?"+":"")+soles(dp);
+        if(policyType==="imp"){
+          var prod=eq2.pe-amt;
+          $("polRead").innerHTML="El impuesto desplaza la oferta <b>hacia arriba</b>. La cantidad de equilibrio "+(dq<0?"disminuye":"aumenta")+" en "+fmt(Math.abs(dq))+" docenas. El consumidor paga "+soles(eq2.pe)+" y el productor recibe "+soles(prod)+" por polo.";
+        }else{
+          var prod2=eq2.pe+amt;
+          $("polRead").innerHTML="El subsidio desplaza la oferta <b>hacia abajo</b>. La cantidad de equilibrio "+(dq>0?"aumenta":"disminuye")+" en "+fmt(Math.abs(dq))+" docenas. El consumidor paga "+soles(eq2.pe)+" y el productor recibe "+soles(prod2)+" por polo.";
+        }
+      }else{
+        $("origCard").textContent="("+fmt(eq.qe)+"; "+fmt(eq.pe)+")";
+        $("newCard").textContent="No existe";
+        $("dqCard").textContent="—";$("dpCard").textContent="—";
+        $("polRead").textContent=(policyType==="imp")?"El impuesto es tan alto que la oferta queda por encima de la demanda: no hay intercambio en este mercado.":"Con este subsidio la oferta se desplaza mucho; revisa los valores.";
+      }
+    }
+    // restaurar oferta sólida si no estamos en política
+    if(mode!=="politica"){$("lineO").style.display="";}
+  }
+
+  // pestañas
+  var tabs=document.querySelectorAll(".tab");
+  tabs.forEach(function(t){t.addEventListener("click",function(){
+    tabs.forEach(function(x){x.classList.remove("active");});t.classList.add("active");
+    mode=t.getAttribute("data-mode");
+    $("panel-equilibrio").classList.toggle("hidden",mode!=="equilibrio");
+    $("panel-exceso").classList.toggle("hidden",mode!=="exceso");
+    $("panel-politica").classList.toggle("hidden",mode!=="politica");
+    render();
+  });});
+
+  // sliders
+  ["mO","bO","mD","bD","pSlider","amtSlider"].forEach(function(id){$(id).addEventListener("input",render);});
+
+  // política
+  $("btnImp").addEventListener("click",function(){policyType="imp";$("btnImp").classList.add("on");$("btnSub").classList.remove("on");$("amtLbl").textContent="Impuesto (S/ por polo)";render();});
+  $("btnSub").addEventListener("click",function(){policyType="sub";$("btnSub").classList.add("on");$("btnImp").classList.remove("on");$("amtLbl").textContent="Subsidio (S/ por polo)";render();});
+
+  // tema
+  $("themeBtn").addEventListener("click",function(){
+    document.body.classList.toggle("light");
+    $("themeBtn").textContent=document.body.classList.contains("light")?"☀️ Tema":"🌙 Tema";
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

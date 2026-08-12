@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DerivaReto · Reglas de derivación</title>
+<style>
+  :root{--bg:#0D1B2A;--bg2:#0F2233;--panel:rgba(22,35,58,.85);--border:rgba(56,189,248,.28);--text:#E6EDF3;--dim:#94A3B8;--acc:#38BDF8;--accent2:#34D399;--warn:#FBBF24;--err:#F87171;--gold:#F5B942}
+  body.light{--bg:#EEF3F9;--bg2:#fff;--panel:rgba(255,255,255,.94);--border:rgba(37,99,235,.3);--text:#1E293B;--dim:#64748B;--acc:#0284C7;--accent2:#059669;--warn:#D97706;--err:#DC2626;--gold:#B45309}
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
+  body{background:radial-gradient(1200px 700px at 70% -10%,rgba(56,189,248,.09),transparent),var(--bg);color:var(--text);min-height:100vh;padding:18px;display:flex;flex-direction:column;align-items:center;transition:.3s}
+  .wrap{width:100%;max-width:760px}
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .title h1{font-size:1.3rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .title h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--acc);box-shadow:0 0 12px var(--acc)}
+  .title p{color:var(--dim);font-size:.85rem;margin-top:2px}
+  .badge{background:rgba(56,189,248,.14);border:1px solid var(--border);color:var(--acc);padding:3px 10px;border-radius:20px;font-size:.75rem}
+  #themeBtn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:12px;cursor:pointer;font-size:.85rem}
+  .screen{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px;box-shadow:0 0 30px rgba(56,189,248,.08)}
+  .hidden{display:none!important}
+  .btn{border:none;border-radius:12px;padding:12px 18px;cursor:pointer;font-size:1rem;font-weight:700;color:#fff;background:var(--acc);transition:.2s}
+  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--dim);font-weight:600}
+  .btn.warn{background:var(--gold);color:#201500}
+  .btn:hover{filter:brightness(1.12)}
+  .eqDisplay{font-size:1.5rem;text-align:center;margin:18px 0;font-family:'Cambria Math','Segoe UI',serif;color:var(--acc)}
+  .eqDisplay sup{font-size:.65em}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center}
+  input[type=text]{background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:11px 14px;border-radius:12px;font-size:1.1rem;text-align:center;width:180px}
+  .hud{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;color:var(--dim);font-size:.85rem;flex-wrap:wrap}
+  .hud b{color:var(--acc)}
+  .feedback{font-size:.95rem;margin-top:12px;font-weight:600;text-align:center;min-height:22px}
+  .feedback.ok{color:var(--accent2)}.feedback.bad{color:var(--err)}
+  .hintBox{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.35);border-radius:12px;padding:10px 14px;margin-top:12px;font-size:.88rem;color:var(--warn)}
+  .podium{margin-top:16px}
+  .podium h3{text-align:center;color:var(--gold);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase;font-size:.9rem}
+  .podRow{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:8px}
+  .podRow.r1{border-color:var(--gold);box-shadow:0 0 14px rgba(245,185,66,.25)}
+  .podRow.r2{border-color:#C0C7D1}.podRow.r3{border-color:#C98A5A}
+  .podRow .medal{font-size:1.3rem;width:34px;text-align:center}
+  .podRow .nm{flex:1;font-weight:700}
+  .podRow .sc{color:var(--acc);font-weight:700}
+  .podRow .tm{color:var(--dim);font-size:.78rem}
+  .scoreBig{font-size:2.2rem;font-weight:800;color:var(--acc);text-align:center;margin:10px 0}
+  .progress{height:8px;border-radius:6px;background:var(--bg2);overflow:hidden;margin:10px 0 4px}
+  .progress i{display:block;height:100%;background:var(--acc);width:0;transition:.4s}
+  .note{color:var(--dim);font-size:.75rem;text-align:center;margin-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="title">
+    <h1><span class="dot"></span> DerivaReto <span class="badge">La derivada</span></h1>
+    <p>Domina las reglas de derivación y entra al podio · Capítulo 7 · USIL</p>
+  </div>
+  <button id="themeBtn">🌙 Tema</button>
+</header>
+<div class="screen" id="scrStart">
+  <p style="line-height:1.5">🧠 Una ronda tiene <b>5 preguntas</b>. Calcula la derivada pedida y escribe su <b>valor numérico</b> (acepta coma decimal o fracción). Cada acierto vale <b>100 puntos</b> (60 si usas pista).</p>
+  <div class="row" style="margin-top:16px"><button class="btn" id="playBtn">🎮 Jugar</button></div>
+  <div class="podium" id="podStart"></div>
+</div>
+<div class="screen hidden" id="scrGame">
+  <div class="hud">
+    <span>Pregunta <b id="hNum">1/5</b></span>
+    <span>Puntos: <b id="hScore">0</b></span>
+    <span>⏱ <b id="hTime">0 s</b></span>
+  </div>
+  <div class="progress"><i id="hBar"></i></div>
+  <div class="eqDisplay" id="eqBox"></div>
+  <div class="row">
+    <input type="text" id="ansIn" placeholder="valor = ?">
+    <button class="btn" id="okBtn">Comprobar</button>
+  </div>
+  <div class="feedback" id="fb"></div>
+  <div class="hintBox hidden" id="hintBox"></div>
+  <div class="row" style="margin-top:14px">
+    <button class="btn ghost" id="hintBtn">💡 Pista (−40 pts)</button>
+    <button class="btn ghost" id="skipBtn">Revelar y pasar</button>
+  </div>
+</div>
+<div class="screen hidden" id="scrEnd">
+  <h2 style="text-align:center">Fin de la ronda</h2>
+  <div class="scoreBig" id="finalScore"></div>
+  <p style="text-align:center;color:var(--dim)" id="finalTime"></p>
+  <div id="nameBox" class="hidden" style="margin-top:14px">
+    <p style="text-align:center;color:var(--gold);font-weight:700">🏆 ¡Entraste al podio! Escribe tu nombre:</p>
+    <div class="row" style="margin-top:8px">
+      <input type="text" id="nameIn" maxlength="15" placeholder="Tu nombre" style="width:220px">
+      <button class="btn warn" id="saveBtn">Registrar</button>
+    </div>
+  </div>
+  <div class="podium" id="podEnd"></div>
+  <div class="row" style="margin-top:14px"><button class="btn" id="againBtn">🔁 Jugar de nuevo</button></div>
+</div>
+<p class="note">Reglas del libro (p. 199-203): potencia, constante, eˣ, ln x, suma, producto, cociente y regla de la cadena. Podio guardado en este navegador.</p>
+</div>
+<script>
+(function(){
+  "use strict";
+  var $=function(id){return document.getElementById(id);};
+  var EQS=[
+    {html:"f(x) = x<sup>4</sup>, &nbsp;calcula f′(2)",ans:32,tol:1e-6,hint:"Potencia: [xⁿ]′ = n·xⁿ⁻¹ → f′(x) = 4x³ → 4·8."},
+    {html:"f(x) = 2x − 1, &nbsp;calcula f′(5)",ans:2,tol:1e-6,hint:"[mx + b]′ = m, no importa el punto."},
+    {html:"f(x) = 50, &nbsp;calcula f′(3)",ans:0,tol:1e-6,hint:"La derivada de una constante es 0."},
+    {html:"f(x) = x<sup>2</sup>, &nbsp;calcula f′(3)",ans:6,tol:1e-6,hint:"[x²]′ = 2x."},
+    {html:"f(x) = e<sup>x</sup>, &nbsp;calcula f′(0)",ans:1,tol:1e-6,hint:"[eˣ]′ = eˣ, y e⁰ = 1."},
+    {html:"f(x) = ln(x), &nbsp;calcula f′(2)",ans:0.5,tol:0.01,hint:"[ln x]′ = 1/x → 1/2."},
+    {html:"g(x) = x<sup>5</sup> − 2x<sup>3</sup> + 3x<sup>2</sup> − 4, &nbsp;calcula g′(1)",ans:5,tol:1e-6,hint:"Término a término: g′(x) = 5x⁴ − 6x² + 6x."},
+    {html:"h(x) = (2x + 4)<sup>7</sup>, &nbsp;calcula h′(−2)",ans:0,tol:1e-6,hint:"Cadena: h′(x) = 14(2x+4)⁶. En x = −2 el factor (2x+4) vale 0."},
+    {html:"r(x) = e<sup>x²+3</sup>, &nbsp;calcula r′(0)",ans:0,tol:1e-6,hint:"Cadena: r′(x) = 2x·e^(x²+3). En x = 0 hay un factor 2x = 0."},
+    {html:"w(x) = (2x − 3)/(x + 1), &nbsp;calcula w′(0)",ans:5,tol:1e-6,hint:"Cociente: w′(x) = 5/(x+1)² (ejemplo del libro, p. 201)."},
+    {html:"f(x) = x·e<sup>x</sup>, &nbsp;calcula f′(0)",ans:1,tol:1e-6,hint:"Producto: f′(x) = eˣ + x·eˣ."},
+    {html:"f(x) = √x, &nbsp;calcula f′(4)",ans:0.25,tol:0.01,hint:"√x = x^(1/2) → f′(x) = 1/(2√x) → 1/4."},
+    {html:"f(x) = 1/x<sup>6</sup>, &nbsp;calcula f′(1)",ans:-6,tol:1e-6,hint:"1/x⁶ = x⁻⁶ → f′(x) = −6x⁻⁷."},
+    {html:"p(x) = ln(4x − 1), &nbsp;calcula p′(1)",ans:4/3,tol:0.01,hint:"Cadena: p′(x) = 4/(4x−1) → 4/3 (acepta la fracción)."},
+    {html:"f(x) = x<sup>3</sup> − 3x<sup>2</sup> + 10, &nbsp;calcula f′(0)",ans:0,tol:1e-6,hint:"f′(x) = 3x² − 6x. En x = 0 la tangente es horizontal (Ejercicio 7.8)."},
+    {html:"f(x) = 3x<sup>2</sup> − 5x + 2, &nbsp;calcula f′(2)",ans:7,tol:1e-6,hint:"f′(x) = 6x − 5."}
+  ];
+  var round=[],idx=0,score=0,hintsUsed=0,elapsed=0,timerInt=null,cur=null;
+  function parseAns(s){s=(""+s).trim().replace(",",".");if(s.indexOf("/")>=0){var p=s.split("/");return parseFloat(p[0])/parseFloat(p[1]);}return parseFloat(s);}
+  function loadPod(){try{return JSON.parse(localStorage.getItem("derivaPodio")||"[]");}catch(e){return[];}}
+  function savePod(p){localStorage.setItem("derivaPodio",JSON.stringify(p));}
+  function renderPod(el){
+    var p=loadPod(),medals=["🥇","🥈","🥉"];
+    var h="<h3>🎯 Podio de campeones</h3>";
+    if(p.length===0){h+="<p style='text-align:center;color:var(--dim)'>Aún no hay registros. ¡Sé el primero!</p>";}
+    p.forEach(function(r,i){
+      h+="<div class='podRow r"+(i+1)+"'><span class='medal'>"+medals[i]+"</span><span class='nm'>"+r.name+"</span><span class='sc'>"+r.score+" pts</span><span class='tm'>"+r.time+" s · "+r.date+"</span></div>";
+    });
+    el.innerHTML=h;
+  }
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+  function startGame(){
+    round=shuffle(EQS.slice()).slice(0,5);
+    idx=0;score=0;elapsed=0;
+    $("scrStart").classList.add("hidden");$("scrEnd").classList.add("hidden");$("scrGame").classList.remove("hidden");
+    timerInt=setInterval(function(){elapsed++;$("hTime").textContent=elapsed+" s";},1000);
+    showEq();
+  }
+  function showEq(){
+    cur=round[idx];hintsUsed=0;
+    $("hNum").textContent=(idx+1)+"/5";
+    $("hScore").textContent=score;
+    $("hBar").style.width=(idx/5*100)+"%";
+    $("eqBox").innerHTML=cur.html;
+    $("ansIn").value="";$("fb").textContent="";$("fb").className="feedback";
+    $("hintBox").classList.add("hidden");
+    $("ansIn").focus();
+  }
+  function next(){idx++;if(idx>=5)endGame();else showEq();}
+  function endGame(){
+    clearInterval(timerInt);
+    $("scrGame").classList.add("hidden");$("scrEnd").classList.remove("hidden");
+    $("finalScore").textContent=score+" puntos";
+    $("finalTime").textContent="Tiempo total: "+elapsed+" s";
+    var p=loadPod();
+    var qualifies=p.length<3||score>p[p.length-1].score;
+    $("nameBox").classList.toggle("hidden",!(score>0&&qualifies));
+    renderPod($("podEnd"));
+  }
+  function check(){
+    var v=parseAns($("ansIn").value),fb=$("fb");
+    if(isNaN(v)){fb.textContent="Escribe un número (coma decimal o fracción).";fb.className="feedback bad";return;}
+    if(Math.abs(v-cur.ans)<cur.tol){
+      var pts=hintsUsed?60:100;score+=pts;
+      fb.textContent="✔ ¡Correcto! (+"+pts+" pts)";fb.className="feedback ok";
+      setTimeout(next,900);
+    }else{
+      fb.textContent="✗ Deriva con calma: identifica primero la regla que toca.";fb.className="feedback bad";
+    }
+  }
+  $("okBtn").addEventListener("click",check);
+  $("ansIn").addEventListener("keydown",function(e){if(e.key==="Enter")check();});
+  $("hintBtn").addEventListener("click",function(){
+    hintsUsed=1;$("hintBox").textContent="💡 "+cur.hint;$("hintBox").classList.remove("hidden");
+  });
+  $("skipBtn").addEventListener("click",function(){
+    $("fb").textContent="La respuesta era "+String(cur.ans).replace(".",",")+".";
+    $("fb").className="feedback bad";
+    setTimeout(next,1800);
+  });
+  $("saveBtn").addEventListener("click",function(){
+    var nm=$("nameIn").value.trim()||"Anónimo";
+    var p=loadPod();
+    p.push({name:nm,score:score,time:elapsed,date:new Date().toLocaleDateString("es-PE")});
+    p.sort(function(a,b){return b.score-a.score||a.time-b.time;});
+    p=p.slice(0,3);savePod(p);
+    $("nameBox").classList.add("hidden");
+    renderPod($("podEnd"));
+  });
+  $("playBtn").addEventListener("click",startGame);
+  $("againBtn").addEventListener("click",startGame);
+  $("themeBtn").addEventListener("click",function(){
+    document.body.classList.toggle("light");
+    $("themeBtn").textContent=document.body.classList.contains("light")?"☀️ Tema":"🌙 Tema";
+  });
+  renderPod($("podStart"));
+})();
+</script>
+</body>
+</html>

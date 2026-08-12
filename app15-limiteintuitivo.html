@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LimiteIntuitivo · Noción de límite</title>
+<style>
+  :root{--bg:#0D1B2A;--bg2:#0F2233;--panel:rgba(22,35,58,.8);--border:rgba(56,189,248,.25);--text:#E6EDF3;--dim:#94A3B8;--acc:#38BDF8;--accent2:#34D399;--warn:#FBBF24;--err:#F87171;--violet:#A78BFA;--grid:rgba(148,163,184,.14);--axis:rgba(230,237,243,.75)}
+  body.light{--bg:#EEF3F9;--bg2:#fff;--panel:rgba(255,255,255,.92);--border:rgba(37,99,235,.28);--text:#1E293B;--dim:#64748B;--acc:#0284C7;--accent2:#059669;--warn:#D97706;--err:#DC2626;--violet:#7C3AED;--grid:rgba(100,116,139,.18);--axis:rgba(30,41,59,.8)}
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
+  body{background:radial-gradient(1200px 700px at 70% -10%,rgba(56,189,248,.09),transparent),var(--bg);color:var(--text);min-height:100vh;padding:18px;transition:.3s}
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;max-width:1100px;margin:0 auto 14px}
+  .title h1{font-size:1.3rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .title h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--acc);box-shadow:0 0 12px var(--acc)}
+  .title p{color:var(--dim);font-size:.85rem;margin-top:2px}
+  .badge{background:rgba(56,189,248,.14);border:1px solid var(--border);color:var(--acc);padding:3px 10px;border-radius:20px;font-size:.75rem}
+  #themeBtn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:12px;cursor:pointer;font-size:.85rem}
+  main{max-width:1100px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap}
+  .mapbox{flex:1 1 430px;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:14px}
+  svg#map{width:100%;display:block;border-radius:14px;background:var(--bg2)}
+  .hint{color:var(--dim);font-size:.8rem;margin-top:10px;text-align:center}
+  .panel{flex:1 1 330px;display:flex;flex-direction:column;gap:12px}
+  .sliders{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+  .srow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .srow label{min-width:110px;color:var(--dim);font-size:.85rem}
+  .srow input[type=range]{flex:1;min-width:140px;accent-color:var(--acc)}
+  .srow .sval{min-width:90px;text-align:right;font-weight:700;color:var(--acc);font-size:.9rem}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+  .card .lbl{color:var(--dim);font-size:.72rem}
+  .card .val{font-size:.95rem;font-weight:600;word-break:break-word}
+  .card.hl{border-color:var(--warn)}.card.hl .val{color:var(--warn)}
+  .card.gn .val{color:var(--accent2)}.card.bl .val{color:var(--acc)}
+  .eqbox{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+  .eq .lbl{color:var(--dim);font-size:.72rem}
+  .eq .v{font-size:.96rem;font-weight:600;font-family:'Cambria Math','Segoe UI',serif}
+  table{width:100%;border-collapse:collapse;font-size:.8rem}
+  th,td{border:1px solid var(--border);padding:5px 3px;text-align:center}
+  th{color:var(--dim);font-size:.7rem}
+  td.undefined{color:var(--err);font-weight:700}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  input[type=text]{flex:1;min-width:100px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:10px;font-size:1rem}
+  .btn{border:none;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:.88rem;font-weight:600;color:#fff;background:var(--acc);transition:.2s}
+  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--dim)}
+  .btn:hover{filter:brightness(1.12)}
+  .feedback{font-size:.9rem;margin-top:8px;font-weight:600;min-height:20px}
+  .feedback.ok{color:var(--accent2)}.feedback.bad{color:var(--err)}
+  .hidden{display:none!important}
+  .note{max-width:1100px;margin:16px auto 0;color:var(--dim);font-size:.75rem;text-align:center}
+  .gridline{stroke:var(--grid)}.axis{stroke:var(--axis);stroke-width:1.5}.axlbl{fill:var(--dim);font-size:11px}
+  .curve{stroke:var(--acc);stroke-width:3;stroke-linecap:round;fill:none}
+  .hole{fill:var(--bg2);stroke:var(--warn);stroke-width:2.5}
+  .ptMov{fill:var(--accent2);stroke:#fff;stroke-width:2}
+  .guide{stroke:var(--accent2);stroke-width:1;stroke-dasharray:4 4;opacity:.7}
+  .holeLbl{fill:var(--warn);font-size:11px;font-weight:700}
+  @media(max-width:760px){.title h1{font-size:1.08rem}}
+</style>
+</head>
+<body>
+<header>
+  <div class="title">
+    <h1><span class="dot"></span> LimiteIntuitivo <span class="badge">Límites</span></h1>
+    <p>¿A qué valor se acerca f(x) cuando x se acerca a 3? · Capítulo 6 · USIL</p>
+  </div>
+  <button id="themeBtn">🌙 Tema</button>
+</header>
+<main>
+  <div class="mapbox">
+    <svg id="map" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid meet">
+      <g id="grid"></g><g id="axes"></g><g id="labels"></g>
+      <line id="guideX" class="guide"/><line id="guideY" class="guide"/>
+      <path id="curve" class="curve"/>
+      <circle id="hole" class="hole" r="7"/>
+      <text id="holeLbl" class="holeLbl"></text>
+      <circle id="ptMov" class="ptMov" r="6"/>
+    </svg>
+    <p class="hint">La gráfica es la recta y = x + 2, pero SIN el punto (3; 5): allí f no está definida. Sin embargo, el límite sí existe.</p>
+  </div>
+  <div class="panel">
+    <div class="eqbox">
+      <div class="eq"><span class="lbl">Función del libro (p. 170)</span><span class="v" style="color:var(--acc)">f(x) = (x² − x − 6)/(x − 3), &nbsp;x ≠ 3</span></div>
+    </div>
+    <div class="sliders" style="margin-top:10px">
+      <div class="srow"><label>x (cercano a 3)</label><input type="range" id="xS" min="1" max="5" step="0.0001" value="2.9"><span class="sval" id="xV"></span></div>
+      <div class="srow"><label>f(x)</label><span class="sval" id="fV" style="flex:1;text-align:left"></span></div>
+      <div class="row">
+        <button class="btn" id="btnL">⬅ Acercar por la izquierda</button>
+        <button class="btn" id="btnR">Acercar por la derecha ➡</button>
+      </div>
+    </div>
+    <div class="eqbox" style="margin-top:10px">
+      <div class="eq"><span class="lbl">Tabulación (como en el libro)</span></div>
+      <table id="tabla"></table>
+    </div>
+    <div class="eqbox" style="margin-top:10px">
+      <div class="eq"><span class="lbl">Conclusión</span><span class="v" id="concl" style="font-size:.9rem;color:var(--dim)">Cuando x se acerca a 3 (sin ser 3), f(x) se acerca a un valor. ¿A cuál? Escríbelo:</span></div>
+      <div class="row" style="margin-top:6px">
+        <input type="text" id="ansIn" placeholder="límite = ?">
+        <button class="btn" id="okBtn">Comprobar</button>
+        <button class="btn ghost" id="revBtn">Ver explicación</button>
+      </div>
+      <div class="feedback" id="fb"></div>
+      <div class="eq hidden" id="explBox" style="margin-top:6px"><span class="v" style="font-size:.86rem;color:var(--accent2)">Como x² − x − 6 = (x + 2)(x − 3), entonces f(x) = (x+2)(x−3)/(x−3) = x + 2 (para x ≠ 3). Por eso, al acercarse x a 3, f(x) se acerca a 3 + 2 = 5. Se escribe: lím f(x) = 5 cuando x → 3.</span></div>
+    </div>
+  </div>
+</main>
+<p class="note">El límite depende de los valores CERCANOS a x₀, no del valor en x₀ (que aquí ni existe). Convención Perú: coma decimal. Apuntes de Matemática 2 — USIL.</p>
+<script>
+(function(){
+  "use strict";
+  var $=function(id){return document.getElementById(id);};
+  function fmt(n,dec){ if(!isFinite(n))return "—"; if(Math.abs(n)<1e-9)n=0; dec=(dec===undefined)?4:dec;
+    var s=n.toFixed(dec); if(s.indexOf(".")>=0){s=s.replace(/0+$/,"").replace(/\.$/,"");}
+    var neg=s.charAt(0)==="-"; if(neg)s=s.slice(1);
+    var parts=s.split("."); var int=parts[0];
+    if(int.length>=5){int=int.replace(/\B(?=(\d{3})+(?!\d))/g,"\u00A0");}
+    s=int+(parts[1]?","+parts[1]:""); return (neg?"\u2212":"")+s;
+  }
+  function parseAns(s){s=(""+s).trim().replace(",",".");return parseFloat(s);}
+  var W=600,H=600,xMin=-1,xMax=7,yMin=-1,yMax=9;
+  function sx(x){return (x-xMin)/(xMax-xMin)*W;}
+  function sy(y){return H-(y-yMin)/(yMax-yMin)*H;}
+  function f(x){ if(Math.abs(x-3)<1e-12)return NaN; return (x*x-x-6)/(x-3); }
+  (function build(){
+    var NS="http://www.w3.org/2000/svg",i,el,t;
+    for(i=xMin;i<=xMax;i++){
+      el=document.createElementNS(NS,"line");el.setAttribute("class","gridline");el.setAttribute("x1",sx(i));el.setAttribute("x2",sx(i));el.setAttribute("y1",0);el.setAttribute("y2",H);$("grid").appendChild(el);
+      el=document.createElementNS(NS,"line");el.setAttribute("class","gridline");el.setAttribute("x1",0);el.setAttribute("x2",W);el.setAttribute("y1",sy(i));el.setAttribute("y2",sy(i));$("grid").appendChild(el);
+    }
+    el=document.createElementNS(NS,"line");el.setAttribute("class","axis");el.setAttribute("x1",0);el.setAttribute("x2",W);el.setAttribute("y1",sy(0));el.setAttribute("y2",sy(0));$("axes").appendChild(el);
+    el=document.createElementNS(NS,"line");el.setAttribute("class","axis");el.setAttribute("x1",sx(0));el.setAttribute("x2",sx(0));el.setAttribute("y1",0);el.setAttribute("y2",H);$("axes").appendChild(el);
+    for(i=xMin;i<=xMax;i++){ if(i===0)continue;
+      t=document.createElementNS(NS,"text");t.setAttribute("class","axlbl");t.setAttribute("x",sx(i));t.setAttribute("y",sy(0)+14);t.setAttribute("text-anchor","middle");t.textContent=i;$("labels").appendChild(t);
+      if(i<=yMax&&i>=yMin){t=document.createElementNS(NS,"text");t.setAttribute("class","axlbl");t.setAttribute("x",sx(0)-6);t.setAttribute("y",sy(i)+4);t.setAttribute("text-anchor","end");t.textContent=i;$("labels").appendChild(t);}
+    }
+  })();
+  // curva (recta y=x+2 con hueco)
+  (function(){
+    var d1="M"+sx(xMin).toFixed(1)+" "+sy(xMin+2).toFixed(1)+" L"+sx(2.94).toFixed(1)+" "+sy(4.94).toFixed(1);
+    var d2="M"+sx(3.06).toFixed(1)+" "+sy(5.06).toFixed(1)+" L"+sx(xMax).toFixed(1)+" "+sy(xMax+2).toFixed(1);
+    $("curve").setAttribute("d",d1+" "+d2);
+    $("hole").setAttribute("cx",sx(3));$("hole").setAttribute("cy",sy(5));
+    $("holeLbl").setAttribute("x",sx(3)+10);$("holeLbl").setAttribute("y",sy(5)-8);$("holeLbl").textContent="hueco (3; 5): f(3) no existe";
+  })();
+  var dL=0.1,dR=0.1;
+  function update(){
+    var x=parseFloat($("xS").value);
+    $("xV").textContent="x = "+fmt(x,4);
+    var y=f(x);
+    $("fV").textContent=(isNaN(y))?"no definida en x = 3":"f(x) = "+fmt(y,4);
+    if(isNaN(y)){$("ptMov").style.display="none";$("guideX").style.display="none";$("guideY").style.display="none";return;}
+    $("ptMov").style.display="";$("guideX").style.display="";$("guideY").style.display="";
+    $("ptMov").setAttribute("cx",sx(x));$("ptMov").setAttribute("cy",sy(y));
+    $("guideX").setAttribute("x1",sx(x));$("guideX").setAttribute("x2",sx(x));$("guideX").setAttribute("y1",sy(0));$("guideX").setAttribute("y2",sy(y));
+    $("guideY").setAttribute("x1",sx(0));$("guideY").setAttribute("x2",sx(x));$("guideY").setAttribute("y1",sy(y));$("guideY").setAttribute("y2",sy(y));
+  }
+  $("xS").addEventListener("input",update);
+  $("btnL").addEventListener("click",function(){dL=Math.max(dL/10,0.0001);$("xS").value=(3-dL).toFixed(4);update();});
+  $("btnR").addEventListener("click",function(){dR=Math.max(dR/10,0.0001);$("xS").value=(3+dR).toFixed(4);update();});
+  // tabla del libro
+  (function(){
+    var xs=[2.9,2.91,2.95,2.999,3,3.001,3.05,3.075,3.1];
+    var h="<tr><th>x</th>";xs.forEach(function(x){h+="<td>"+fmt(x,3)+"</td>";});h+="</tr><tr><th>f(x)</th>";
+    xs.forEach(function(x){ if(x===3){h+="<td class='undefined'>—</td>";} else {h+="<td>"+fmt(x+2,3)+"</td>";} });
+    h+="</tr>";$("tabla").innerHTML=h;
+  })();
+  $("okBtn").addEventListener("click",function(){
+    var v=parseAns($("ansIn").value),fb=$("fb");
+    if(isNaN(v)){fb.textContent="Escribe un número (con coma decimal si hace falta).";fb.className="feedback bad";return;}
+    if(Math.abs(v-5)<1e-6){fb.textContent="✔ ¡Correcto! lím f(x) = 5 cuando x → 3.";fb.className="feedback ok";$("explBox").classList.remove("hidden");}
+    else{fb.textContent="✗ Observa la tabla: por ambos lados f(x) se acerca al mismo número…";fb.className="feedback bad";}
+  });
+  $("revBtn").addEventListener("click",function(){
+    $("explBox").classList.remove("hidden");
+    $("fb").textContent="El límite es 5.";
+    $("fb").className="feedback ok";
+  });
+  $("themeBtn").addEventListener("click",function(){
+    document.body.classList.toggle("light");
+    $("themeBtn").textContent=document.body.classList.contains("light")?"☀️ Tema":"🌙 Tema";
+  });
+  update();
+})();
+</script>
+</body>
+</html>

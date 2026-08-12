@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecanteTangente · La derivada</title>
+<style>
+  :root{--bg:#0D1B2A;--bg2:#0F2233;--panel:rgba(22,35,58,.8);--border:rgba(56,189,248,.25);--text:#E6EDF3;--dim:#94A3B8;--acc:#38BDF8;--accent2:#34D399;--warn:#FBBF24;--err:#F87171;--violet:#A78BFA;--grid:rgba(148,163,184,.14);--axis:rgba(230,237,243,.75)}
+  body.light{--bg:#EEF3F9;--bg2:#fff;--panel:rgba(255,255,255,.92);--border:rgba(37,99,235,.28);--text:#1E293B;--dim:#64748B;--acc:#0284C7;--accent2:#059669;--warn:#D97706;--err:#DC2626;--violet:#7C3AED;--grid:rgba(100,116,139,.18);--axis:rgba(30,41,59,.8)}
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
+  body{background:radial-gradient(1200px 700px at 70% -10%,rgba(56,189,248,.09),transparent),var(--bg);color:var(--text);min-height:100vh;padding:18px;transition:.3s}
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;max-width:1100px;margin:0 auto 14px}
+  .title h1{font-size:1.3rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .title h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--acc);box-shadow:0 0 12px var(--acc)}
+  .title p{color:var(--dim);font-size:.85rem;margin-top:2px}
+  .badge{background:rgba(56,189,248,.14);border:1px solid var(--border);color:var(--acc);padding:3px 10px;border-radius:20px;font-size:.75rem}
+  #themeBtn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:12px;cursor:pointer;font-size:.85rem}
+  .tabs{max-width:1100px;margin:0 auto 14px;display:flex;gap:8px;flex-wrap:wrap}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--dim);padding:9px 16px;border-radius:12px;cursor:pointer;font-size:.9rem}
+  .tab.active{color:#fff;background:var(--acc);border-color:var(--acc);font-weight:600}
+  main{max-width:1100px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap}
+  .mapbox{flex:1 1 430px;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:14px}
+  svg#map{width:100%;display:block;border-radius:14px;background:var(--bg2)}
+  .hint{color:var(--dim);font-size:.8rem;margin-top:10px;text-align:center}
+  .panel{flex:1 1 330px;display:flex;flex-direction:column;gap:12px}
+  .sliders{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+  .srow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .srow label{min-width:130px;color:var(--dim);font-size:.85rem}
+  .srow input[type=range]{flex:1;min-width:130px;accent-color:var(--acc)}
+  .srow .sval{min-width:64px;text-align:right;font-weight:700;color:var(--acc);font-size:.9rem}
+  select{background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:10px;font-size:.88rem;width:100%}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+  .card .lbl{color:var(--dim);font-size:.72rem}
+  .card .val{font-size:.95rem;font-weight:600;word-break:break-word}
+  .card.hl{border-color:var(--warn)}.card.hl .val{color:var(--warn)}
+  .card.gn .val{color:var(--accent2)}.card.bl .val{color:var(--acc)}
+  .eqbox{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+  .eq .lbl{color:var(--dim);font-size:.72rem}
+  .eq .v{font-size:.96rem;font-weight:600;font-family:'Cambria Math','Segoe UI',serif}
+  .btn{border:none;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:.9rem;font-weight:600;color:#fff;background:var(--acc);transition:.2s}
+  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--dim)}
+  .btn:hover{filter:brightness(1.12)}
+  .hidden{display:none!important}
+  .note{max-width:1100px;margin:16px auto 0;color:var(--dim);font-size:.75rem;text-align:center}
+  .gridline{stroke:var(--grid)}.axis{stroke:var(--axis);stroke-width:1.5}.axlbl{fill:var(--dim);font-size:10.5px}
+  .curve{fill:none;stroke:var(--acc);stroke-width:3;stroke-linecap:round}
+  .sec{stroke:var(--accent2);stroke-width:2.5;stroke-linecap:round}
+  .tan{stroke:var(--warn);stroke-width:2;stroke-dasharray:7 5}
+  .ptA{fill:var(--warn);stroke:#fff;stroke-width:2}.ptB{fill:var(--accent2);stroke:#fff;stroke-width:2}
+  @media(max-width:760px){.srow label{min-width:105px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="title">
+    <h1><span class="dot"></span> SecanteTangente <span class="badge">La derivada</span></h1>
+    <p>De la razón de cambio promedio a la derivada · Capítulo 7 · USIL</p>
+  </div>
+  <button id="themeBtn">🌙 Tema</button>
+</header>
+<div class="tabs">
+  <button class="tab active" data-mode="rcp">📏 Razón de cambio promedio</button>
+  <button class="tab" data-mode="lim">✨ Secante → tangente</button>
+</div>
+<main>
+  <div class="mapbox">
+    <svg id="map" viewBox="0 0 640 470" preserveAspectRatio="xMidYMid meet">
+      <g id="grid"></g><g id="axes"></g><g id="labels"></g>
+      <path id="curve" class="curve"/>
+      <line id="sec" class="sec"/><line id="tan" class="tan"/>
+      <circle id="ptA" class="ptA" r="6"/><circle id="ptB" class="ptB" r="6"/>
+      <text id="lblA" fill="#FBBF24" font-size="11" font-weight="700"></text>
+      <text id="lblB" fill="#34D399" font-size="11" font-weight="700"></text>
+      <text id="xTitle" fill="var(--dim)" font-size="12" font-weight="600"></text>
+      <text id="yTitle" fill="var(--dim)" font-size="12" font-weight="600"></text>
+    </svg>
+    <p class="hint" id="hintTxt">La pendiente de la recta secante es la razón de cambio promedio en el intervalo [a; b].</p>
+  </div>
+  <div class="panel">
+    <div id="panel-rcp">
+      <div class="eqbox">
+        <div class="eq"><span class="lbl">Costo de producción (ejemplo del libro, p. 197)</span><span class="v" style="color:var(--acc)">C(q) = 2q² + 4q + 1200 &nbsp;(soles)</span></div>
+      </div>
+      <div class="sliders" style="margin-top:10px">
+        <div class="srow"><label>Desde q = a</label><input type="range" id="aS" min="10" max="90" step="5" value="40"><span class="sval" id="aV"></span></div>
+        <div class="srow"><label>Hasta q = b</label><input type="range" id="bS" min="10" max="90" step="5" value="60"><span class="sval" id="bV"></span></div>
+      </div>
+      <div class="cards" style="margin-top:10px">
+        <div class="card wr"><span class="lbl">C(a)</span><span class="val" id="caV"></span></div>
+        <div class="card gn"><span class="lbl">C(b)</span><span class="val" id="cbV"></span></div>
+        <div class="card hl" style="grid-column:1/-1"><span class="lbl">RCP = (C(b) − C(a))/(b − a)</span><span class="val" id="rcpV"></span></div>
+      </div>
+      <div class="eqbox" style="margin-top:10px;border-color:var(--warn)">
+        <div class="eq"><span class="v" id="interp" style="font-size:.85rem;color:var(--dim)"></span></div>
+      </div>
+    </div>
+    <div id="panel-lim" class="hidden">
+      <select id="fSel">
+        <option value="0">f(x) = x², &nbsp;en a = 2</option>
+        <option value="1">C(q) = 2q² + 4q + 1200, &nbsp;en a = 40</option>
+        <option value="2">f(x) = x³, &nbsp;en a = 1</option>
+      </select>
+      <div class="sliders" style="margin-top:10px">
+        <div class="srow"><label>Distancia h</label><input type="range" id="hS" min="0.02" max="3" step="0.01" value="2"><span class="sval" id="hV"></span></div>
+        <div class="srow">
+          <button class="btn" id="animBtn">▶ Animar acercamiento</button>
+          <button class="btn ghost" id="alejarBtn">↔ Alejar</button>
+        </div>
+      </div>
+      <div class="cards" style="margin-top:10px">
+        <div class="card gn" style="grid-column:1/-1"><span class="lbl">Pendiente de la secante: (f(a+h) − f(a))/h</span><span class="val" id="secV"></span></div>
+        <div class="card hl" style="grid-column:1/-1"><span class="lbl">Derivada f′(a) (reglas de derivación)</span><span class="val" id="derV"></span></div>
+        <div class="card bl" style="grid-column:1/-1"><span class="lbl">Lectura</span><span class="val" id="leeV" style="font-weight:500"></span></div>
+      </div>
+      <div class="eqbox" style="margin-top:10px;border-color:var(--warn)">
+        <div class="eq"><span class="v" style="font-size:.85rem;color:var(--dim)">💡 Definición del libro (p. 197): f′(a) = lím [f(a+h) − f(a)]/h cuando h → 0. Geométricamente, la secante gira hasta convertirse en la recta tangente.</span></div>
+      </div>
+    </div>
+  </div>
+</main>
+<p class="note">Capítulo 7: la derivada es el límite de la razón de cambio promedio. Convención Perú: coma decimal. Apuntes de Matemática 2 — USIL.</p>
+<script>
+(function(){
+  "use strict";
+  var $=function(id){return document.getElementById(id);};
+  function fmt(n,dec){ if(!isFinite(n))return "—"; if(Math.abs(n)<1e-9)n=0; dec=(dec===undefined)?2:dec;
+    var s=n.toFixed(dec); if(s.indexOf(".")>=0){s=s.replace(/0+$/,"").replace(/\.$/,"");}
+    var neg=s.charAt(0)==="-"; if(neg)s=s.slice(1);
+    var parts=s.split("."); var int=parts[0];
+    if(int.length>=5){int=int.replace(/\B(?=(\d{3})+(?!\d))/g,"\u00A0");}
+    s=int+(parts[1]?","+parts[1]:""); return (neg?"\u2212":"")+s;
+  }
+  var W=640,H=470,L=66,R=16,T=16,B=46;
+  var view={xMin:0,xMax:100,yMin:0,yMax:100};
+  function sx(x){return L+(x-view.xMin)/(view.xMax-view.xMin)*(W-L-R);}
+  function sy(y){return T+(view.yMax-y)/(view.yMax-view.yMin)*(H-T-B);}
+  function niceStep(range){var raw=range/5,pow=Math.pow(10,Math.floor(Math.log10(Math.abs(raw)||1))),n=raw/pow,st;
+    if(n<1.5)st=1;else if(n<3.5)st=2;else if(n<7.5)st=5;else st=10;return st*pow;}
+  function drawGrid(){
+    var NS="http://www.w3.org/2000/svg";
+    ["grid","axes","labels"].forEach(function(id){var g=$(id);while(g.firstChild)g.removeChild(g.firstChild);});
+    var stX=niceStep(view.xMax-view.xMin),stY=niceStep(view.yMax-view.yMin),x,y,el,t;
+    var x0=Math.ceil(view.xMin/stX)*stX;
+    for(x=x0;x<=view.xMax+1e-9;x+=stX){
+      el=document.createElementNS(NS,"line");el.setAttribute("class","gridline");el.setAttribute("x1",sx(x));el.setAttribute("x2",sx(x));el.setAttribute("y1",sy(view.yMax));el.setAttribute("y2",sy(view.yMin));$("grid").appendChild(el);
+      t=document.createElementNS(NS,"text");t.setAttribute("class","axlbl");t.setAttribute("x",sx(x));t.setAttribute("y",H-B+16);t.setAttribute("text-anchor","middle");t.textContent=fmt(x,0);$("labels").appendChild(t);
+    }
+    var y0=Math.ceil(view.yMin/stY)*stY;
+    for(y=y0;y<=view.yMax+1e-9;y+=stY){
+      el=document.createElementNS(NS,"line");el.setAttribute("class","gridline");el.setAttribute("x1",sx(view.xMin));el.setAttribute("x2",sx(view.xMax));el.setAttribute("y1",sy(y));el.setAttribute("y2",sy(y));$("grid").appendChild(el);
+      t=document.createElementNS(NS,"text");t.setAttribute("class","axlbl");t.setAttribute("x",L-6);t.setAttribute("y",sy(y)+4);t.setAttribute("text-anchor","end");t.textContent=fmt(y,0);$("labels").appendChild(t);
+    }
+    if(view.yMin<=0&&view.yMax>=0){el=document.createElementNS(NS,"line");el.setAttribute("class","axis");el.setAttribute("x1",sx(view.xMin));el.setAttribute("x2",sx(view.xMax));el.setAttribute("y1",sy(0));el.setAttribute("y2",sy(0));$("axes").appendChild(el);}
+    if(view.xMin<=0&&view.xMax>=0){el=document.createElementNS(NS,"line");el.setAttribute("class","axis");el.setAttribute("x1",sx(0));el.setAttribute("x2",sx(0));el.setAttribute("y1",sy(view.yMax));el.setAttribute("y2",sy(view.yMin));$("axes").appendChild(el);}
+  }
+  var mode="rcp";
+  function C(q){return 2*q*q+4*q+1200;}
+  function drawCurve(f){
+    var d="";
+    for(var i=0;i<=140;i++){var x=view.xMin+(view.xMax-view.xMin)*i/140;
+      d+=(i===0?"M":"L")+sx(x).toFixed(1)+" "+sy(f(x)).toFixed(1)+" ";}
+    $("curve").setAttribute("d",d);
+  }
+  function setLineXY(el,x1,y1,x2,y2){el.setAttribute("x1",sx(x1));el.setAttribute("y1",sy(y1));el.setAttribute("x2",sx(x2));el.setAttribute("y2",sy(y2));}
+  function extendLine(el,x0,y0,m){
+    var dx=(view.xMax-view.xMin);
+    setLineXY(el,x0-dx,y0-m*dx,x0+dx,y0+m*dx);
+  }
+  function renderRCP(){
+    var a=parseFloat($("aS").value),b=parseFloat($("bS").value);
+    $("aV").textContent=fmt(a,0);$("bV").textContent=fmt(b,0);
+    if(a===b){$("rcpV").textContent="Elige a ≠ b.";return;}
+    if(b<a){var t=a;a=b;b=t;}
+    view.xMin=0;view.xMax=100;view.yMin=0;view.yMax=C(100)*1.05;
+    drawGrid();drawCurve(C);
+    $("tan").style.display="none";$("ptB").style.display="";$("lblB").style.display="";
+    setLineXY($("sec"),a,C(a),b,C(b));$("sec").style.display="";
+    $("ptA").setAttribute("cx",sx(a));$("ptA").setAttribute("cy",sy(C(a)));
+    $("ptB").setAttribute("cx",sx(b));$("ptB").setAttribute("cy",sy(C(b)));
+    $("lblA").setAttribute("x",sx(a)-8);$("lblA").setAttribute("y",sy(C(a))-8);$("lblA").setAttribute("text-anchor","end");$("lblA").textContent="a = "+fmt(a,0);
+    $("lblB").setAttribute("x",sx(b)+8);$("lblB").setAttribute("y",sy(C(b))-8);$("lblB").textContent="b = "+fmt(b,0);
+    $("xTitle").setAttribute("x",W/2);$("xTitle").setAttribute("y",H-8);$("xTitle").setAttribute("text-anchor","middle");$("xTitle").textContent="Cantidad q (unidades)";
+    $("yTitle").setAttribute("x",12);$("yTitle").setAttribute("y",T+4);$("yTitle").textContent="Costo (S/)";
+    var ca=C(a),cb=C(b),rcp=(cb-ca)/(b-a);
+    $("caV").textContent="S/ "+fmt(ca,0);
+    $("cbV").textContent="S/ "+fmt(cb,0);
+    $("rcpV").textContent="("+fmt(cb,0)+" − "+fmt(ca,0)+")/("+fmt(b,0)+" − "+fmt(a,0)+") = "+fmt(rcp)+" soles/unidad";
+    $("interp").innerHTML="💡 Interpretación (como en el libro): cuando la producción cambia de "+fmt(a,0)+" a "+fmt(b,0)+" unidades, el costo aumenta en promedio <b>"+fmt(rcp)+" soles por cada unidad</b> producida.";
+  }
+  var OPT=[
+    {f:function(x){return x*x;},df:function(x){return 2*x;},a:2,xw:[-3,7],yw:[-3,32],lab:"x"},
+    {f:C,df:function(x){return 4*x+4;},a:40,xw:[20,60],yw:[1500,9500],lab:"q"},
+    {f:function(x){return x*x*x;},df:function(x){return 3*x*x;},a:1,xw:[-1.5,3],yw:[-6,30],lab:"x"}
+  ];
+  var oi=0,anim=null;
+  function renderLim(){
+    var o=OPT[oi],h=parseFloat($("hS").value);
+    $("hV").textContent=fmt(h);
+    view.xMin=o.xw[0];view.xMax=o.xw[1];view.yMin=o.yw[0];view.yMax=o.yw[1];
+    drawGrid();drawCurve(o.f);
+    var a=o.a,mSec=(o.f(a+h)-o.f(a))/h,mTan=o.df(a);
+    extendLine($("sec"),a,o.f(a),mSec);$("sec").style.display="";
+    extendLine($("tan"),a,o.f(a),mTan);$("tan").style.display="";
+    $("ptA").setAttribute("cx",sx(a));$("ptA").setAttribute("cy",sy(o.f(a)));
+    $("ptB").setAttribute("cx",sx(a+h));$("ptB").setAttribute("cy",sy(o.f(a+h)));
+    $("ptB").style.display="";
+    $("lblA").setAttribute("x",sx(a)-8);$("lblA").setAttribute("y",sy(o.f(a))-8);$("lblA").setAttribute("text-anchor","end");$("lblA").textContent="a";
+    $("lblB").setAttribute("x",sx(a+h)+8);$("lblB").setAttribute("y",sy(o.f(a+h))-8);$("lblB").textContent="a+h";
+    $("xTitle").setAttribute("x",W/2);$("xTitle").setAttribute("y",H-8);$("xTitle").setAttribute("text-anchor","middle");$("xTitle").textContent="Variable "+o.lab;
+    $("yTitle").setAttribute("x",12);$("yTitle").setAttribute("y",T+4);$("yTitle").textContent="Valores de la función";
+    $("secV").textContent=fmt(mSec,3)+(h<0.15?"  (¡ya casi no cambia!)":"");
+    $("derV").textContent="f′("+fmt(a,0)+") = "+fmt(mTan,3);
+    $("leeV").textContent=(h<0.05)?"La secante prácticamente SE CONFUNDE con la tangente: ese es el límite que define la derivada.":"Al reducir h, la secante (verde) gira hacia la tangente (dorada). Su pendiente se acerca a f′(a).";
+  }
+  $("aS").addEventListener("input",renderRCP);
+  $("bS").addEventListener("input",renderRCP);
+  $("hS").addEventListener("input",function(){if(anim){clearInterval(anim);anim=null;$("animBtn").textContent="▶ Animar acercamiento";}renderLim();});
+  $("fSel").addEventListener("change",function(){oi=parseInt($("fSel").value,10);$("hS").value=2;renderLim();});
+  $("animBtn").addEventListener("click",function(){
+    if(anim){clearInterval(anim);anim=null;$("animBtn").textContent="▶ Animar acercamiento";return;}
+    $("animBtn").textContent="⏸ Pausa";
+    anim=setInterval(function(){
+      var h=parseFloat($("hS").value);
+      h=Math.max(0.02,h*0.8);
+      $("hS").value=h;renderLim();
+      if(h<=0.02){clearInterval(anim);anim=null;$("animBtn").textContent="▶ Animar acercamiento";}
+    },140);
+  });
+  $("alejarBtn").addEventListener("click",function(){$("hS").value=3;renderLim();});
+  var tabs=document.querySelectorAll(".tab");
+  tabs.forEach(function(tEl){tEl.addEventListener("click",function(){
+    tabs.forEach(function(x){x.classList.remove("active");});tEl.classList.add("active");
+    mode=tEl.getAttribute("data-mode");
+    $("panel-rcp").classList.toggle("hidden",mode!=="rcp");
+    $("panel-lim").classList.toggle("hidden",mode!=="lim");
+    if(anim){clearInterval(anim);anim=null;$("animBtn").textContent="▶ Animar acercamiento";}
+    if(mode==="rcp")renderRCP();else renderLim();
+  });});
+  $("themeBtn").addEventListener("click",function(){
+    document.body.classList.toggle("light");
+    $("themeBtn").textContent=document.body.classList.contains("light")?"☀️ Tema":"🌙 Tema";
+  });
+  renderRCP();
+})();
+</script>
+</body>
+</html>

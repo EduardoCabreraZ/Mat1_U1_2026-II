@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InterésLab · Interés compuesto y continuo</title>
+<style>
+  :root{--bg:#0D1B2A;--bg2:#0F2233;--panel:rgba(22,35,58,.8);--border:rgba(245,185,66,.25);--text:#E6EDF3;--dim:#94A3B8;--acc:#F5B942;--accent2:#34D399;--warn:#FBBF24;--err:#F87171;--blue:#38BDF8;--violet:#A78BFA;--grid:rgba(148,163,184,.14);--axis:rgba(230,237,243,.75)}
+  body.light{--bg:#EEF3F9;--bg2:#fff;--panel:rgba(255,255,255,.92);--border:rgba(180,120,20,.3);--text:#1E293B;--dim:#64748B;--acc:#B45309;--accent2:#059669;--warn:#D97706;--err:#DC2626;--blue:#0284C7;--violet:#7C3AED;--grid:rgba(100,116,139,.18);--axis:rgba(30,41,59,.8)}
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
+  body{background:radial-gradient(1200px 700px at 70% -10%,rgba(245,185,66,.08),transparent),var(--bg);color:var(--text);min-height:100vh;padding:18px;transition:.3s}
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;max-width:1100px;margin:0 auto 14px}
+  .title h1{font-size:1.3rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .title h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--acc);box-shadow:0 0 12px var(--acc)}
+  .title p{color:var(--dim);font-size:.85rem;margin-top:2px}
+  .badge{background:rgba(245,185,66,.12);border:1px solid var(--border);color:var(--acc);padding:3px 10px;border-radius:20px;font-size:.75rem}
+  #themeBtn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:12px;cursor:pointer;font-size:.85rem}
+  .tabs{max-width:1100px;margin:0 auto 14px;display:flex;gap:8px;flex-wrap:wrap}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--dim);padding:9px 16px;border-radius:12px;cursor:pointer;font-size:.9rem}
+  .tab.active{color:#201500;background:var(--acc);border-color:var(--acc);box-shadow:0 0 18px rgba(245,185,66,.35);font-weight:600}
+  main{max-width:1100px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap}
+  .mapbox{flex:1 1 430px;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:14px}
+  svg#map{width:100%;display:block;border-radius:14px;background:var(--bg2)}
+  .hint{color:var(--dim);font-size:.8rem;margin-top:10px;text-align:center}
+  .panel{flex:1 1 330px;display:flex;flex-direction:column;gap:12px}
+  .sliders{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+  .srow{display:flex;align-items:center;gap:10px}
+  .srow label{min-width:165px;color:var(--dim);font-size:.83rem}
+  .srow input[type=range]{flex:1;accent-color:var(--acc)}
+  .srow .sval{min-width:76px;text-align:right;font-weight:700;color:var(--acc);font-size:.88rem}
+  select{background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:10px;font-size:.88rem;width:100%}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+  .card .lbl{color:var(--dim);font-size:.72rem}
+  .card .val{font-size:.93rem;font-weight:600;word-break:break-word}
+  .card.hl{border-color:var(--acc)}.card.hl .val{color:var(--acc)}
+  .card.gn .val{color:var(--accent2)}.card.rd .val{color:var(--err)}.card.bl .val{color:var(--blue)}.card.vi .val{color:var(--violet)}
+  .eqbox{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+  .eq .lbl{color:var(--dim);font-size:.72rem}
+  .eq .v{font-size:.96rem;font-weight:600;font-family:'Cambria Math','Segoe UI',serif}
+  .hidden{display:none!important}
+  .note{max-width:1100px;margin:16px auto 0;color:var(--dim);font-size:.75rem;text-align:center}
+  .gridline{stroke:var(--grid)}.axis{stroke:var(--axis);stroke-width:1.5}
+  .axlbl{fill:var(--dim);font-size:10.5px}.axtitle{fill:var(--dim);font-size:12px;font-weight:600}
+  .curveA{fill:none;stroke:var(--acc);stroke-width:3;stroke-linecap:round}
+  .curveB{fill:none;stroke:var(--blue);stroke-width:3;stroke-linecap:round;stroke-dasharray:8 5}
+  .ptEnd{fill:var(--accent2);stroke:#fff;stroke-width:2}
+  @media(max-width:760px){.srow label{min-width:120px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="title">
+    <h1><span class="dot"></span> InterésLab <span class="badge">Matemática financiera</span></h1>
+    <p>Interés compuesto M = C(1+r/k)^(kt) y continuo M = C·e^(rt) · Capítulo 4 · USIL</p>
+  </div>
+  <button id="themeBtn">🌙 Tema</button>
+</header>
+<div class="tabs">
+  <button class="tab active" data-mode="sim">🧮 Simulador</button>
+  <button class="tab" data-mode="comp">⚖️ Comparar dos opciones</button>
+  <button class="tab" data-mode="meta">🎯 Meta de ahorro</button>
+</div>
+<main>
+  <div class="mapbox">
+    <svg id="map" viewBox="0 0 640 470" preserveAspectRatio="xMidYMid meet">
+      <g id="grid"></g><g id="axes"></g><g id="labels"></g>
+      <path id="curveA" class="curveA"/><path id="curveB" class="curveB"/>
+      <circle id="ptEnd" class="ptEnd" r="6"/>
+      <text id="xTitle" class="axtitle"></text><text id="yTitle" class="axtitle"></text>
+      <text id="legA" fill="#F5B942" font-size="11" font-weight="700"></text>
+      <text id="legB" fill="#38BDF8" font-size="11" font-weight="700"></text>
+    </svg>
+    <p class="hint" id="hintTxt">El monto crece con el tiempo; mientras más capitalizaciones por año, más rápido crece (y el interés continuo es el caso extremo).</p>
+  </div>
+  <div class="panel">
+    <!-- SIMULADOR -->
+    <div id="panel-sim">
+      <div class="sliders">
+        <div class="srow"><label>Capital C</label><input type="range" id="sC" min="500" max="50000" step="500" value="1000"><span class="sval" id="sCv"></span></div>
+        <div class="srow"><label>Tasa anual r (%)</label><input type="range" id="sR" min="1" max="30" step="0.5" value="9"><span class="sval" id="sRv"></span></div>
+        <div class="srow"><label>Tiempo t (años)</label><input type="range" id="sT" min="1" max="30" step="1" value="8"><span class="sval" id="sTv"></span></div>
+        <select id="sK">
+          <option value="1">Capitalización anual (k=1)</option>
+          <option value="2" selected>Semestral (k=2)</option>
+          <option value="4">Trimestral (k=4)</option>
+          <option value="6">Bimestral (k=6)</option>
+          <option value="12">Mensual (k=12)</option>
+          <option value="cont">Continua (M = C·e^(rt))</option>
+        </select>
+        <select id="sCur">
+          <option value="S/ ">Soles (S/)</option>
+          <option value="US$ " selected>Dólares (US$)</option>
+          <option value="€ ">Euros (€)</option>
+        </select>
+      </div>
+      <div class="eqbox" style="margin-top:10px">
+        <div class="eq"><span class="lbl">Fórmula aplicada</span><span class="v" id="simForm"></span></div>
+      </div>
+      <div class="cards" style="margin-top:10px">
+        <div class="card hl"><span class="lbl">Monto M</span><span class="val" id="simM"></span></div>
+        <div class="card gn"><span class="lbl">Interés ganado I = M − C</span><span class="val" id="simI"></span></div>
+        <div class="card vi" style="grid-column:1/-1"><span class="lbl">Tiempo para duplicar el capital</span><span class="val" id="simDup"></span></div>
+      </div>
+    </div>
+    <!-- COMPARAR -->
+    <div id="panel-comp" class="hidden">
+      <div class="sliders">
+        <div class="srow"><label>Capital C (S/)</label><input type="range" id="cC" min="1000" max="200000" step="1000" value="100000"><span class="sval" id="cCv"></span></div>
+        <div class="srow"><label>Tiempo t (años)</label><input type="range" id="cT" min="1" max="20" step="1" value="4"><span class="sval" id="cTv"></span></div>
+        <div class="srow"><label>🏦 Opción A: tasa (%)</label><input type="range" id="cR1" min="1" max="20" step="0.1" value="5"><span class="sval" id="cR1v"></span></div>
+        <select id="cK1">
+          <option value="1" selected>A: anual</option><option value="2">A: semestral</option><option value="4">A: trimestral</option><option value="12">A: mensual</option><option value="cont">A: continua</option>
+        </select>
+        <div class="srow"><label>🏛️ Opción B: tasa (%)</label><input type="range" id="cR2" min="1" max="20" step="0.1" value="4.5"><span class="sval" id="cR2v"></span></div>
+        <select id="cK2">
+          <option value="1">B: anual</option><option value="2" selected>B: semestral</option><option value="4">B: trimestral</option><option value="12">B: mensual</option><option value="cont">B: continua</option>
+        </select>
+      </div>
+      <div class="cards" style="margin-top:10px">
+        <div class="card hl"><span class="lbl">🏦 Monto opción A</span><span class="val" id="compMA"></span></div>
+        <div class="card bl"><span class="lbl">🏛️ Monto opción B</span><span class="val" id="compMB"></span></div>
+        <div class="card gn" style="grid-column:1/-1"><span class="lbl">Conclusión</span><span class="val" id="compConc"></span></div>
+      </div>
+      <div class="eqbox" style="margin-top:10px;border-color:var(--warn)">
+        <div class="eq"><span class="v" style="font-size:.84rem;color:var(--dim)">💡 Como el Problema resuelto 4.4 del libro (Rosaura): no siempre la tasa nominal mayor gana; importa cuántas veces se capitaliza al año.</span></div>
+      </div>
+    </div>
+    <!-- META -->
+    <div id="panel-meta" class="hidden">
+      <div class="sliders">
+        <div class="srow"><label>Meta M (US$)</label><input type="range" id="mM" min="1000" max="100000" step="1000" value="15000"><span class="sval" id="mMv"></span></div>
+        <div class="srow"><label>Tasa anual r (%)</label><input type="range" id="mR" min="1" max="20" step="0.5" value="5"><span class="sval" id="mRv"></span></div>
+        <div class="srow"><label>Plazo t (años)</label><input type="range" id="mT" min="1" max="20" step="1" value="3"><span class="sval" id="mTv"></span></div>
+        <select id="mK">
+          <option value="1">Anual</option><option value="2">Semestral</option><option value="4">Trimestral</option><option value="12" selected>Mensual</option><option value="cont">Continua</option>
+        </select>
+      </div>
+      <div class="eqbox" style="margin-top:10px">
+        <div class="eq"><span class="lbl">Capital que debes depositar hoy</span><span class="v" id="metaC" style="color:var(--acc)"></span></div>
+      </div>
+      <div class="eqbox" style="margin-top:10px;border-color:var(--warn)">
+        <div class="eq"><span class="v" style="font-size:.84rem;color:var(--dim)">💡 Como el Ejercicio 4.4 del libro (Juan ahorra para su auto): se despeja C de M = C(1+r/k)^(kt).</span></div>
+      </div>
+    </div>
+  </div>
+</main>
+<p class="note">Fórmulas del Capítulo 4: M = C(1+i)^t · M = C(1+r/k)^(kt) · M = C·e^(rt) · I = M − C. Convención Perú: coma decimal · miles con espacio desde 10 000. Apuntes de Matemática 2 — USIL.</p>
+<script>
+(function(){
+  "use strict";
+  var $=function(id){return document.getElementById(id);};
+  function fmt(n,dec){ if(!isFinite(n))return "—"; if(Math.abs(n)<1e-9)n=0; dec=(dec===undefined)?2:dec;
+    var s=n.toFixed(dec); if(s.indexOf(".")>=0){s=s.replace(/0+$/,"").replace(/\.$/,"");}
+    var neg=s.charAt(0)==="-"; if(neg)s=s.slice(1);
+    var parts=s.split("."); var int=parts[0];
+    if(int.length>=5){int=int.replace(/\B(?=(\d{3})+(?!\d))/g,"\u00A0");}
+    s=int+(parts[1]?","+parts[1]:""); return (neg?"\u2212":"")+s;
+  }
+  function monto(C,r,t,k){ if(k==="cont")return C*Math.exp(r*t); return C*Math.pow(1+r/k,k*t); }
+  var mode="sim";
+  var W=640,H=470,L=70,R=16,T=16,B=46;
+  var view={xMax:10,yMax:10};
+  function sx(x){return L+x/view.xMax*(W-L-R);}
+  function sy(y){return T+(view.yMax-y)/view.yMax*(H-T-B);}
+  function niceStep(range){var raw=range/5,pow=Math.pow(10,Math.floor(Math.log10(raw))),n=raw/pow,st;
+    if(n<1.5)st=1;else if(n<3.5)st=2;else if(n<7.5)st=5;else st=10;return st*pow;}
+  function drawGrid(){
+    var NS="http://www.w3.org/2000/svg";
+    ["grid","axes","labels"].forEach(function(id){var g=$(id);while(g.firstChild)g.removeChild(g.firstChild);});
+    var stX=niceStep(view.xMax),stY=niceStep(view.yMax),x,y,el,t;
+    for(x=0;x<=view.xMax+1e-9;x+=stX){
+      el=document.createElementNS(NS,"line");el.setAttribute("class","gridline");el.setAttribute("x1",sx(x));el.setAttribute("x2",sx(x));el.setAttribute("y1",sy(view.yMax));el.setAttribute("y2",sy(0));$("grid").appendChild(el);
+      t=document.createElementNS(NS,"text");t.setAttribute("class","axlbl");t.setAttribute("x",sx(x));t.setAttribute("y",sy(0)+16);t.setAttribute("text-anchor","middle");t.textContent=fmt(x,0);$("labels").appendChild(t);
+    }
+    for(y=0;y<=view.yMax+1e-9;y+=stY){
+      el=document.createElementNS(NS,"line");el.setAttribute("class","gridline");el.setAttribute("x1",sx(0));el.setAttribute("x2",sx(view.xMax));el.setAttribute("y1",sy(y));el.setAttribute("y2",sy(y));$("grid").appendChild(el);
+      t=document.createElementNS(NS,"text");t.setAttribute("class","axlbl");t.setAttribute("x",sx(0)-6);t.setAttribute("y",sy(y)+4);t.setAttribute("text-anchor","end");t.textContent=fmt(y,0);$("labels").appendChild(t);
+    }
+    el=document.createElementNS(NS,"line");el.setAttribute("class","axis");el.setAttribute("x1",sx(0));el.setAttribute("x2",sx(view.xMax));el.setAttribute("y1",sy(0));el.setAttribute("y2",sy(0));$("axes").appendChild(el);
+    el=document.createElementNS(NS,"line");el.setAttribute("class","axis");el.setAttribute("x1",sx(0));el.setAttribute("x2",sx(0));el.setAttribute("y1",sy(view.yMax));el.setAttribute("y2",sy(0));$("axes").appendChild(el);
+  }
+  function curvePath(C,r,k,tEnd){
+    var d="";
+    for(var i=0;i<=140;i++){var t=tEnd*i/140;var M=monto(C,r,t,k);
+      d+=(i===0?"M":"L")+sx(t).toFixed(1)+" "+sy(M).toFixed(1)+" ";}
+    return d;
+  }
+  function renderSim(){
+    var C=parseFloat($("sC").value),rPct=parseFloat($("sR").value),t=parseFloat($("sT").value);
+    var kRaw=$("sK").value, cur=$("sCur").value;
+    var r=rPct/100;
+    $("sCv").textContent=cur+fmt(C,0);$("sRv").textContent=fmt(rPct)+" %";$("sTv").textContent=fmt(t,0)+" años";
+    var M=monto(C,r,t,kRaw);
+    view.xMax=t*1.06;view.yMax=M*1.18;
+    drawGrid();
+    $("curveB").setAttribute("d","");$("legB").textContent="";
+    $("curveA").setAttribute("d",curvePath(C,r,kRaw,t));
+    $("ptEnd").setAttribute("cx",sx(t));$("ptEnd").setAttribute("cy",sy(M));
+    $("legA").setAttribute("x",sx(t)-6);$("legA").setAttribute("y",sy(M)-10);$("legA").setAttribute("text-anchor","end");
+    $("legA").textContent="Monto M(t)";
+    $("xTitle").setAttribute("x",sx(t/2));$("xTitle").setAttribute("y",H-8);$("xTitle").setAttribute("text-anchor","middle");
+    $("xTitle").textContent="Tiempo t (años)";
+    $("yTitle").setAttribute("x",14);$("yTitle").setAttribute("y",T+4);$("yTitle").textContent="Monto ("+cur.trim()+")";
+    if(kRaw==="cont"){
+      $("simForm").textContent="M = C·e^(rt) = "+fmt(C,0)+"·e^("+fmt(r)+"·"+fmt(t,0)+")";
+    }else{
+      var k=parseInt(kRaw,10);
+      $("simForm").textContent="M = C(1+r/k)^(kt) = "+fmt(C,0)+"(1+"+fmt(r)+"/"+k+")^("+k+"·"+fmt(t,0)+")";
+    }
+    $("simM").textContent=cur+fmt(M);
+    $("simI").textContent=cur+fmt(M-C);
+    var dup=(kRaw==="cont")?Math.log(2)/r:Math.log(2)/(parseInt(kRaw,10)*Math.log(1+r/parseInt(kRaw,10)));
+    $("simDup").textContent="≈ "+fmt(dup)+" años";
+  }
+  function renderComp(){
+    var C=parseFloat($("cC").value),t=parseFloat($("cT").value);
+    var r1=parseFloat($("cR1").value)/100,r2=parseFloat($("cR2").value)/100;
+    var k1=$("cK1").value,k2=$("cK2").value;
+    $("cCv").textContent="S/ "+fmt(C,0);$("cTv").textContent=fmt(t,0)+" años";
+    $("cR1v").textContent=fmt(r1*100)+" %";$("cR2v").textContent=fmt(r2*100)+" %";
+    var MA=monto(C,r1,t,k1),MB=monto(C,r2,t,k2);
+    view.xMax=t*1.06;view.yMax=Math.max(MA,MB)*1.18;
+    drawGrid();
+    $("curveA").setAttribute("d",curvePath(C,r1,k1,t));
+    $("curveB").setAttribute("d",curvePath(C,r2,k2,t));
+    $("ptEnd").setAttribute("cx",sx(t));$("ptEnd").setAttribute("cy",sy(Math.max(MA,MB)));
+    $("legA").setAttribute("x",sx(t)-6);$("legA").setAttribute("y",sy(MA)-8);$("legA").setAttribute("text-anchor","end");$("legA").textContent="Opción A";
+    $("legB").setAttribute("x",sx(t)-6);$("legB").setAttribute("y",sy(MB)+16);$("legB").setAttribute("text-anchor","end");$("legB").textContent="Opción B";
+    $("xTitle").setAttribute("x",sx(t/2));$("xTitle").setAttribute("y",H-8);$("xTitle").setAttribute("text-anchor","middle");$("xTitle").textContent="Tiempo t (años)";
+    $("yTitle").setAttribute("x",14);$("yTitle").setAttribute("y",T+4);$("yTitle").textContent="Monto (S/)";
+    $("compMA").textContent="S/ "+fmt(MA);
+    $("compMB").textContent="S/ "+fmt(MB);
+    var diff=Math.abs(MA-MB);
+    if(Math.abs(diff)<0.01){$("compConc").textContent="Ambas opciones dan el mismo monto.";}
+    else if(MA>MB){$("compConc").textContent="Conviene la opción A: gana S/ "+fmt(diff)+" más que la B.";}
+    else{$("compConc").textContent="Conviene la opción B: gana S/ "+fmt(diff)+" más que la A.";}
+  }
+  function renderMeta(){
+    var M=parseFloat($("mM").value),rPct=parseFloat($("mR").value),t=parseFloat($("mT").value);
+    var kRaw=$("mK").value,r=rPct/100;
+    $("mMv").textContent="US$ "+fmt(M,0);$("mRv").textContent=fmt(rPct)+" %";$("mTv").textContent=fmt(t,0)+" años";
+    var C=(kRaw==="cont")?M*Math.exp(-r*t):M/Math.pow(1+r/parseInt(kRaw,10),parseInt(kRaw,10)*t);
+    view.xMax=t*1.06;view.yMax=M*1.18;
+    drawGrid();
+    $("curveB").setAttribute("d","");$("legB").textContent="";
+    $("curveA").setAttribute("d",curvePath(C,r,kRaw,t));
+    $("ptEnd").setAttribute("cx",sx(t));$("ptEnd").setAttribute("cy",sy(M));
+    $("legA").setAttribute("x",sx(t)-6);$("legA").setAttribute("y",sy(M)-10);$("legA").setAttribute("text-anchor","end");$("legA").textContent="Ahorro";
+    $("xTitle").setAttribute("x",sx(t/2));$("xTitle").setAttribute("y",H-8);$("xTitle").setAttribute("text-anchor","middle");$("xTitle").textContent="Tiempo t (años)";
+    $("yTitle").setAttribute("x",14);$("yTitle").setAttribute("y",T+4);$("yTitle").textContent="Monto (US$)";
+    $("metaC").textContent="C = US$ "+fmt(C)+"  (hoy)";
+  }
+  function render(){
+    if(mode==="sim")renderSim(); else if(mode==="comp")renderComp(); else renderMeta();
+  }
+  var tabs=document.querySelectorAll(".tab");
+  tabs.forEach(function(tEl){tEl.addEventListener("click",function(){
+    tabs.forEach(function(x){x.classList.remove("active");});tEl.classList.add("active");
+    mode=tEl.getAttribute("data-mode");
+    $("panel-sim").classList.toggle("hidden",mode!=="sim");
+    $("panel-comp").classList.toggle("hidden",mode!=="comp");
+    $("panel-meta").classList.toggle("hidden",mode!=="meta");
+    render();
+  });});
+  ["sC","sR","sT","sK","sCur","cC","cT","cR1","cK1","cR2","cK2","mM","mR","mT","mK"].forEach(function(id){
+    $(id).addEventListener("input",render);$(id).addEventListener("change",render);
+  });
+  $("themeBtn").addEventListener("click",function(){
+    document.body.classList.toggle("light");
+    $("themeBtn").textContent=document.body.classList.contains("light")?"☀️ Tema":"🌙 Tema";
+  });
+  render();
+})();
+</script>
+</body>
+</html>

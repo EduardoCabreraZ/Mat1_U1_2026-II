@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ExpoReto · Ecuaciones exponenciales</title>
+<style>
+  :root{--bg:#0D1B2A;--bg2:#0F2233;--panel:rgba(22,35,58,.85);--border:rgba(45,212,191,.28);--text:#E6EDF3;--dim:#94A3B8;--acc:#2DD4BF;--accent2:#34D399;--warn:#FBBF24;--err:#F87171;--blue:#38BDF8;--gold:#F5B942}
+  body.light{--bg:#EEF3F9;--bg2:#fff;--panel:rgba(255,255,255,.94);--border:rgba(13,148,136,.3);--text:#1E293B;--dim:#64748B;--acc:#0D9488;--accent2:#059669;--warn:#D97706;--err:#DC2626;--blue:#0284C7;--gold:#B45309}
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
+  body{background:radial-gradient(1200px 700px at 70% -10%,rgba(45,212,191,.09),transparent),var(--bg);color:var(--text);min-height:100vh;padding:18px;display:flex;flex-direction:column;align-items:center;transition:.3s}
+  .wrap{width:100%;max-width:760px}
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .title h1{font-size:1.3rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .title h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--acc);box-shadow:0 0 12px var(--acc)}
+  .title p{color:var(--dim);font-size:.85rem;margin-top:2px}
+  .badge{background:rgba(45,212,191,.14);border:1px solid var(--border);color:var(--acc);padding:3px 10px;border-radius:20px;font-size:.75rem}
+  #themeBtn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:12px;cursor:pointer;font-size:.85rem}
+  .screen{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px;box-shadow:0 0 30px rgba(45,212,191,.08)}
+  .hidden{display:none!important}
+  .btn{border:none;border-radius:12px;padding:12px 18px;cursor:pointer;font-size:1rem;font-weight:700;color:#fff;background:var(--acc);transition:.2s}
+  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--dim);font-weight:600}
+  .btn.warn{background:var(--warn);color:#201500}
+  .btn:hover{filter:brightness(1.12)}
+  .eqDisplay{font-size:1.7rem;text-align:center;margin:18px 0;font-family:'Cambria Math','Segoe UI',serif;color:var(--acc)}
+  .eqDisplay sup{font-size:.65em}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center}
+  input[type=text]{background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:11px 14px;border-radius:12px;font-size:1.1rem;text-align:center;width:160px}
+  .hud{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;color:var(--dim);font-size:.85rem;flex-wrap:wrap}
+  .hud b{color:var(--acc)}
+  .feedback{font-size:.95rem;margin-top:12px;font-weight:600;text-align:center;min-height:22px}
+  .feedback.ok{color:var(--accent2)}.feedback.bad{color:var(--err)}
+  .hintBox{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.35);border-radius:12px;padding:10px 14px;margin-top:12px;font-size:.88rem;color:var(--warn)}
+  .podium{margin-top:16px}
+  .podium h3{text-align:center;color:var(--gold);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase;font-size:.9rem}
+  .podRow{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:8px}
+  .podRow.r1{border-color:var(--gold);box-shadow:0 0 14px rgba(245,185,66,.25)}
+  .podRow.r2{border-color:#C0C7D1}.podRow.r3{border-color:#C98A5A}
+  .podRow .medal{font-size:1.3rem;width:34px;text-align:center}
+  .podRow .nm{flex:1;font-weight:700}
+  .podRow .sc{color:var(--acc);font-weight:700}
+  .podRow .tm{color:var(--dim);font-size:.78rem}
+  .scoreBig{font-size:2.2rem;font-weight:800;color:var(--acc);text-align:center;margin:10px 0}
+  .progress{height:8px;border-radius:6px;background:var(--bg2);overflow:hidden;margin:10px 0 4px}
+  .progress i{display:block;height:100%;background:var(--acc);width:0;transition:.4s}
+  .note{color:var(--dim);font-size:.75rem;text-align:center;margin-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="title">
+    <h1><span class="dot"></span> ExpoReto <span class="badge">Función exponencial</span></h1>
+    <p>Resuelve ecuaciones exponenciales y entra al podio · Apuntes de Matemática 2 · USIL</p>
+  </div>
+  <button id="themeBtn">🌙 Tema</button>
+</header>
+
+<!-- INICIO -->
+<div class="screen" id="scrStart">
+  <p style="line-height:1.5">🧠 Una ronda tiene <b>5 ecuaciones</b>. Cada acierto vale <b>100 puntos</b> (60 si usas pista). Escribe el valor de x con coma decimal o fracción (por ejemplo <b>2,5</b> o <b>5/2</b>).</p>
+  <div class="row" style="margin-top:16px"><button class="btn" id="playBtn">🎮 Jugar</button></div>
+  <div class="podium" id="podStart"></div>
+</div>
+
+<!-- JUEGO -->
+<div class="screen hidden" id="scrGame">
+  <div class="hud">
+    <span>Ecuación <b id="hNum">1/5</b></span>
+    <span>Puntos: <b id="hScore">0</b></span>
+    <span>⏱ <b id="hTime">0 s</b></span>
+  </div>
+  <div class="progress"><i id="hBar"></i></div>
+  <div class="eqDisplay" id="eqBox"></div>
+  <div class="row">
+    <input type="text" id="ansIn" inputmode="text" placeholder="x = ?">
+    <button class="btn" id="okBtn">Comprobar</button>
+  </div>
+  <div class="feedback" id="fb"></div>
+  <div class="hintBox hidden" id="hintBox"></div>
+  <div class="row" style="margin-top:14px">
+    <button class="btn ghost" id="hintBtn">💡 Pista (−40 pts)</button>
+    <button class="btn ghost" id="skipBtn">Revelar y pasar</button>
+  </div>
+</div>
+
+<!-- FIN -->
+<div class="screen hidden" id="scrEnd">
+  <h2 style="text-align:center">Fin de la ronda</h2>
+  <div class="scoreBig" id="finalScore"></div>
+  <p style="text-align:center;color:var(--dim)" id="finalTime"></p>
+  <div id="nameBox" class="hidden" style="margin-top:14px">
+    <p style="text-align:center;color:var(--gold);font-weight:700">🏆 ¡Entraste al podio! Escribe tu nombre:</p>
+    <div class="row" style="margin-top:8px">
+      <input type="text" id="nameIn" maxlength="15" placeholder="Tu nombre" style="width:220px">
+      <button class="btn warn" id="saveBtn">Registrar</button>
+    </div>
+  </div>
+  <div class="podium" id="podEnd"></div>
+  <div class="row" style="margin-top:14px"><button class="btn" id="againBtn">🔁 Jugar de nuevo</button></div>
+</div>
+<p class="note">Ecuaciones del Capítulo 3: igualar bases, propiedades de potencias y cambio de variable. Podio guardado en este navegador.</p>
+</div>
+<script>
+(function(){
+  "use strict";
+  var $=function(id){return document.getElementById(id);};
+  var EQS=[
+    {html:"2<sup>x</sup> = 128",ans:7,hint:"Escribe 128 como potencia de 2: 128 = 2⁷. Igualando bases: x = 7."},
+    {html:"5<sup>2x−1</sup> = 625",ans:2.5,hint:"625 = 5⁴. Iguala exponentes: 2x − 1 = 4."},
+    {html:"3<sup>x+1</sup> = 9<sup>x</sup>",ans:1,hint:"9 = 3², entonces 9ˣ = 3²ˣ. Iguala: x + 1 = 2x."},
+    {html:"4<sup>2x−3</sup> = 8<sup>x+1</sup>",ans:9,hint:"4 = 2² y 8 = 2³. Queda 2^(4x−6) = 2^(3x+3): 4x − 6 = 3x + 3."},
+    {html:"2<sup>x</sup> + 2<sup>x+2</sup> = 40",ans:3,hint:"Factor común 2ˣ: 2ˣ(1 + 4) = 40 → 2ˣ = 8."},
+    {html:"2<sup>x</sup> + 2<sup>x+3</sup> = 72",ans:3,hint:"Factor común 2ˣ: 2ˣ(1 + 8) = 72 → 2ˣ = 8."},
+    {html:"e<sup>2x</sup> · e<sup>2x+2</sup> = e<sup>14</sup>",ans:3,hint:"Producto de bases iguales: se suman exponentes: 2x + 2x + 2 = 14."},
+    {html:"3<sup>x+3</sup> − 3<sup>x+2</sup> + 2·3<sup>x+1</sup> = 216",ans:2,hint:"Factor común 3ˣ: 3ˣ(27 − 9 + 6) = 216 → 3ˣ = 9."},
+    {html:"9<sup>x</sup> − 2·3<sup>x+2</sup> + 81 = 0",ans:2,hint:"Cambio de variable u = 3ˣ: u² − 18u + 81 = 0 → (u − 9)² = 0 → u = 9."},
+    {html:"4<sup>x</sup> + 16 = 4·2<sup>x+1</sup>",ans:2,hint:"u = 2ˣ: u² + 16 = 8u → u² − 8u + 16 = 0 → (u − 4)² = 0."},
+    {html:"25<sup>x</sup> + 9<sup>x</sup> − 2·15<sup>x</sup> = 0",ans:0,hint:"Es un trinomio cuadrado: (5ˣ − 3ˣ)² = 0 → 5ˣ = 3ˣ → x = 0."}
+  ];
+  var round=[],idx=0,score=0,hintsUsed=0,t0=0,timerInt=null,elapsed=0,cur=null;
+  function fmtTime(s){return s+" s";}
+  function parseAns(s){s=(""+s).trim().replace(",",".");if(s.indexOf("/")>=0){var p=s.split("/");return parseFloat(p[0])/parseFloat(p[1]);}return parseFloat(s);}
+  function loadPod(){try{return JSON.parse(localStorage.getItem("expoPodio")||"[]");}catch(e){return[];}}
+  function savePod(p){localStorage.setItem("expoPodio",JSON.stringify(p));}
+  function renderPod(el){
+    var p=loadPod(),medals=["🥇","🥈","🥉"];
+    var h="<h3>🎯 Podio de campeones</h3>";
+    if(p.length===0){h+="<p style='text-align:center;color:var(--dim)'>Aún no hay registros. ¡Sé el primero!</p>";}
+    p.forEach(function(r,i){
+      h+="<div class='podRow r"+(i+1)+"'><span class='medal'>"+medals[i]+"</span><span class='nm'>"+r.name+"</span><span class='sc'>"+r.score+" pts</span><span class='tm'>"+r.time+" s · "+r.date+"</span></div>";
+    });
+    el.innerHTML=h;
+  }
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+  function startGame(){
+    round=shuffle(EQS.slice()).slice(0,5);
+    idx=0;score=0;elapsed=0;t0=Date.now();
+    $("scrStart").classList.add("hidden");$("scrEnd").classList.add("hidden");$("scrGame").classList.remove("hidden");
+    timerInt=setInterval(function(){elapsed=Math.floor((Date.now()-t0)/1000);$("hTime").textContent=fmtTime(elapsed);},500);
+    showEq();
+  }
+  function showEq(){
+    cur=round[idx];hintsUsed=0;
+    $("hNum").textContent=(idx+1)+"/5";
+    $("hScore").textContent=score;
+    $("hBar").style.width=(idx/5*100)+"%";
+    $("eqBox").innerHTML=cur.html;
+    $("ansIn").value="";$("fb").textContent="";$("fb").className="feedback";
+    $("hintBox").classList.add("hidden");
+    $("ansIn").focus();
+  }
+  function next(){
+    idx++;
+    if(idx>=5)endGame(); else showEq();
+  }
+  function endGame(){
+    clearInterval(timerInt);
+    $("scrGame").classList.add("hidden");$("scrEnd").classList.remove("hidden");
+    $("finalScore").textContent=score+" puntos";
+    $("finalTime").textContent="Tiempo total: "+fmtTime(elapsed);
+    $("hBar").style.width="100%";
+    var p=loadPod();
+    var qualifies=p.length<3||score>p[p.length-1].score;
+    $("nameBox").classList.toggle("hidden",!(score>0&&qualifies));
+    renderPod($("podEnd"));
+  }
+  $("okBtn").addEventListener("click",check);
+  $("ansIn").addEventListener("keydown",function(e){if(e.key==="Enter")check();});
+  function check(){
+    var v=parseAns($("ansIn").value),fb=$("fb");
+    if(isNaN(v)){fb.textContent="Escribe un número (coma decimal o fracción).";fb.className="feedback bad";return;}
+    if(Math.abs(v-cur.ans)<1e-6){
+      var pts=hintsUsed?60:100;score+=pts;
+      fb.textContent="✔ ¡Correcto! x = "+String(cur.ans).replace(".",",")+"  (+"+pts+" pts)";fb.className="feedback ok";
+      setTimeout(next,900);
+    }else{
+      fb.textContent="✗ Ese valor no satisface la ecuación. Intenta otra estrategia.";fb.className="feedback bad";
+    }
+  }
+  $("hintBtn").addEventListener("click",function(){
+    hintsUsed=1;$("hintBox").textContent="💡 "+cur.hint;$("hintBox").classList.remove("hidden");
+  });
+  $("skipBtn").addEventListener("click",function(){
+    $("fb").textContent="La solución era x = "+String(cur.ans).replace(".",",")+".";
+    $("fb").className="feedback bad";
+    setTimeout(next,1400);
+  });
+  $("saveBtn").addEventListener("click",function(){
+    var nm=$("nameIn").value.trim()||"Anónimo";
+    var p=loadPod();
+    p.push({name:nm,score:score,time:elapsed,date:new Date().toLocaleDateString("es-PE")});
+    p.sort(function(a,b){return b.score-a.score||a.time-b.time;});
+    p=p.slice(0,3);savePod(p);
+    $("nameBox").classList.add("hidden");
+    renderPod($("podEnd"));
+  });
+  $("playBtn").addEventListener("click",startGame);
+  $("againBtn").addEventListener("click",startGame);
+  $("themeBtn").addEventListener("click",function(){
+    document.body.classList.toggle("light");
+    $("themeBtn").textContent=document.body.classList.contains("light")?"☀️ Tema":"🌙 Tema";
+  });
+  renderPod($("podStart"));
+})();
+</script>
+</body>
+</html>

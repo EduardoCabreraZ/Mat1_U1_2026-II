@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DerivadaViva · Signo de la derivada y optimización</title>
+<style>
+  :root{
+    --bg:#06101F;--bg2:#0A1830;--panel:rgba(13,27,50,.88);--border:rgba(34,211,238,.3);
+    --text:#E6EDF3;--dim:#8FA3BF;--cy:#22D3EE;--vi:#A78BFA;--gn:#34D399;--rd:#F87171;--gd:#F5B942;
+    --grid:rgba(143,163,191,.14);--axis:rgba(230,237,243,.7);
+    --glowC:0 0 16px rgba(34,211,238,.22);--glowG:0 0 16px rgba(245,185,66,.2);
+  }
+  body.light{
+    --bg:#EEF3F9;--bg2:#fff;--panel:rgba(255,255,255,.94);--border:rgba(8,145,178,.3);
+    --text:#1E293B;--dim:#64748B;--cy:#0891B2;--vi:#7C3AED;--gn:#059669;--rd:#DC2626;--gd:#B45309;
+    --grid:rgba(100,116,139,.18);--axis:rgba(30,41,59,.8);
+    --glowC:0 0 12px rgba(8,145,178,.15);--glowG:0 0 12px rgba(180,83,9,.12);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
+  body{background:radial-gradient(1100px 600px at 80% -10%,rgba(167,139,250,.12),transparent),radial-gradient(900px 500px at 10% 110%,rgba(34,211,238,.1),transparent),var(--bg);color:var(--text);min-height:100vh;padding:18px;transition:.3s}
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;max-width:1100px;margin:0 auto 14px}
+  .title h1{font-size:1.3rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap;letter-spacing:.3px}
+  .title h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--cy);box-shadow:0 0 14px var(--cy)}
+  .title p{color:var(--dim);font-size:.85rem;margin-top:2px}
+  .badge{background:rgba(34,211,238,.12);border:1px solid var(--border);color:var(--cy);padding:3px 10px;border-radius:20px;font-size:.75rem}
+  #themeBtn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:12px;cursor:pointer;font-size:.85rem}
+  .tabs{max-width:1100px;margin:0 auto 14px;display:flex;gap:8px;flex-wrap:wrap}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--dim);padding:9px 16px;border-radius:12px;cursor:pointer;font-size:.9rem}
+  .tab.active{color:#04121a;background:linear-gradient(135deg,var(--cy),var(--vi));border-color:transparent;font-weight:700;box-shadow:var(--glowC)}
+  body.light .tab.active{color:#fff}
+  main{max-width:1100px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap}
+  .mapbox{flex:1 1 430px;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:14px;box-shadow:var(--glowC)}
+  svg.graph{width:100%;display:block;border-radius:14px;background:var(--bg2)}
+  .hint{color:var(--dim);font-size:.8rem;margin-top:10px;text-align:center}
+  .panel{flex:1 1 330px;display:flex;flex-direction:column;gap:12px}
+  .sliders{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+  .srow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .srow label{min-width:110px;color:var(--dim);font-size:.85rem}
+  .srow input[type=range]{flex:1;min-width:130px;accent-color:var(--cy)}
+  .srow .sval{min-width:64px;text-align:right;font-weight:700;color:var(--cy);font-variant-numeric:tabular-nums}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+  .card .lbl{color:var(--dim);font-size:.72rem}
+  .card .val{font-size:.95rem;font-weight:600;word-break:break-word;font-variant-numeric:tabular-nums}
+  .card.cy{border-color:var(--cy);box-shadow:var(--glowC)}.card.cy .val{color:var(--cy)}
+  .card.gn .val{color:var(--gn)}.card.rd .val{color:var(--rd)}.card.gd{border-color:var(--gd);box-shadow:var(--glowG)}.card.gd .val{color:var(--gd)}
+  .eqbox{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+  .eq .lbl{color:var(--dim);font-size:.72rem}
+  .eq .v{font-size:.96rem;font-weight:600;font-family:'Cambria Math','Segoe UI',serif}
+  .hidden{display:none!important}
+  .note{max-width:1100px;margin:16px auto 0;color:var(--dim);font-size:.75rem;text-align:center}
+  .gridline{stroke:var(--grid)}.axis{stroke:var(--axis);stroke-width:1.3}.axlbl{fill:var(--dim);font-size:10.5px}
+  .curve{fill:none;stroke:var(--cy);stroke-width:3;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(34,211,238,.4))}
+  .curve2{fill:none;stroke:var(--vi);stroke-width:2.5;stroke-linecap:round}
+  .tanL{stroke-width:2.5;stroke-linecap:round}
+  .ptP{stroke:#fff;stroke-width:2}
+  .critPt{fill:var(--gd);stroke:#fff;stroke-width:2}
+  .critLbl{fill:var(--gd);font-size:11px;font-weight:700}
+  .signRow{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-size:.88rem}
+  .signRow .arw{font-weight:800;width:26px;text-align:center}
+  @media(max-width:760px){.srow label{min-width:95px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="title">
+    <h1><span class="dot"></span> DerivadaViva <span class="badge">La derivada</span></h1>
+    <p>Signo de f′ ↔ crecimiento · criterio de la 1.ª derivada · optimización · USIL</p>
+  </div>
+  <button id="themeBtn">🌙 Tema</button>
+</header>
+<div class="tabs">
+  <button class="tab active" data-mode="signo">⚡ Signo de f′</button>
+  <button class="tab" data-mode="crit">🚦 Criterio 1.ª derivada</button>
+  <button class="tab" data-mode="opt">🏆 Optimización</button>
+</div>
+<main>
+  <div class="mapbox">
+    <svg id="g1" class="graph" viewBox="0 0 640 420" preserveAspectRatio="xMidYMid meet">
+      <g id="g1grid"></g><g id="g1axes"></g><g id="g1labels"></g>
+      <path id="g1curve" class="curve"/><line id="g1tan" class="tanL"/>
+      <circle id="g1pt" class="ptP" r="6"/>
+    </svg>
+    <svg id="g2" class="graph hidden" viewBox="0 0 640 240" preserveAspectRatio="xMidYMid meet" style="margin-top:10px">
+      <g id="g2grid"></g><g id="g2axes"></g><g id="g2labels"></g>
+      <path id="g2curve" class="curve2"/>
+      <circle id="g2pt" class="ptP" r="5"/>
+      <text id="g2lbl" x="320" y="16" text-anchor="middle" font-size="11" fill="var(--dim)"></text>
+    </svg>
+    <svg id="g3" class="graph hidden" viewBox="0 0 640 420" preserveAspectRatio="xMidYMid meet">
+      <g id="g3grid"></g><g id="g3axes"></g><g id="g3labels"></g>
+      <path id="g3curve" class="curve"/>
+      <circle id="g3crit" class="critPt" r="6"/><text id="g3critLbl" class="critLbl"></text>
+    </svg>
+    <p class="hint" id="hintTxt">Mueve x₀: la recta tangente muestra la pendiente f′(x₀) y su signo.</p>
+  </div>
+  <div class="panel">
+    <div id="panel-signo">
+      <div class="eqbox">
+        <div class="eq"><span class="lbl">Función (Ejercicio 7.8a del libro)</span><span class="v" style="color:var(--cy)">f(x) = x³ − 3x² + 10 &nbsp;→&nbsp; f′(x) = 3x² − 6x</span></div>
+      </div>
+      <div class="sliders" style="margin-top:10px">
+        <div class="srow"><label>Punto x₀</label><input type="range" id="x0S" min="-1.5" max="3.5" step="0.05" value="0.5"><span class="sval" id="x0V"></span></div>
+      </div>
+      <div class="cards" style="margin-top:10px">
+        <div class="card cy"><span class="lbl">Pendiente de la tangente f′(x₀)</span><span class="val" id="fpV"></span></div>
+        <div class="card" id="signCard"><span class="lbl">Signo de f′(x₀)</span><span class="val" id="signV"></span></div>
+        <div class="card gn" style="grid-column:1/-1"><span class="lbl">Conclusión</span><span class="val" id="concV" style="font-weight:500"></span></div>
+      </div>
+      <div class="eqbox" style="margin-top:10px;border-color:var(--cy)">
+        <div class="eq"><span class="v" style="font-size:.85rem;color:var(--dim)">💡 Arriba está f y abajo su derivada f′. Cuando f′ está sobre el eje (positiva), f crece; cuando está debajo, f decrece; donde f′ cruza el eje, f tiene tangente horizontal.</span></div>
+      </div>
+    </div>
+    <div id="panel-crit" class="hidden">
+      <div class="eqbox">
+        <div class="eq"><span class="lbl">Análisis de f′(x) = 3x² − 6x = 3x(x − 2)</span><span class="v" style="color:var(--cy)">Puntos críticos: x = 0 y x = 2 &nbsp;(Ejercicio 7.8a: tangentes horizontales ✓)</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+        <div class="signRow"><span class="arw" style="color:var(--gn)">↗</span><span>En ]−∞; 0[: f′ &gt; 0 → f <b>crece</b></span></div>
+        <div class="signRow"><span class="arw" style="color:var(--gd)">●</span><span>En x = 0: f′ = 0 y cambia de + a − → <b>máximo local</b> f(0) = 10</span></div>
+        <div class="signRow"><span class="arw" style="color:var(--rd)">↘</span><span>En ]0; 2[: f′ &lt; 0 → f <b>decrece</b></span></div>
+        <div class="signRow"><span class="arw" style="color:var(--gd)">●</span><span>En x = 2: f′ = 0 y cambia de − a + → <b>mínimo local</b> f(2) = 6</span></div>
+        <div class="signRow"><span class="arw" style="color:var(--gn)">↗</span><span>En ]2; +∞[: f′ &gt; 0 → f <b>crece</b></span></div>
+      </div>
+      <div class="eqbox" style="margin-top:10px;border-color:var(--gd)">
+        <div class="eq"><span class="v" style="font-size:.85rem;color:var(--dim)">📌 <b>Criterio de la primera derivada</b> (enriquecimiento; no está en el libro): si f′ cambia de + a − en un punto crítico, hay máximo local; si cambia de − a +, hay mínimo local. La App 20 lo usa solo aquí y en Optimización.</span></div>
+      </div>
+    </div>
+    <div id="panel-opt" class="hidden">
+      <div class="eqbox">
+        <div class="eq"><span class="lbl">📖 Problema 7.8 del libro: ventas y publicidad</span><span class="v" style="color:var(--cy)">S(x) = −2x³ + 27x² + 132x + 207, &nbsp;x ∈ [0; 17] (x en miles de US$)</span></div>
+        <div class="eq"><span class="lbl">Derivando e igualando a cero</span><span class="v" style="font-size:.88rem">S′(x) = −6x² + 54x + 132 = −6(x − 11)(x + 2) = 0 → x = 11 (x = −2 queda fuera del dominio)</span></div>
+      </div>
+      <div class="cards" style="margin-top:10px">
+        <div class="card gn"><span class="lbl">Signo de S′ antes de x = 11</span><span class="val">S′ &gt; 0: las ventas crecen ↗</span></div>
+        <div class="card rd"><span class="lbl">Signo de S′ después de x = 11</span><span class="val">S′ &lt; 0: las ventas decrecen ↘</span></div>
+        <div class="card gd" style="grid-column:1/-1"><span class="lbl">Inversión óptima</span><span class="val">x = 11 → invertir US$ 11 000</span></div>
+        <div class="card cy" style="grid-column:1/-1"><span class="lbl">Nivel máximo de ventas S(11)</span><span class="val">S(11) = −2(1331) + 27(121) + 132(11) + 207 = 2264 unidades</span></div>
+      </div>
+      <div class="eqbox" style="margin-top:10px;border-color:var(--gd)">
+        <div class="eq"><span class="lbl">🔁 Conexión con la App 7 (Capítulo 2)</span><span class="v" style="font-size:.86rem;color:var(--dim)">Para U(q) = −0,25q² + 135q − 10 000 (panadería), el vértice dio q* = 270. Ahora con derivadas: U′(q) = −0,5q + 135 = 0 → q = 270. <b>¡El mismo resultado!</b> La derivada confirma lo que ya sabías del vértice.</span></div>
+      </div>
+    </div>
+  </div>
+</main>
+<p class="note">Contenido del Capítulo 7 + enriquecimiento (criterio de la 1.ª derivada). Convención Perú: coma decimal · miles con espacio desde 10 000. Apuntes de Matemática 2 — USIL.</p>
+<script>
+(function(){
+  "use strict";
+  var $=function(id){return document.getElementById(id);};
+  function fmt(n,dec){ if(!isFinite(n))return "—"; if(Math.abs(n)<1e-9)n=0; dec=(dec===undefined)?2:dec;
+    var s=n.toFixed(dec); if(s.indexOf(".")>=0){s=s.replace(/0+$/,"").replace(/\.$/,"");}
+    var neg=s.charAt(0)==="-"; if(neg)s=s.slice(1);
+    var parts=s.split("."); var int=parts[0];
+    if(int.length>=5){int=int.replace(/\B(?=(\d{3})+(?!\d))/g,"\u00A0");}
+    s=int+(parts[1]?","+parts[1]:""); return (neg?"\u2212":"")+s;
+  }
+  function makeScale(svgId,W,H,L,R,T,B,v){
+    return{sx:function(x){return L+(x-v.xMin)/(v.xMax-v.xMin)*(W-L-R);},
+           sy:function(y){return T+(v.yMax-y)/(v.yMax-v.yMin)*(H-T-B);}};
+  }
+  function drawAxes(gid,aid,lid,sc,v,W){
+    var NS="http://www.w3.org/2000/svg";
+    var g=$(gid);while(g.firstChild)g.removeChild(g.firstChild);
+    var ax=$(aid);while(ax.firstChild)ax.removeChild(ax.firstChild);
+    var lb=$(lid);while(lb.firstChild)lb.removeChild(lb.firstChild);
+    function step(range){var raw=range/6,pow=Math.pow(10,Math.floor(Math.log10(Math.abs(raw)||1))),n=raw/pow;
+      if(n<1.5)return pow;if(n<3.5)return 2*pow;if(n<7.5)return 5*pow;return 10*pow;}
+    var stX=step(v.xMax-v.xMin),stY=step(v.yMax-v.yMin),x,y,el,t;
+    var x0=Math.ceil(v.xMin/stX)*stX;
+    for(x=x0;x<=v.xMax+1e-9;x+=stX){
+      el=document.createElementNS(NS,"line");el.setAttribute("class","gridline");
+      el.setAttribute("x1",sc.sx(x));el.setAttribute("x2",sc.sx(x));el.setAttribute("y1",sc.sy(v.yMax));el.setAttribute("y2",sc.sy(v.yMin));g.appendChild(el);
+      t=document.createElementNS(NS,"text");t.setAttribute("class","axlbl");t.setAttribute("x",sc.sx(x));t.setAttribute("y",sc.sy(0)+14);t.setAttribute("text-anchor","middle");t.textContent=fmt(x,0);lb.appendChild(t);
+    }
+    var y0=Math.ceil(v.yMin/stY)*stY;
+    for(y=y0;y<=v.yMax+1e-9;y+=stY){
+      el=document.createElementNS(NS,"line");el.setAttribute("class","gridline");
+      el.setAttribute("x1",sc.sx(v.xMin));el.setAttribute("x2",sc.sx(v.xMax));el.setAttribute("y1",sc.sy(y));el.setAttribute("y2",sc.sy(y));g.appendChild(el);
+      t=document.createElementNS(NS,"text");t.setAttribute("class","axlbl");t.setAttribute("x",sc.sx(0)-5);t.setAttribute("y",sc.sy(y)+4);t.setAttribute("text-anchor","end");t.textContent=fmt(y,0);lb.appendChild(t);
+    }
+    if(v.yMin<=0&&v.yMax>=0){el=document.createElementNS(NS,"line");el.setAttribute("class","axis");el.setAttribute("x1",sc.sx(v.xMin));el.setAttribute("x2",sc.sx(v.xMax));el.setAttribute("y1",sc.sy(0));el.setAttribute("y2",sc.sy(0));ax.appendChild(el);}
+    if(v.xMin<=0&&v.xMax>=0){el=document.createElementNS(NS,"line");el.setAttribute("class","axis");el.setAttribute("x1",sc.sx(0));el.setAttribute("x2",sc.sx(0));el.setAttribute("y1",sc.sy(v.yMax));el.setAttribute("y2",sc.sy(v.yMin));ax.appendChild(el);}
+  }
+  function pathOf(f,sc,v,n){
+    var d="";
+    for(var i=0;i<=n;i++){var x=v.xMin+(v.xMax-v.xMin)*i/n;
+      d+=(i===0?"M":"L")+sc.sx(x).toFixed(1)+" "+sc.sy(f(x)).toFixed(1)+" ";}
+    return d;
+  }
+  function f(x){return x*x*x-3*x*x+10;}
+  function fp(x){return 3*x*x-6*x;}
+  var v1={xMin:-1.5,xMax:3.5,yMin:-4,yMax:18};
+  var sc1=makeScale("g1",640,420,50,14,14,34,v1);
+  var v2={xMin:-1.5,xMax:3.5,yMin:-5,yMax:17};
+  var sc2=makeScale("g2",640,240,50,14,20,26,v2);
+  function renderSigno(){
+    drawAxes("g1grid","g1axes","g1labels",sc1,v1,640);
+    $("g1curve").setAttribute("d",pathOf(f,sc1,v1,160));
+    var x0=parseFloat($("x0S").value);
+    $("x0V").textContent=fmt(x0);
+    var m=fp(x0),y0=f(x0);
+    var col=Math.abs(m)<0.08?"var(--gd)":(m>0?"var(--gn)":"var(--rd)");
+    var dx=(v1.xMax-v1.xMin);
+    $("g1tan").setAttribute("x1",sc1.sx(x0-dx*0.35));$("g1tan").setAttribute("y1",sc1.sy(y0-m*dx*0.35));
+    $("g1tan").setAttribute("x2",sc1.sx(x0+dx*0.35));$("g1tan").setAttribute("y2",sc1.sy(y0+m*dx*0.35));
+    $("g1tan").setAttribute("stroke",col);
+    $("g1pt").setAttribute("cx",sc1.sx(x0));$("g1pt").setAttribute("cy",sc1.sy(y0));$("g1pt").setAttribute("fill",col);
+    drawAxes("g2grid","g2axes","g2labels",sc2,v2,640);
+    $("g2curve").setAttribute("d",pathOf(fp,sc2,v2,160));
+    $("g2pt").setAttribute("cx",sc2.sx(x0));$("g2pt").setAttribute("cy",sc2.sy(m));$("g2pt").setAttribute("fill",col);
+    $("g2lbl").textContent="La derivada f′(x) = 3x² − 6x: su signo manda.";
+    $("fpV").textContent=fmt(m,3);
+    if(Math.abs(m)<0.08){$("signV").textContent="Cero: tangente horizontal";$("signCard").className="card gd";}
+    else if(m>0){$("signV").textContent="Positivo (+)";$("signCard").className="card gn";}
+    else{$("signV").textContent="Negativo (−)";$("signCard").className="card rd";}
+    $("concV").textContent=Math.abs(m)<0.08?"En x₀ la función no crece ni decrece: punto de tangente horizontal (posible máximo o mínimo local).":(m>0?"f es CRECIENTE alrededor de x₀: al aumentar x, la curva sube.":"f es DECRECIENTE alrededor de x₀: al aumentar x, la curva baja.");
+  }
+  $("x0S").addEventListener("input",renderSigno);
+  // ===== optimización: gráfica de S(x) =====
+  function S(x){return -2*x*x*x+27*x*x+132*x+207;}
+  var v3={xMin:-0.6,xMax:17.6,yMin:0,yMax:2500};
+  var sc3=makeScale("g3",640,420,56,14,14,34,v3);
+  function renderOpt(){
+    drawAxes("g3grid","g3axes","g3labels",sc3,v3,640);
+    $("g3curve").setAttribute("d",pathOf(S,sc3,v3,200));
+    $("g3crit").setAttribute("cx",sc3.sx(11));$("g3crit").setAttribute("cy",sc3.sy(2264));
+    $("g3critLbl").setAttribute("x",sc3.sx(11)+9);$("g3critLbl").setAttribute("y",sc3.sy(2264)-8);
+    $("g3critLbl").textContent="Máximo (11; 2264): S′(11) = 0";
+  }
+  var mode="signo";
+  function layout(){
+    var showG2=(mode==="signo");
+    $("g1").classList.toggle("hidden",mode==="opt");
+    $("g2").classList.toggle("hidden",!showG2);
+    $("g3").classList.toggle("hidden",mode!=="opt");
+    $("panel-signo").classList.toggle("hidden",mode!=="signo");
+    $("panel-crit").classList.toggle("hidden",mode!=="crit");
+    $("panel-opt").classList.toggle("hidden",mode!=="opt");
+    $("hintTxt").textContent=(mode==="opt")?"S′(x) = 0 en x = 11: allí las ventas alcanzan su máximo (2264 unidades).":(mode==="crit")?"El signo de f′ en cada intervalo decide si f sube o baja; el cambio de signo clasifica máximos y mínimos.":"Mueve x₀: la recta tangente muestra la pendiente f′(x₀) y su signo.";
+    if(mode==="opt")renderOpt();else renderSigno();
+  }
+  var tabs=document.querySelectorAll(".tab");
+  tabs.forEach(function(tEl){tEl.addEventListener("click",function(){
+    tabs.forEach(function(x){x.classList.remove("active");});tEl.classList.add("active");
+    mode=tEl.getAttribute("data-mode");layout();
+  });});
+  $("themeBtn").addEventListener("click",function(){
+    document.body.classList.toggle("light");
+    $("themeBtn").textContent=document.body.classList.contains("light")?"☀️ Tema":"🌙 Tema";
+  });
+  layout();
+})();
+</script>
+</body>
+</html>
